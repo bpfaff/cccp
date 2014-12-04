@@ -1,0 +1,10 @@
+##
+## Import directives
+##
+import(Rcpp, methods)
+import(RcppArmadillo)
+useDynLib(cccp3)
+##
+## Export directives
+##
+exportPattern("^[[:alpha:]]+")

@@ -1,0 +1,14 @@
+Package: cccp3
+Version: 0.0-1
+Date: 2014-12-04
+Title: Cone Constrained Convex Problems
+Authors@R: person("Bernhard", "Pfaff", role = c("aut", "cre"), email = "bernhard@pfaffikus.de")
+Maintainer: Bernhard Pfaff <bernhard@pfaffikus.de>
+Depends: R (>= 3.0.1), methods
+Suggests: RUnit, numDeriv
+LazyLoad: yes
+Description: This package contains routines for solving convex optimization problems with cone constraints by means of interior-point methods. The implemented routines are adopted from the cvxopt-software. 
+Imports: Rcpp (>= 0.11.2), RcppArmadillo (>= 0.4.320.0)
+LinkingTo: Rcpp, RcppArmadillo
+License: GPL (>= 3)
+RcppModules: NLF, NNO, SOC, PSD
