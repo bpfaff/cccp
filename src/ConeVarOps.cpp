@@ -10,31 +10,13 @@
 double udot_n(NLFV* s, NLFV* z){ // for Rcpp Module
   return arma::dot(s->u, z->u);
 }
-double udot(NLFV s, NLFV z){
-  return arma::dot(s.u, z.u);
-}
-double udot(NLFV s){
-  return udot(s, s);
-}
 // NNO-variables
 double udot_l(NNOV* s, NNOV* z){ // for Rcpp Module
   return arma::dot(s->u, z->u);
 }
-double udot(NNOV s, NNOV z){
-  return arma::dot(s.u, z.u);
-}
-double udot(NNOV s){
-  return udot(s, s);
-}
 // SOC-variables
 double udot_s(SOCV* s, SOCV* z){ // for Rcpp Module
   return arma::dot(s->u, z->u);
-}
-double udot(SOCV s, SOCV z){
-  return arma::dot(s.u, z.u);
-}
-double udot(SOCV s){
-  return udot(s, s);
 }
 // PSD-variables
 double udot_p(PSDV* s, PSDV* z){ // for Rcpp Module
@@ -51,24 +33,6 @@ double udot_p(PSDV* s, PSDV* z){ // for Rcpp Module
 
     return ans;
 }
-double udot(PSDV s, PSDV z){
-    double ans = 0.0;
-    arma::mat sa = s.u;
-    arma::mat za = z.u;
-
-    sa = arma::reshape(sa, s.dims, s.dims);
-    za = arma::reshape(za, z.dims, z.dims);
-    ans = arma::dot(sa.diag(), za.diag());
-    for(int i = -1; i > -s.dims; i--){
-      ans += 2 * arma::dot(sa.diag(i), za.diag(i));
-    } 
-
-    return ans;
-}
-double udot(PSDV s){
-  return udot(s, s);
-}
-
 /*
  * jdot: Hyperbolic householder transformation for SOC variables
 */
@@ -81,19 +45,6 @@ double jdot_s(SOCV* s, SOCV* z){ // for Rcpp Module
   }
   return a;
 }
-double jdot(SOCV s, SOCV z){
-  double a = 0.0;
-
-  a = s.u(0, 0) * z.u(0, 0);
-  for(int i = 1; i < s.dims; i++){
-    a -= s.u(i, 0) * z.u(i, 0);
-  }
-  return a;
-}
-double jdot(SOCV s){
-  return jdot(s, s);
-}
-
 /*
  * uprd: Product of vectors in S
 */
@@ -129,7 +80,6 @@ PSDV uprd_p(PSDV* s, PSDV* z){ // for Rcpp Module
 
   return PSDV(a, dims);
 }
-
 /*
  * uinv: Inverse product of vectors in S
 */
@@ -180,7 +130,6 @@ PSDV uinv_p(PSDV* s, PSDV* z){ // for Rcpp Module
 
   return PSDV(a, m);
 }
-
 /*
  * uone: One-element of vectors in S
 */
@@ -209,7 +158,6 @@ PSDV uone_p(PSDV* s){ // for Rcpp Module
 
   return PSDV(a, m);
 }
-
 /*
  * umss: Computing maximum step-length for vectors in S
 */
@@ -251,7 +199,6 @@ SEXP umss_p(PSDV* s){
   return(Rcpp::List::create(Rcpp::Named("ms") = Rcpp::wrap(-eval[0]),
 			    Rcpp::Named("evd") = evd));
 }
-
 /*
  * umsa: Applying maximum step-size to vectors in S
 */
@@ -315,7 +262,6 @@ PSDV umsa_p2(PSDV* s, double alpha, arma::vec sigma, PSDV* lmbda){
   
   return *s;
 }
-
 /*
  * ntsc: Compute initial NT-scalings and Lagrange Multipliers
 */

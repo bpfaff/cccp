@@ -20,24 +20,11 @@ RCPP_EXPOSED_CLASS(PSDV)
 #include <RcppArmadillo.h>
 
 double udot_n(NLFV* s, NLFV* z); // for Rcpp Module 
-double udot(NLFV s);
-double udot(NLFV s, NLFV z);
-
 double udot_l(NNOV* s, NNOV* z); // for Rcpp Module 
-double udot(NNOV s);
-double udot(NNOV s, NNOV z);
-
 double udot_s(SOCV* s, SOCV* z); // for Rcpp Module 
-double udot(SOCV s);
-double udot(SOCV s, SOCV z);
-
 double udot_p(PSDV* s, PSDV* z); // for Rcpp Module 
-double udot(PSDV s);
-double udot(PSDV s, PSDV z);
 
 double jdot_s(SOCV* s, SOCV* z); // for Rcpp Module 
-double jdot(SOCV s);
-double jdot(SOCV s, SOCV z);
 
 NLFV uone_n(NLFV* s); // for Rcpp Module
 NNOV uone_l(NNOV* s); // for Rcpp Module
