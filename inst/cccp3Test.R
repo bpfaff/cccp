@@ -4,31 +4,6 @@
 ## 
 library(cccp3)
 ##
-## Creating NLFV objects
-##
-n <- 10L
-unlf <- matrix(runif(n), nrow = n)
-vnlf <- matrix(runif(n), nrow = n)
-## reference objects
-urc <- new(NLFV, u = unlf, dims = n)
-vrc <- new(NLFV, u = vnlf, dims = n)
-## udot-methods
-(rcobj <- urc$udot(vrc))
-## uone-methods
-(rcobj <- urc$uone())
-## uprd-methods
-(rcobj <- urc$uprd(vrc))
-## uinv-methods
-(rcobj <- urc$uinv(vrc))
-## umsa-methods
-(rcobj <- urc$umsa(alpha = 2.0, init = TRUE))
-(rcobj <- urc$umsa(alpha = 2.0, init = FALSE))
-## ntsc-method
-(rcobj <- urc$ntsc(vrc))
-rcobj$dnl
-rcobj$dnli
-rcobj$lambda
-##
 ## Creating NNOV objects
 ##
 n <- 10L
