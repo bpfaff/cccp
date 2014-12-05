@@ -6,10 +6,6 @@
 /*
  * udot: Inner product of variables in S
 */
-// NLF-variables
-double udot_n(NLFV* s, NLFV* z){ // for Rcpp Module
-  return arma::dot(s->u, z->u);
-}
 // NNO-variables
 double udot_l(NNOV* s, NNOV* z){ // for Rcpp Module
   return arma::dot(s->u, z->u);
@@ -48,10 +44,6 @@ double jdot_s(SOCV* s, SOCV* z){ // for Rcpp Module
 /*
  * uprd: Product of vectors in S
 */
-// NLF-variables
-NLFV uprd_n(NLFV* s, NLFV* z){ // for Rcpp Module
-    return NLFV(s->u % z->u, s->dims);
-}
 // NNO-variables
 NNOV uprd_l(NNOV* s, NNOV* z){ // for Rcpp Module
   return NNOV(s->u % z->u, s->dims);
@@ -83,10 +75,6 @@ PSDV uprd_p(PSDV* s, PSDV* z){ // for Rcpp Module
 /*
  * uinv: Inverse product of vectors in S
 */
-// NLF-variables
-NLFV uinv_n(NLFV* s, NLFV* z){ // for Rcpp Module
-  return NLFV(s->u / z->u, s->dims);
-}
 // NNO-variables
 NNOV uinv_l(NNOV* s, NNOV* z){ // for Rcpp Module
   return NNOV(s->u / z->u, s->dims);
@@ -133,11 +121,6 @@ PSDV uinv_p(PSDV* s, PSDV* z){ // for Rcpp Module
 /*
  * uone: One-element of vectors in S
 */
-// NLF-variables
-NLFV uone_n(NLFV* s){ // for Rcpp Module
-  arma::mat a(s->dims, 1);
-    return NLFV(a.ones(), s->dims);
-}
 // NNO-variables
 NNOV uone_l(NNOV* s){ // for Rcpp Module
   arma::mat a(s->dims, 1);
@@ -161,11 +144,6 @@ PSDV uone_p(PSDV* s){ // for Rcpp Module
 /*
  * umss: Computing maximum step-length for vectors in S
 */
-// NLF-variables
-SEXP umss_n(NLFV* s){
-  return(Rcpp::List::create(Rcpp::Named("ms") = -min(s->u),
-			    Rcpp::Named("evd") = R_NilValue));
-}
 // NNO-variables
 SEXP umss_l(NNOV* s){
   return(Rcpp::List::create(Rcpp::Named("ms") = -min(s->u),
@@ -202,20 +180,6 @@ SEXP umss_p(PSDV* s){
 /*
  * umsa: Applying maximum step-size to vectors in S
 */
-// NLF-variables
-NLFV umsa_n(NLFV* s, double alpha, bool init){
-  if(init){
-    for(int i = 0; i < s->dims; i++){
-      s->u(i, 0) = s->u(i, 0) + (1 + alpha);
-    }
-  } else {
-    for(int i = 0; i < s->dims; i++){
-      s->u(i, 0) = 1.0 + alpha * s->u(i, 0);
-    }
-  }
-
-  return *s;
-}
 // NNO-variables
 NNOV umsa_l(NNOV* s, double alpha, bool init){
   if(init){
@@ -265,19 +229,6 @@ PSDV umsa_p2(PSDV* s, double alpha, arma::vec sigma, PSDV* lmbda){
 /*
  * ntsc: Compute initial NT-scalings and Lagrange Multipliers
 */
-// NLF-variables
-NLFS ntsc_n(NLFV* s, NLFV* z){
-  arma::mat dnl(s->dims, 1), dnli(s->dims, 1);
-  NLFV lambda(s->dims);
-
-  for(int i = 0; i < s->dims; i++){
-    dnl(i, 0) = sqrt(s->u(i, 0) / z->u(i, 0));
-    dnli(i, 0) = sqrt(z->u(i, 0) / s->u(i, 0));
-    lambda.u(i, 0) = sqrt(s->u(i, 0) * z->u(i, 0));
-  }
-
-  return NLFS(dnl, dnli, lambda);
-}
 // NNO-variables
 NNOS ntsc_l(NNOV* s, NNOV* z){
   arma::mat d(s->dims, 1), di(s->dims, 1);

@@ -1,34 +1,5 @@
 #include "cccp3.h"
 /*
- * Module for nonlinear related variables
-*/
-RCPP_MODULE(NLF){
-  Rcpp::class_<NLFV>( "NLFV" )
-    .constructor("default constructor")
-    .constructor<int>("sets the NLF-variable to one-element")
-    .constructor<arma::mat, int>("sets the NLF-variable and its dimension")
-
-    .field("u", &NLFV::u)
-    .field("dims", &NLFV::dims)
-
-    .method("uone", &uone_n)
-    .method("udot", &udot_n)
-    .method("uprd", &uprd_n)
-    .method("uinv", &uinv_n)
-    .method("umss", &umss_n)
-    .method("umsa", &umsa_n)
-    .method("ntsc", &ntsc_n)
-;
-
-  Rcpp::class_<NLFS>( "NLFS" )
-    .constructor<arma::mat, arma::mat, NLFV>("sets the NLF-variable and its dimension")
-
-    .field("dnl", &NLFS::dnl)
-    .field("dnli", &NLFS::dnli)
-    .field("lambda", &NLFS::lambda)
-;
-}
-/*
  * Module for NNO related variables
 */
 RCPP_MODULE(NNO){

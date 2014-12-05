@@ -5,7 +5,7 @@ Title: Cone Constrained Convex Problems
 Authors@R: person("Bernhard", "Pfaff", role = c("aut", "cre"), email = "bernhard@pfaffikus.de")
 Maintainer: Bernhard Pfaff <bernhard@pfaffikus.de>
 Depends: R (>= 3.0.1), methods
-Suggests: RUnit, numDeriv
+Suggests: RUnit, numDeriv, cccp
 LazyLoad: yes
 Description: This package contains routines for solving convex optimization problems with cone constraints by means of interior-point methods. The implemented routines are adopted from the cvxopt-software. 
 Imports: Rcpp (>= 0.11.2), RcppArmadillo (>= 0.4.320.0)
