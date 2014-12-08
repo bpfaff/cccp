@@ -9,34 +9,20 @@
 
 #include <RcppCommon.h>
 // forward declarations and helping module classes 
-RCPP_EXPOSED_CLASS(SOCV)
-RCPP_EXPOSED_CLASS(SOCS)
 RCPP_EXPOSED_CLASS(PSDV)
 
+#ifndef ARMA_H
+#define ARMA_H
 #include <RcppArmadillo.h>
+#endif
 
-double udot_s(SOCV* s, SOCV* z); // for Rcpp Module 
 double udot_p(PSDV* s, PSDV* z); // for Rcpp Module 
-
-double jdot_s(SOCV* s, SOCV* z); // for Rcpp Module 
-
-SOCV uone_s(SOCV* s); // for Rcpp Module
 PSDV uone_p(PSDV* s); // for Rcpp Module
-
-SOCV uprd_s(SOCV* s, SOCV* z); // for Rcpp Module
 PSDV uprd_p(PSDV* s, PSDV* z); // for Rcpp Module
-
-SOCV uinv_s(SOCV* s, SOCV* z); // for Rcpp Module
 PSDV uinv_p(PSDV* s, PSDV* z); // for Rcpp Module
-
-SEXP umss_s(SOCV* s); // for Rcpp Module
 SEXP umss_p(PSDV* s); // for Rcpp Module
-
-SOCV umsa_s(SOCV* s, double alpha, bool init); // for Rcpp Module
 PSDV umsa_p1(PSDV* s, double alpha); // for Rcpp Module 
 PSDV umsa_p2(PSDV* s, double alpha, arma::vec sigma, PSDV* lmbda); // for Rcpp Module 
-
-SOCS ntsc_s(SOCV* s, SOCV* z); // for Rcpp Module 
 
 #include "NLF.h"
 #include "NNO.h"

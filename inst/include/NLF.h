@@ -3,7 +3,11 @@
 RCPP_EXPOSED_CLASS(NLFV)
 RCPP_EXPOSED_CLASS(NLFS)
 
+#ifndef ARMA_H
+#define ARMA_H
 #include <RcppArmadillo.h>
+#endif
+
 /*
  * Class definition and methods for nonlinear constraints
 */

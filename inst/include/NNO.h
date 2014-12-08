@@ -3,7 +3,11 @@
 RCPP_EXPOSED_CLASS(NNOV)
 RCPP_EXPOSED_CLASS(NNOS)
 
+#ifndef ARMA_H
+#define ARMA_H
 #include <RcppArmadillo.h>
+#endif
+
 /*
  * Class definition and methods for nonlinear constraints
 */
@@ -33,7 +37,6 @@ class NNOV {
   arma::mat u;
   int dims;
 };
-
 
 // Class definition for NT-scaling and Lagrange-Multipliers
 class NNOS {
