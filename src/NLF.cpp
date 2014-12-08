@@ -1,7 +1,7 @@
 #include "NLF.h"
 
 // udot-method
-double NLFV::udot(const NLFV& z) const{ // for Rcpp Module
+double NLFV::udot(const NLFV& z) const{ 
   return arma::dot(u, z.u);
 }
 // uone-method
@@ -10,11 +10,11 @@ NLFV* NLFV::uone() const{
   return new NLFV(a.ones(), dims);
 }
 // uprd-method
-NLFV* NLFV::uprd(const NLFV& z) const{ // for Rcpp Module
+NLFV* NLFV::uprd(const NLFV& z) const{ 
     return new NLFV(u % z.u, dims);
 }
 // uinv-method
-NLFV* NLFV::uinv(const NLFV& z) const{ // for Rcpp Module
+NLFV* NLFV::uinv(const NLFV& z) const{ 
   return new NLFV(u / z.u, dims);
 }
 // umss-method
@@ -22,29 +22,27 @@ double NLFV::umss() const{
   return u.min();
 }
 // umsa-method
-NLFV* NLFV::umsa(double alpha, bool init) const{ // for Rcpp Module
+NLFV* NLFV::umsa(double alpha, bool init) const{ 
   arma::mat ua = u;
+
   if(init){
-    for(int i = 0; i < dims; i++){
-      ua(i, 0) = u(i, 0) + (1 + alpha);
-    }
+    ua(arma::span::all, 0) += (1 + alpha);
   } else {
-    for(int i = 0; i < dims; i++){
-      ua(i, 0) = 1.0 + alpha * u(i, 0);
-    }
+    ua(arma::span::all, 0) *= alpha;
+    ua(arma::span::all, 0) += 1.0;
   }
+
   return new NLFV(ua, dims);
 }
 // ntsc-method
-NLFS* NLFV::ntsc(const NLFV& z) const{ // for Rcpp Module
+NLFS* NLFV::ntsc(const NLFV& z) const{ 
   arma::mat dnl(dims, 1), dnli(dims, 1);
   NLFV lambda(dims);
 
-  for(int i = 0; i < dims; i++){
-    dnl(i, 0) = sqrt(u(i, 0) / z.u(i, 0));
-    dnli(i, 0) = sqrt(z.u(i, 0) / u(i, 0));
-    lambda.u(i, 0) = sqrt(u(i, 0) * z.u(i, 0));
-  }
+  dnl = sqrt(u / z.u);
+  dnli = sqrt(z.u / u);
+  lambda.u = sqrt(u % z.u);
+
   return new NLFS(dnl, dnli, lambda);
 }
 
