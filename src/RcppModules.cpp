@@ -1,34 +1,5 @@
 #include "cccp3.h"
 /*
- * Module for NNO related variables
-*/
-RCPP_MODULE(NNO){
-  Rcpp::class_<NNOV>( "NNOV" )
-    .constructor("default constructor")
-    .constructor<int>("sets the NNO-variable to one-element")
-    .constructor<arma::mat, int>("sets the NNO-variable and its dimension")
-
-    .field("u", &NNOV::u)
-    .field("dims", &NNOV::dims)
-
-    .method("uone", &uone_l)
-    .method("udot", &udot_l)
-    .method("uprd", &uprd_l)
-    .method("uinv", &uinv_l)
-    .method("umss", &umss_l)
-    .method("umsa", &umsa_l)
-    .method("ntsc", &ntsc_l)
-    ;
-
-  Rcpp::class_<NNOS>( "NNOS" )
-    .constructor<arma::mat, arma::mat, NNOV>("sets the NNO-variable and its dimension")
-
-    .field("d", &NNOS::d)
-    .field("di", &NNOS::di)
-    .field("lambda", &NNOS::lambda)
-;
-}
-/*
  * Module for SOC related variables
 */
 RCPP_MODULE(SOC){
