@@ -1,7 +1,6 @@
-#include "cccp3.h"
 /*
- * Module for PSD related variables
-*/
+#include "cccp3.h"
+
 RCPP_MODULE(PSD){
   Rcpp::class_<PSDV>( "PSDV" )
     .constructor("default constructor")
@@ -20,3 +19,4 @@ RCPP_MODULE(PSD){
     .method("umsa2", &umsa_p2)
     ;
 }
+*/

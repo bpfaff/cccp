@@ -1,4 +1,7 @@
+#ifndef REFC_H
+#define REFC_H
 #include <RcppCommon.h>
+#endif
 // forward declarations and helping module classes 
 RCPP_EXPOSED_CLASS(NLFV)
 RCPP_EXPOSED_CLASS(NLFS)
@@ -58,5 +61,7 @@ class NLFS {
   arma::mat dnli;
   NLFV lambda;
 };
+
+
 
 
