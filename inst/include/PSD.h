@@ -4,6 +4,7 @@
 #endif
 // forward declarations and helping module classes 
 RCPP_EXPOSED_CLASS(PSDV)
+RCPP_EXPOSED_CLASS(PSDS)
 
 #ifndef ARMA_H
 #define ARMA_H
@@ -33,8 +34,30 @@ class PSDV {
   PSDV* uinv(const PSDV& z) const;
   PSDV* umsa1(double alpha) const;
   PSDV* umsa2(double alpha, const PSDV& lambda, arma::vec sigma) const;
+  PSDS* ntsc(const PSDV& z) const;
 
  private:
   arma::mat u;	
   int dims;
 };
+
+// Class definition for NT-scaling and Lagrange-Multipliers
+class PSDS {
+ public:
+
+  // constructors
+ PSDS(arma::mat r_, arma::mat rti_, PSDV lambda_): r(r_), rti(rti_), lambda(lambda_) {}
+
+  arma::mat get_r() {return r;}
+  void set_r(arma::mat r_) {r = r_;}
+  arma::mat get_rti() {return rti;}
+  void set_rti(arma::mat rti_) {rti = rti_;}
+  PSDV get_lambda() {return lambda;}
+  void set_lambda(PSDV lambda_) {lambda = lambda_;}
+
+ private:
+  arma::mat r;
+  arma::mat rti;
+  PSDV lambda;
+};
+

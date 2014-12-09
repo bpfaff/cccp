@@ -88,7 +88,28 @@ PSDV* PSDV::umsa2(double alpha, const PSDV& lambda, arma::vec sigma) const{
 
   return new PSDV(sa, dims);
 }
+// ntsc-method
+PSDS* PSDV::ntsc(const PSDV& z) const{
+  arma::mat r(dims, dims), rti(dims, dims);
+  PSDV lambda(dims); 
+  arma::mat sa = u;
+  arma::mat za = z.u;
+  arma::mat sc, zc, szc, U, V;
+  arma::vec l;
 
+  sa.reshape(dims, dims);
+  za.reshape(dims, dims);
+  arma::chol(sc, sa);
+  arma::chol(zc, za);
+  szc = zc * sc.t();
+  svd(U, l, V, szc);
+  r = zc.i() * U * diagmat(sqrt(l));
+  rti = zc.t() * U * diagmat(1.0 / sqrt(l));
+  lambda.u = diagmat(l);
+  lambda.u.reshape(dims * dims, 1);
+
+  return new PSDS(r, rti, lambda);
+}
 
 /*
  * Module for positive semidefinite related variables
@@ -109,10 +130,15 @@ RCPP_MODULE(PSD){
     .const_method("umss", &PSDV::umss)
     .const_method("umsa1", &PSDV::umsa1)
     .const_method("umsa2", &PSDV::umsa2)
-
-    /*
     .const_method("ntsc", &PSDV::ntsc)
-    */
-;
+    ;
+
+  Rcpp::class_<PSDS>( "PSDS" )
+    .constructor<arma::mat, arma::mat, PSDV>("sets the PSD-variable and its dimension")
+
+    .property("r", &PSDS::get_r, &PSDS::set_r, "Getter and setter for r")
+    .property("rti", &PSDS::get_rti, &PSDS::set_rti, "Getter and setter for rti")
+    .property("lambda", &PSDS::get_lambda, &PSDS::set_lambda, "Getter and setter for lambda")
+    ;
 
 }
