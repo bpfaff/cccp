@@ -28,5 +28,6 @@ test.PSDV <- function(){
     checkTrue(is.double(ans1))
     checkTrue(is.double(ans7))
     checkEqualsNumeric(sum(ans2$u), n)
+    checkEqualsNumeric(urc$u, vrc$uprd(ans4)$u)
     return()
 }

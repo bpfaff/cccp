@@ -24,7 +24,9 @@ PSDV* PSDV::uprd(const PSDV& z) const{
   sa.reshape(dims, dims);
   za.reshape(dims, dims);
 
-  ans = 0.5 * (sa * za + za * sa);
+  // if mat and vec representation is used
+  //ans = 0.5 * (sa * za + za * sa);
+  ans = sa * za;
   ans.reshape(dims * dims, 1);
 
   return new PSDV(ans, dims);
@@ -37,12 +39,15 @@ PSDV* PSDV::uinv(const PSDV& z) const{
   sa.reshape(dims, dims);
   za.reshape(dims, dims);
   arma::mat ans = sa;
-
+  /*
+  // if mat and vec representation is used
   for(int i = 0; i < dims; i++){
     for(int j = 0; j < dims; j++){
       ans.at(i, j) = sa.at(i, j) * 2.0 / (za.at(i, i) + za.at(j, j));
     }
   }
+  */
+  ans = inv(za) * sa;
   ans.reshape(dims * dims, 1);
 
   return new PSDV(ans, dims);
