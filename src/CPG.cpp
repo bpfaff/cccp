@@ -15,4 +15,15 @@ RCPP_MODULE(CPG){
     .property("kappa", &PDV::get_kappa, &PDV::set_kappa, "Getter and setter for kappa")
     .property("tau", &PDV::get_tau, &PDV::set_tau, "Getter and setter for tau")
     ;
+
+  Rcpp::class_<DQP>( "DQP" )
+    .constructor("Default constructor")
+    .constructor<arma::mat, arma::vec, arma::mat, arma::vec, Rcpp::List>("sets the DQP-values")
+
+    .property("P", &DQP::get_P, &DQP::set_P, "Getter and setter for P")
+    .property("q", &DQP::get_q, &DQP::set_q, "Getter and setter for q")
+    .property("A", &DQP::get_A, &DQP::set_A, "Getter and setter for A")
+    .property("b", &DQP::get_b, &DQP::set_b, "Getter and setter for b")
+    .property("cList", &DQP::get_cList, &DQP::set_cList, "Getter and setter for cList")
+    ;
 }
