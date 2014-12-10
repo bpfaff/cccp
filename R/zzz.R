@@ -2,6 +2,7 @@ loadModule("NLF", TRUE)
 loadModule("NNO", TRUE)
 loadModule("SOC", TRUE)
 loadModule("PSD", TRUE)
+loadModule("CTL", TRUE)
 
 evalqOnLoad({
     ## show methods
@@ -32,5 +33,13 @@ evalqOnLoad({
         cat("\n")
         cat("Showing head of PSD-variable\n")
         print(head(object$u))
+    })
+    setMethod("show", "Rcpp_CTRL", function(object){
+        cat("Control parameters used in optimization:\n\n")
+        cat(paste("Maximum iterations:\t", object$maxiters,"\n"))
+        cat(paste("Absolute tolerance:\t", object$abstol,"\n"))
+        cat(paste("Relative tolerance:\t", object$reltol,"\n"))
+        cat(paste("Feasible tolerance:\t", object$feastol,"\n"))
+        cat(paste("Tracing progress:\t", object$trace,"\n"))
     })
 })
