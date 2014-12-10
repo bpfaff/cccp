@@ -11,4 +11,4 @@ Description: This package contains routines for solving convex optimization prob
 Imports: Rcpp (>= 0.11.2), RcppArmadillo (>= 0.4.320.0)
 LinkingTo: Rcpp, RcppArmadillo
 License: GPL (>= 3)
-RcppModules: NLF, NNO, SOC, PSD, CTL
+RcppModules: NLF, NNO, SOC, PSD, CTL, CPG
