@@ -74,4 +74,12 @@ RCPP_MODULE(NLF){
     .property("dnli", &NLFS::get_dnli, &NLFS::set_dnli, "Getter and setter for dnli")
     .property("lambda", &NLFS::get_lambda, &NLFS::set_lambda, "Getter and setter for lambda")
 ;
+
+  Rcpp::class_<NLFC>( "NLFC" )
+    .constructor<arma::mat, NLFV, int>("sets the NLF-variable and its dimension")
+
+    .property("G", &NLFC::get_G, &NLFC::set_G, "Getter and setter for G")
+    .property("h", &NLFC::get_h, &NLFC::set_h, "Getter and setter for h")
+    .property("dims", &NLFC::get_dims, &NLFC::set_dims, "Getter and setter for dims")
+;
 }

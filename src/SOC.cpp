@@ -143,4 +143,12 @@ RCPP_MODULE(SOC){
     .property("beta", &SOCS::get_beta, &SOCS::set_beta, "Getter and setter for beta")
     .property("lambda", &SOCS::get_lambda, &SOCS::set_lambda, "Getter and setter for lambda")
 ;
+
+  Rcpp::class_<SOCC>( "SOCC" )
+    .constructor<arma::mat, SOCV, int>("sets the SOC-variable and its dimension")
+
+    .property("G", &SOCC::get_G, &SOCC::set_G, "Getter and setter for G")
+    .property("h", &SOCC::get_h, &SOCC::set_h, "Getter and setter for h")
+    .property("dims", &SOCC::get_dims, &SOCC::set_dims, "Getter and setter for dims")
+;
 }

@@ -2,6 +2,7 @@
 \alias{PSD}
 \alias{PSDV}
 \alias{PSDS}
+\alias{PSDC}
 
 \title{
 	Rcpp module: PSD
@@ -18,6 +19,7 @@
     \item{PSDV}{Class for variables with respect to nonlinear
       constraints.}
     \item{PSDS}{Class for NT-scaling and Lagrange-Multipliers.}
+    \item{PSDC}{Class for positive semidefinite constraints.}
   }
 }
     

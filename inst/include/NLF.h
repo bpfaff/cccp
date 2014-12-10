@@ -5,6 +5,7 @@
 // forward declarations and helping module classes 
 RCPP_EXPOSED_CLASS(NLFV)
 RCPP_EXPOSED_CLASS(NLFS)
+RCPP_EXPOSED_CLASS(NLFC)
 
 #ifndef ARMA_H
 #define ARMA_H
@@ -48,7 +49,7 @@ class NLFS {
 
   // constructors
  NLFS(arma::mat dnl_, arma::mat dnli_, NLFV lambda_): dnl(dnl_), dnli(dnli_), lambda(lambda_) {}
-
+  // members
   arma::mat get_dnl() {return dnl;}
   void set_dnl(arma::mat dnl_) {dnl = dnl_;}
   arma::mat get_dnli() {return dnli;}
@@ -63,5 +64,24 @@ class NLFS {
 };
 
 
+// Class definition for nonlinear constraints
+class NLFC {
+ public:
+
+  // constructors
+ NLFC(arma::mat G_, NLFV h_, int dims_): G(G_), h(h_), dims(dims_) {}
+  // members
+  arma::mat get_G() {return G;}
+  void set_G(arma::mat G_) {G = G_;}
+  NLFV get_h() {return h;}
+  void set_h(NLFV h_) {h = h_;}
+  int get_dims() {return dims;}
+  void set_dims(int dims_) {dims = dims_;}
+
+ private:
+  arma::mat G;
+  NLFV h;
+  int dims;
+};
 
 

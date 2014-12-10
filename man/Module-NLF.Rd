@@ -2,6 +2,7 @@
 \alias{NLF}
 \alias{NLFV}
 \alias{NLFS}
+\alias{NLFC}
 
 \title{
 	Rcpp module: NLF
@@ -18,6 +19,7 @@
     \item{NLFV}{Class for variables with respect to nonlinear
       constraints.}
     \item{NLFS}{Class for NT-scaling and Lagrange-Multipliers.}
+    \item{NLFC}{Class for nonlinear constraints.}
   }
 }
     

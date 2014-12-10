@@ -5,6 +5,7 @@
 // forward declarations and helping module classes 
 RCPP_EXPOSED_CLASS(SOCV)
 RCPP_EXPOSED_CLASS(SOCS)
+RCPP_EXPOSED_CLASS(SOCC)
 
 #ifndef ARMA_H
 #define ARMA_H
@@ -60,4 +61,25 @@ public:
   arma::mat v;
   double beta;
   SOCV lambda;
+};
+
+
+// Class definition for second-order cone constraints
+class SOCC {
+ public:
+
+  // constructors
+ SOCC(arma::mat G_, SOCV h_, int dims_): G(G_), h(h_), dims(dims_) {}
+  // members
+  arma::mat get_G() {return G;}
+  void set_G(arma::mat G_) {G = G_;}
+  SOCV get_h() {return h;}
+  void set_h(SOCV h_) {h = h_;}
+  int get_dims() {return dims;}
+  void set_dims(int dims_) {dims = dims_;}
+
+ private:
+  arma::mat G;
+  SOCV h;
+  int dims;
 };

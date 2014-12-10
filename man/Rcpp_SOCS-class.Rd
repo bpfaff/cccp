@@ -6,7 +6,8 @@
 \title{Class \code{"Rcpp_SOCS"}}
 
 \description{
-  Class for variables that are related to second-order cone constraints.
+  Class for scalings applied to variables that are related to
+  second-order cone constraints. 
 }
 
 \section{Extends}{

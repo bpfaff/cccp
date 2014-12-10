@@ -146,4 +146,11 @@ RCPP_MODULE(PSD){
     .property("lambda", &PSDS::get_lambda, &PSDS::set_lambda, "Getter and setter for lambda")
     ;
 
+  Rcpp::class_<PSDC>( "PSDC" )
+    .constructor<arma::mat, PSDV, int>("sets the PSD-variable and its dimension")
+
+    .property("G", &PSDC::get_G, &PSDC::set_G, "Getter and setter for G")
+    .property("h", &PSDC::get_h, &PSDC::set_h, "Getter and setter for h")
+    .property("dims", &PSDC::get_dims, &PSDC::set_dims, "Getter and setter for dims")
+;
 }

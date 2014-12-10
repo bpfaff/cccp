@@ -2,6 +2,7 @@
 \alias{NNO}
 \alias{NNOV}
 \alias{NNOS}
+\alias{NNOC}
 
 \title{
 	Rcpp module: NNO
@@ -18,6 +19,7 @@
     \item{NNOV}{Class for variables with respect to nonlinear
       constraints.}
     \item{NNOS}{Class for NT-scaling and Lagrange-Multipliers.}
+    \item{NNOC}{Class for linear constraints.}
   }
 }
     

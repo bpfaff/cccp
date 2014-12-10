@@ -1,13 +1,12 @@
-\name{Rcpp_NNOS-class}
+\name{Rcpp_SOCC-class}
 \Rdversion{1.1}
 \docType{class}
-\alias{Rcpp_NNOS-class}
+\alias{Rcpp_SOCC-class}
 
-\title{Class \code{"Rcpp_NNOS"}}
+\title{Class \code{"Rcpp_SOCC"}}
 
 \description{
-  Class for scalings applied to variables that are related to linear
-  constraints. 
+  Class for second-order cone constraints. 
 }
 
 \section{Extends}{
@@ -17,9 +16,9 @@ All reference classes extend and inherit methods from \code{"\linkS4class{envRef
        
 \section{Fields}{
   \describe{
-    \item{\code{d}:}{Object of class \code{activeBindingFunction} ~~ }
-    \item{\code{di}:}{Object of class \code{activeBindingFunction} ~~ }
-    \item{\code{lambda}:}{Object of class \code{activeBindingFunction} ~~ }
+    \item{\code{G}:}{Object of class \code{activeBindingFunction} ~~ }
+    \item{\code{h}:}{Object of class \code{activeBindingFunction} ~~ }
+    \item{\code{dims}:}{Object of class \code{activeBindingFunction} ~~ }
   }
 }
 
@@ -31,6 +30,6 @@ All reference classes extend and inherit methods from \code{"\linkS4class{envRef
 }
 
 \examples{
-showClass("Rcpp_NNOS")
+showClass("Rcpp_SOCC")
 }
 \keyword{classes}

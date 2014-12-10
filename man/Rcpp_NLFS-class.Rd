@@ -6,7 +6,8 @@
 \title{Class \code{"Rcpp_NLFS"}}
 
 \description{
-  Class for variables that are related to nonlinear constraints.
+  Class for scalings applied to variables that are related to nonlinear
+  constraints. 
 }
 
 \section{Extends}{

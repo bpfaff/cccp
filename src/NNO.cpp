@@ -74,4 +74,12 @@ RCPP_MODULE(NNO){
     .property("di", &NNOS::get_di, &NNOS::set_di, "Getter and setter for di")
     .property("lambda", &NNOS::get_lambda, &NNOS::set_lambda, "Getter and setter for lambda")
 ;
+
+  Rcpp::class_<NNOC>( "NNOC" )
+    .constructor<arma::mat, NNOV, int>("sets the NNO-variable and its dimension")
+
+    .property("G", &NNOC::get_G, &NNOC::set_G, "Getter and setter for G")
+    .property("h", &NNOC::get_h, &NNOC::set_h, "Getter and setter for h")
+    .property("dims", &NNOC::get_dims, &NNOC::set_dims, "Getter and setter for dims")
+;
 }

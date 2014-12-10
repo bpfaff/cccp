@@ -5,6 +5,7 @@
 // forward declarations and helping module classes 
 RCPP_EXPOSED_CLASS(NNOV)
 RCPP_EXPOSED_CLASS(NNOS)
+RCPP_EXPOSED_CLASS(NNOC)
 
 #ifndef ARMA_H
 #define ARMA_H
@@ -62,3 +63,22 @@ class NNOS {
 };
 
 
+// Class definition for linear constraints
+class NNOC {
+ public:
+
+  // constructors
+ NNOC(arma::mat G_, NNOV h_, int dims_): G(G_), h(h_), dims(dims_) {}
+  // members
+  arma::mat get_G() {return G;}
+  void set_G(arma::mat G_) {G = G_;}
+  NNOV get_h() {return h;}
+  void set_h(NNOV h_) {h = h_;}
+  int get_dims() {return dims;}
+  void set_dims(int dims_) {dims = dims_;}
+
+ private:
+  arma::mat G;
+  NNOV h;
+  int dims;
+};

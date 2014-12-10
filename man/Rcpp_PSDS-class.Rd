@@ -6,7 +6,8 @@
 \title{Class \code{"Rcpp_PSDS"}}
 
 \description{
-  Class for variables that are related to positive semidefinite cone constraints.
+  Class for scalings applied to variables that are related to positive
+  semidefinite cone constraints. 
 }
 
 \section{Extends}{

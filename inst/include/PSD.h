@@ -5,6 +5,7 @@
 // forward declarations and helping module classes 
 RCPP_EXPOSED_CLASS(PSDV)
 RCPP_EXPOSED_CLASS(PSDS)
+RCPP_EXPOSED_CLASS(PSDC)
 
 #ifndef ARMA_H
 #define ARMA_H
@@ -61,3 +62,23 @@ class PSDS {
   PSDV lambda;
 };
 
+
+// Class definition for positive semidefinite constraints
+class PSDC {
+ public:
+
+  // constructors
+ PSDC(arma::mat G_, PSDV h_, int dims_): G(G_), h(h_), dims(dims_) {}
+  // members
+  arma::mat get_G() {return G;}
+  void set_G(arma::mat G_) {G = G_;}
+  PSDV get_h() {return h;}
+  void set_h(PSDV h_) {h = h_;}
+  int get_dims() {return dims;}
+  void set_dims(int dims_) {dims = dims_;}
+
+ private:
+  arma::mat G;
+  PSDV h;
+  int dims;
+};
