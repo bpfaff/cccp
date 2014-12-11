@@ -1,2 +1,0 @@
-##
-## Value of variable 's'
