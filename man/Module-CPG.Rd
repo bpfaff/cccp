@@ -2,6 +2,7 @@
 \alias{CPG}
 \alias{PDV}
 \alias{DQP}
+\alias{CPS}
 
 \title{
 	Rcpp module: CPG
@@ -15,7 +16,8 @@
   The module contains the following items:
   classes: \describe{
     \item{PDV}{Class for primal/dual variables.}
-    \item{PDV}{Class for definition of quadratic programs.}
+    \item{DQP}{Class for definition of quadratic programs.}
+    \item{CPS}{Class for solution of convex programs.}
   }
 }
     

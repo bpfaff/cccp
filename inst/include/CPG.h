@@ -74,3 +74,42 @@ class DQP {
    arma::vec b;
    Rcpp::List cList;
 };
+
+/*
+ * Class for solution of convex programs
+*/
+class CPS {
+ public:
+
+  // constructors
+ CPS() : pdv(PDV()), state(Rcpp::NumericVector::create()), status("unknown"), niter(0) 
+    {
+      state["pobj"] = NA_REAL;
+      state["dobj"] = NA_REAL;
+      state["dgap"] = NA_REAL;
+      state["rdgap"] = NA_REAL;
+      state["certp"] = NA_REAL;
+      state["certd"] = NA_REAL;
+      state["pslack"] = NA_REAL;
+      state["dslack"] = NA_REAL;
+      status = "unknown";
+    }
+ CPS(PDV pdv_, Rcpp::NumericVector state_, Rcpp::String status_, int niter_):	\
+  pdv(pdv_), state(state_), status(status_), niter(niter_) {}
+  // members
+  PDV get_pdv() {return pdv;}
+  void set_pdv(PDV pdv_) {pdv = pdv_;}
+  Rcpp::NumericVector get_state() {return state;}
+  void set_state(Rcpp::NumericVector state_) {state = state_;}
+  Rcpp::String get_status() {return status;}
+  void set_status(Rcpp::String status_) {status = status_;}
+  int get_niter() {return niter;}
+  void set_niter(int niter_) {niter = niter_;}
+
+ private:
+  PDV pdv;
+  Rcpp::NumericVector state;
+  Rcpp::String status;
+  int niter;
+};
+
