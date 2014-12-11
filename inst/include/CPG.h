@@ -5,11 +5,14 @@
 // forward declarations and helping module classes 
 RCPP_EXPOSED_CLASS(PDV)
 RCPP_EXPOSED_CLASS(DQP)
+RCPP_EXPOSED_CLASS(CPS)
 
 #ifndef ARMA_H
 #define ARMA_H
 #include <RcppArmadillo.h>
 #endif
+
+#include "CTL.h"
 
 /*
  * Class definition for primal/dual variables
@@ -54,25 +57,29 @@ class DQP {
   // constructors
  DQP() : P(arma::mat()), q(arma::vec()), A(arma::mat()), b(arma::vec()), cList(Rcpp::List::create()) {}
  DQP(arma::mat P_, arma::vec q_, arma::mat A_, arma::vec b_, Rcpp::List cList_):  \
-   P(P_), q(q_), A(A_), b(b_), cList(cList_) {}
-   // members
-   arma::mat get_P() {return P;}
-   void set_P(arma::mat P_) {P = P_;}
-   arma::vec get_q() {return q;}
-   void set_q(arma::vec q_) {q = q_;}
-   arma::mat get_A() {return A;}
-   void set_A(arma::mat A_) {A = A_;}
-   arma::vec get_b() {return b;}
-   void set_b(arma::vec b_) {b = b_;}
-   Rcpp::List get_cList() {return cList;}
-   void set_cList(Rcpp::List cList_) {cList = cList_;}
+  P(P_), q(q_), A(A_), b(b_), cList(cList_) {}
+  // members
+  arma::mat get_P() {return P;}
+  void set_P(arma::mat P_) {P = P_;}
+  arma::vec get_q() {return q;}
+  void set_q(arma::vec q_) {q = q_;}
+  arma::mat get_A() {return A;}
+  void set_A(arma::mat A_) {A = A_;}
+  arma::vec get_b() {return b;}
+  void set_b(arma::vec b_) {b = b_;}
+  Rcpp::List get_cList() {return cList;}
+  void set_cList(Rcpp::List cList_) {cList = cList_;}
+
+  double pobj(PDV& pdv);
+  CPS* cps(const CTRL& ctrl);
+
 
  private:
-   arma::mat P;
-   arma::vec q;
-   arma::mat A;
-   arma::vec b;
-   Rcpp::List cList;
+  arma::mat P;
+  arma::vec q;
+  arma::mat A;
+  arma::vec b;
+  Rcpp::List cList;
 };
 
 /*

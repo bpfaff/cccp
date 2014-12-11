@@ -1,5 +1,31 @@
 #include "CPG.h"
 
+double DQP::pobj(PDV& pdv){
+  double ans;
+  arma::mat term1;
+
+  term1 = (0.5 * pdv.get_x().t() * P * pdv.get_x());
+  ans = term1(0,0) + arma::dot(pdv.get_x(), q);
+
+  return ans;
+}
+
+CPS* DQP::cps(const CTRL& ctrl){
+  // Initialising object
+  PDV pdv;
+  CPS *cps = new CPS();
+  Rcpp::NumericVector state = cps->get_state();
+  // Case 1: Unconstrained QP
+  if((cList.size() == 0) && (A.n_rows == 0)){
+    pdv.set_x(solve(P, -q));
+    cps->set_pdv(pdv);
+    state["pobj"] = pobj(pdv);
+    cps->set_state(state);
+    cps->set_status("optimal");
+  }
+  return cps;
+}
+
 /*
  * Module for control options of optimization routines
 */
@@ -25,6 +51,9 @@ RCPP_MODULE(CPG){
     .property("A", &DQP::get_A, &DQP::set_A, "Getter and setter for A")
     .property("b", &DQP::get_b, &DQP::set_b, "Getter and setter for b")
     .property("cList", &DQP::get_cList, &DQP::set_cList, "Getter and setter for cList")
+
+    .method("cps", &DQP::cps)
+    .method("pobj", &DQP::pobj)
     ;
 
   Rcpp::class_<CPS>( "CPS" )
