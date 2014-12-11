@@ -30,6 +30,16 @@ CPS* DQP::cps(const CTRL& ctrl){
  * Module for control options of optimization routines
 */
 RCPP_MODULE(CPG){
+  Rcpp::class_<CTRL>( "CTRL" )
+    .constructor<int, double, double, double, bool>("sets the CTRL-options")
+
+    .property("maxiters", &CTRL::get_maxiters, &CTRL::set_maxiters, "Getter and setter for maxiters")
+    .property("abstol", &CTRL::get_abstol, &CTRL::set_abstol, "Getter and setter for abstol")
+    .property("reltol", &CTRL::get_reltol, &CTRL::set_reltol, "Getter and setter for reltol")
+    .property("feastol", &CTRL::get_feastol, &CTRL::set_feastol, "Getter and setter for feastol")
+    .property("trace", &CTRL::get_trace, &CTRL::set_trace, "Getter and setter for trace")
+    ;
+
   Rcpp::class_<PDV>( "PDV" )
     .constructor("Default constructor")
     .constructor<arma::vec, arma::vec, Rcpp::List, Rcpp::List, double, double>("sets the PDV-values")

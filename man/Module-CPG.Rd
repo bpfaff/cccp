@@ -1,4 +1,5 @@
 \name{CPG}
+\alias{CTRL}
 \alias{CPG}
 \alias{PDV}
 \alias{DQP}
@@ -15,6 +16,7 @@
 \details{
   The module contains the following items:
   classes: \describe{
+    \item{CTRL}{Class for control parameters used in optimizations.}
     \item{PDV}{Class for primal/dual variables.}
     \item{DQP}{Class for definition of quadratic programs.}
     \item{CPS}{Class for solution of convex programs.}
