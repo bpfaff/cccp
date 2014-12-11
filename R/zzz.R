@@ -99,4 +99,36 @@ setMethod("show", signature = "Rcpp_CPS", function(object){
     cat("Solutions are contained in 'pdv'.\n")
     cat("Use 'getx()', 'gety()', 'gets()' and 'getz()', respectively.\n")
 })
+## gets-methods
+setMethod("gets", signature = "Rcpp_PDV", function(object){
+    lapply(object$s, function(s) s$u)
+})
+setMethod("gets", signature = "Rcpp_CPS", function(object){
+    pdv <- object$pdv
+    gets(pdv)
+})
+## getz-methods
+setMethod("getz", signature = "Rcpp_PDV", function(object){
+    lapply(object$z, function(s) z$u)
+})
+setMethod("getz", signature = "Rcpp_CPS", function(object){
+    pdv <- object$pdv
+    getz(pdv)
+})
+## getx-methods
+setMethod("getx", signature = "Rcpp_PDV", function(object){
+    object$x
+})
+setMethod("getx", signature = "Rcpp_CPS", function(object){
+    pdv <- object$pdv
+    getx(pdv)
+})
+## gety-methods
+setMethod("gety", signature = "Rcpp_PDV", function(object){
+    object$y
+})
+setMethod("gety", signature = "Rcpp_CPS", function(object){
+    pdv <- object$pdv
+    gety(pdv)
+})
 })
