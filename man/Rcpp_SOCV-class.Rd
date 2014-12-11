@@ -2,7 +2,6 @@
 \Rdversion{1.1}
 \docType{class}
 \alias{Rcpp_SOCV-class}
-\alias{show}
 
 \title{Class \code{"Rcpp_SOCV"}}
 
