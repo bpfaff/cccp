@@ -17,12 +17,15 @@ RCPP_EXPOSED_CLASS(SOCC)
 */
 // Class definition for vectors/variables
 class SOCV {
-public:
+ public:
 
   // constructors
-  SOCV() : u(arma::mat()), dims(0L) {}
-  SOCV(int dims_) : u(arma::mat().ones(dims_, 1)), dims(dims_) {}
-  SOCV(arma::mat u_, int dims_): u(u_), dims(dims_) {}
+ SOCV() : u(arma::mat()), dims(0L) {}
+ SOCV(int dims_) : u(arma::mat().zeros(dims_, 1)), dims(dims_)
+  {
+    u.at(0, 0) = 1.0;
+  }
+ SOCV(arma::mat u_, int dims_): u(u_), dims(dims_) {}
   // members
   arma::mat get_u() {return u;}
   void set_u(arma::mat u_) {u = u_;}
