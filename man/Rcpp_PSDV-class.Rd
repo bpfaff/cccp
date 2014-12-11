@@ -2,6 +2,7 @@
 \Rdversion{1.1}
 \docType{class}
 \alias{Rcpp_PSDV-class}
+\alias{show}
 
 \title{Class \code{"Rcpp_PSDV"}}
 

@@ -2,6 +2,7 @@
 \Rdversion{1.1}
 \docType{class}
 \alias{Rcpp_NLFV-class}
+\alias{show}
 
 \title{Class \code{"Rcpp_NLFV"}}
 
