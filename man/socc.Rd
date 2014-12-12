@@ -32,11 +32,7 @@ socc(F, g, d, f)
 }
 
 \value{
-  Pointer
-}
-
-\seealso{
-  \code{\linkS4class{Rcpp_SOCC}}
+  List with elements: \code{conType}, \code{G} and \code{h}.
 }
 
 \keyword{classes}

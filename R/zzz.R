@@ -53,13 +53,13 @@ setMethod("show", signature = "Rcpp_DQP", function(object){
     cat("\n")
     cat(paste("Count of variables in objective:", ncol(object$P), "\n"))
     cat(paste("Count of equality constraints:", nrow(object$A), "\n"))
-    countcc <- length(object$cList)
+    countcc <- object$cList$K
     cat(paste("Count of cone constraints:", countcc, "\n"))
-    cc <- unlist(lapply(object$cList, function(x) class(x)))
+    cc <- object$cList$conTypes
     cat("These consist of:\n")
-    cat(paste("Constraints w.r.t. the nonnegative orthant:", max(0, sum(cc %in% "Rcpp_NNOC")), "\n"))
-    cat(paste("Constraints w.r.t. the second-order cone:", max(0, sum(cc %in% "Rcpp_SOCC")), "\n"))
-    cat(paste("Constraints w.r.t. the semidefinite cone:", max(0, sum(cc %in% "Rcpp_PSDC")), "\n"))
+    cat(paste("Constraints w.r.t. the nonnegative orthant:", max(0, sum(cc %in% "NNOC")), "\n"))
+    cat(paste("Constraints w.r.t. the second-order cone:", max(0, sum(cc %in% "SOCC")), "\n"))
+    cat(paste("Constraints w.r.t. the semidefinite cone:", max(0, sum(cc %in% "PSDC")), "\n"))
     cat("\n")
 })
 setMethod("show", signature = "Rcpp_CPS", function(object){

@@ -12,10 +12,16 @@ dqp <- function(P, q, A = NULL, b = NULL, cList = list()){
         b <- numeric()
     } 
     if(length(cList) > 0){
-        coneclasses <- unlist(lapply(cList, class))
-        if(!all(coneclasses %in% c("Rcpp_NNOC", "Rcpp_SOCC", "Rcpp_PSDC"))){
-            stop("List elements of cone constraints must be of either class:\n'Rcpp_NNOC', or 'Rcpp_SOCC', or 'Rcpp_PSDC'.\n")
+        conTypes <- unlist(lapply(cList, function(x) x[["conType"]]))
+        if(!all(conTypes %in% c("NNOC", "SOCC", "PSDC"))){
+            stop("List elements of cone constraints must be either created by calls to:\n'nnoc()', or 'socc()', or 'psdc()'.\n")
         }
+        K <- length(cList)
+        Gmats <- lapply(cList, function(x) x[["G"]])
+        hvecs <- lapply(cList, function(x) x[["h"]])
+        cList <- new(CONEC, conTypes, Gmats, hvecs, K)
+    } else {
+        cList <- new(CONEC)
     }
    ans <- new(DQP,
               P = P,

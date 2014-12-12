@@ -29,11 +29,7 @@ psdc(Flist, F0)
 }
 
 \value{
-  Pointer
-}
-
-\seealso{
-  \code{\linkS4class{Rcpp_PSDC}}
+  List with elements: \code{conType}, \code{G} and \code{h}.
 }
 
 \keyword{classes}

@@ -25,11 +25,7 @@ nlfc(G, h)
 }
 
 \value{
-  Pointer
-}
-
-\seealso{
-  \code{\linkS4class{Rcpp_NLFC}}
+  List with elements: \code{conType}, \code{G} and \code{h}.
 }
 
 \keyword{classes}
