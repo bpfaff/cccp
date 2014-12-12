@@ -34,7 +34,7 @@ CPS* DQP::cps(const CTRL& ctrl){
   CPS* cps = new CPS();
   Rcpp::NumericVector state = cps->get_state();
   // Case 1: Unconstrained QP
-  if((cList.size() == 0) && (A.n_rows == 0)){
+  if((cList.get_K() == 0) && (A.n_rows == 0)){
     pdv.set_x(solve(P, -q));
     cps->set_pdv(pdv);
     state["pobj"] = pobj(pdv);
@@ -83,7 +83,7 @@ RCPP_MODULE(CPG){
 
   Rcpp::class_<DQP>( "DQP" )
     .constructor("Default constructor")
-    .constructor<arma::mat, arma::vec, arma::mat, arma::vec, Rcpp::List>("sets the DQP-values")
+    .constructor<arma::mat, arma::vec, arma::mat, arma::vec, CONEC>("sets the DQP-values")
 
     .property("P", &DQP::get_P, &DQP::set_P, "Getter and setter for P")
     .property("q", &DQP::get_q, &DQP::set_q, "Getter and setter for q")
@@ -93,7 +93,7 @@ RCPP_MODULE(CPG){
 
     .method("cps", &DQP::cps)
     .method("pobj", &DQP::pobj)
-    .method("dobj", &DQP::pobj)
+    .method("dobj", &DQP::dobj)
     ;
 
   Rcpp::class_<CPS>( "CPS" )

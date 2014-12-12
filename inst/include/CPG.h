@@ -4,6 +4,7 @@
 #endif
 // forward declarations and helping module classes 
 RCPP_EXPOSED_CLASS(CTRL)
+RCPP_EXPOSED_CLASS(CONEC)
 RCPP_EXPOSED_CLASS(PDV)
 RCPP_EXPOSED_CLASS(DQP)
 RCPP_EXPOSED_CLASS(CPS)
@@ -110,8 +111,8 @@ class DQP {
  public:
 
   // constructors
- DQP() : P(arma::mat()), q(arma::vec()), A(arma::mat()), b(arma::vec()), cList(Rcpp::List::create()) {}
- DQP(arma::mat P_, arma::vec q_, arma::mat A_, arma::vec b_, Rcpp::List cList_):  \
+ DQP() : P(arma::mat()), q(arma::vec()), A(arma::mat()), b(arma::vec()), cList(CONEC()) {}
+  DQP(arma::mat P_, arma::vec q_, arma::mat A_, arma::vec b_, CONEC cList_): \
   P(P_), q(q_), A(A_), b(b_), cList(cList_) {}
   // members
   arma::mat get_P() {return P;}
@@ -122,8 +123,8 @@ class DQP {
   void set_A(arma::mat A_) {A = A_;}
   arma::vec get_b() {return b;}
   void set_b(arma::vec b_) {b = b_;}
-  Rcpp::List get_cList() {return cList;}
-  void set_cList(Rcpp::List cList_) {cList = cList_;}
+  CONEC get_cList() {return cList;}
+  void set_cList(CONEC cList_) {cList = cList_;}
 
   double pobj(PDV& pdv);
   double dobj(PDV& pdv);
@@ -135,7 +136,7 @@ class DQP {
   arma::vec q;
   arma::mat A;
   arma::vec b;
-  Rcpp::List cList;
+  CONEC cList;
 };
 
 /*
