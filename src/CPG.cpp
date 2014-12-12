@@ -15,8 +15,14 @@ double DQP::pobj(PDV& pdv){
 double DQP::dobj(PDV& pdv){
   double ans;
   arma::mat term1;
+  term1(0,0) = 0.0;
 
+  // dobj term for equality constraints
   term1 = pdv.get_y().t() * (A * pdv.get_x() - b);
+
+  // dobj term for inequality constraints
+  // needs to be included
+
   ans = pobj(pdv) + term1(0,0);
 
   return ans;
@@ -54,7 +60,7 @@ RCPP_MODULE(CPG){
 
   Rcpp::class_<PDV>( "PDV" )
     .constructor("Default constructor")
-    .constructor<arma::vec, arma::vec, Rcpp::List, Rcpp::List, double, double>("sets the PDV-values")
+    .constructor<arma::vec, arma::vec, std::vector<arma::mat>, std::vector<arma::mat>, double, double>("sets the PDV-values")
 
     .property("x", &PDV::get_x, &PDV::set_x, "Getter and setter for x")
     .property("y", &PDV::get_y, &PDV::set_y, "Getter and setter for y")

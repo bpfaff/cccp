@@ -49,18 +49,18 @@ class PDV {
  public:
 
   // constructors
- PDV() : x(arma::vec()), y(arma::vec()), s(Rcpp::List::create()), z(Rcpp::List::create()), kappa(1.0), tau(1.0) {}
- PDV(arma::vec x_, arma::vec y_, Rcpp::List s_, Rcpp::List z_, double kappa_, double tau_):  \
+PDV() : x(arma::vec()), y(arma::vec()), s(std::vector<arma::mat>()), z(std::vector<arma::mat>()), kappa(1.0), tau(1.0) {}
+ PDV(arma::vec x_, arma::vec y_, std::vector<arma::mat> s_, std::vector<arma::mat> z_, double kappa_, double tau_):  \
    x(x_), y(y_), s(s_), z(z_), kappa(kappa_), tau(tau_) {}
    // members
    arma::vec get_x() {return x;}
    void set_x(arma::vec x_) {x = x_;}
    arma::vec get_y() {return y;}
    void set_y(arma::vec y_) {y = y_;}
-   Rcpp::List get_s() {return s;}
-   void set_s(Rcpp::List s_) {s = s_;}
-   Rcpp::List get_z() {return z;}
-   void set_z(Rcpp::List z_) {z = z_;}
+   std::vector<arma::mat> get_s() {return s;}
+   void set_s(std::vector<arma::mat> s_) {s = s_;}
+   std::vector<arma::mat> get_z() {return z;}
+   void set_z(std::vector<arma::mat> z_) {z = z_;}
    double get_kappa() {return kappa;}
    void set_kappa(double kappa_) {kappa = kappa_;}
    double get_tau() {return tau;}
@@ -69,8 +69,8 @@ class PDV {
  private:
    arma::vec x;
    arma::vec y;
-   Rcpp::List s;
-   Rcpp::List z;
+   std::vector<arma::mat> s;
+   std::vector<arma::mat> z;
    double kappa;
    double tau;
 };
