@@ -1,5 +1,7 @@
 #include "CPG.h"
 
+
+// primal objective for QPs
 double DQP::pobj(PDV& pdv){
   double ans;
   arma::mat term1;
@@ -9,11 +11,21 @@ double DQP::pobj(PDV& pdv){
 
   return ans;
 }
+// dual objective for QPs
+double DQP::dobj(PDV& pdv){
+  double ans;
+  arma::mat term1;
+
+  term1 = pdv.get_y().t() * (A * pdv.get_x() - b);
+  ans = pobj(pdv) + term1(0,0);
+
+  return ans;
+}
 
 CPS* DQP::cps(const CTRL& ctrl){
   // Initialising object
   PDV pdv;
-  CPS *cps = new CPS();
+  CPS* cps = new CPS();
   Rcpp::NumericVector state = cps->get_state();
   // Case 1: Unconstrained QP
   if((cList.size() == 0) && (A.n_rows == 0)){
@@ -64,6 +76,7 @@ RCPP_MODULE(CPG){
 
     .method("cps", &DQP::cps)
     .method("pobj", &DQP::pobj)
+    .method("dobj", &DQP::pobj)
     ;
 
   Rcpp::class_<CPS>( "CPS" )

@@ -99,6 +99,7 @@ class DQP {
   void set_cList(Rcpp::List cList_) {cList = cList_;}
 
   double pobj(PDV& pdv);
+  double dobj(PDV& pdv);
   CPS* cps(const CTRL& ctrl);
 
 

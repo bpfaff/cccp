@@ -29,6 +29,7 @@ All reference classes extend and inherit methods from \code{"\linkS4class{envRef
     \item{\code{initialize(...)}:}{ ~~ }
     \item{\code{finalize()}:}{ ~~ }
     \item{\code{pobj()}:}{ ~~ }
+    \item{\code{dobj()}:}{ ~~ }
     \item{\code{cps()}:}{ ~~ }
   }
 }
