@@ -75,6 +75,33 @@ PDV() : x(arma::vec()), y(arma::vec()), s(std::vector<arma::mat>()), z(std::vect
    double tau;
 };
 
+/*
+ * Class definition for inequality (cone) constraints
+*/
+class CONEC {
+ public:
+ CONEC() : conTypes(std::vector<std::string>()), Gmats(std::vector<arma::mat>()), hvecs(std::vector<arma::vec>()), K(0) {}
+ CONEC(Rcpp::CharacterVector conTypes_, Rcpp::List Gmats_, Rcpp::List hvecs_, int K_): conTypes(), Gmats(), hvecs(), K(K_){
+    conTypes = Rcpp::as< std::vector<std::string> >(conTypes_);
+    Gmats = Rcpp::as< std::vector<arma::mat> >(Gmats_);
+    hvecs = Rcpp::as< std::vector<arma::vec> >(hvecs_);
+}
+  // members
+  std::vector<std::string> get_conTypes() {return conTypes;}
+  void set_conTypes(std::vector<std::string> conTypes_) {conTypes = conTypes_;}
+  std::vector<arma::mat> get_Gmats() {return Gmats;}
+  void set_Gmats(std::vector<arma::mat> Gmats_) {Gmats = Gmats_;}
+  std::vector<arma::vec> get_hvecs() {return hvecs;}
+  void set_hvecs(std::vector<arma::vec> hvecs_) {hvecs = hvecs_;}
+  int get_K() {return K;}
+  void set_K(int K_) {K = K_;}
+
+ private:
+  std::vector<std::string> conTypes;
+  std::vector<arma::mat> Gmats;
+  std::vector<arma::vec> hvecs;
+  int K;
+};
 
 /*
  * Class for definition of Quadratic program

@@ -70,6 +70,17 @@ RCPP_MODULE(CPG){
     .property("tau", &PDV::get_tau, &PDV::set_tau, "Getter and setter for tau")
     ;
 
+
+  Rcpp::class_<CONEC>( "CONEC" )
+    .constructor("Default constructor")
+    .constructor<Rcpp::CharacterVector, Rcpp::List, Rcpp::List, int>("sets the PDV-values")
+
+    .property("conTypes", &CONEC::get_conTypes, &CONEC::set_conTypes, "Getter and setter for conTypes")
+    .property("Gmats", &CONEC::get_Gmats, &CONEC::set_Gmats, "Getter and setter for Gmats")
+    .property("hvecs", &CONEC::get_hvecs, &CONEC::set_hvecs, "Getter and setter for hvecs")
+    .property("K", &CONEC::get_K, &CONEC::set_K, "Getter and setter for hvecs")
+    ;
+
   Rcpp::class_<DQP>( "DQP" )
     .constructor("Default constructor")
     .constructor<arma::mat, arma::vec, arma::mat, arma::vec, Rcpp::List>("sets the DQP-values")
