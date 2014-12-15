@@ -50,30 +50,32 @@ class PDV {
  public:
 
   // constructors
-PDV() : x(arma::vec()), y(arma::vec()), s(std::vector<arma::mat>()), z(std::vector<arma::mat>()), kappa(1.0), tau(1.0) {}
- PDV(arma::vec x_, arma::vec y_, std::vector<arma::mat> s_, std::vector<arma::mat> z_, double kappa_, double tau_):  \
-   x(x_), y(y_), s(s_), z(z_), kappa(kappa_), tau(tau_) {}
-   // members
-   arma::vec get_x() {return x;}
-   void set_x(arma::vec x_) {x = x_;}
-   arma::vec get_y() {return y;}
-   void set_y(arma::vec y_) {y = y_;}
-   std::vector<arma::mat> get_s() {return s;}
-   void set_s(std::vector<arma::mat> s_) {s = s_;}
-   std::vector<arma::mat> get_z() {return z;}
-   void set_z(std::vector<arma::mat> z_) {z = z_;}
-   double get_kappa() {return kappa;}
-   void set_kappa(double kappa_) {kappa = kappa_;}
-   double get_tau() {return tau;}
-   void set_tau(double tau_) {tau = tau_;}
+ PDV() : x(arma::vec()), y(arma::vec()), s(std::vector<arma::mat>()), z(std::vector<arma::mat>()), \
+    kappa(1.0), tau(1.0) {}
+ PDV(arma::vec x_, arma::vec y_, std::vector<arma::mat> s_, std::vector<arma::mat> z_, \
+     double kappa_, double tau_):  \
+  x(x_), y(y_), s(s_), z(z_), kappa(kappa_), tau(tau_) {}
+  // members
+  arma::vec get_x() {return x;}
+  void set_x(arma::vec x_) {x = x_;}
+  arma::vec get_y() {return y;}
+  void set_y(arma::vec y_) {y = y_;}
+  std::vector<arma::mat> get_s() {return s;}
+  void set_s(std::vector<arma::mat> s_) {s = s_;}
+  std::vector<arma::mat> get_z() {return z;}
+  void set_z(std::vector<arma::mat> z_) {z = z_;}
+  double get_kappa() {return kappa;}
+  void set_kappa(double kappa_) {kappa = kappa_;}
+  double get_tau() {return tau;}
+  void set_tau(double tau_) {tau = tau_;}
 
  private:
-   arma::vec x;
-   arma::vec y;
-   std::vector<arma::mat> s;
-   std::vector<arma::mat> z;
-   double kappa;
-   double tau;
+  arma::vec x;
+  arma::vec y;
+  std::vector<arma::mat> s;
+  std::vector<arma::mat> z;
+  double kappa;
+  double tau;
 };
 
 /*
@@ -81,12 +83,14 @@ PDV() : x(arma::vec()), y(arma::vec()), s(std::vector<arma::mat>()), z(std::vect
 */
 class CONEC {
  public:
- CONEC() : conTypes(std::vector<std::string>()), Gmats(std::vector<arma::mat>()), hvecs(std::vector<arma::vec>()), K(0) {}
- CONEC(Rcpp::CharacterVector conTypes_, Rcpp::List Gmats_, Rcpp::List hvecs_, int K_): conTypes(), Gmats(), hvecs(), K(K_){
+ CONEC() : conTypes(std::vector<std::string>()), Gmats(std::vector<arma::mat>()), \
+    hvecs(std::vector<arma::vec>()), K(0) {}
+ CONEC(Rcpp::CharacterVector conTypes_, Rcpp::List Gmats_, Rcpp::List hvecs_, int K_): \
+  conTypes(), Gmats(), hvecs(), K(K_){
     conTypes = Rcpp::as< std::vector<std::string> >(conTypes_);
     Gmats = Rcpp::as< std::vector<arma::mat> >(Gmats_);
     hvecs = Rcpp::as< std::vector<arma::vec> >(hvecs_);
-}
+  }
   // members
   std::vector<std::string> get_conTypes() {return conTypes;}
   void set_conTypes(std::vector<std::string> conTypes_) {conTypes = conTypes_;}

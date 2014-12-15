@@ -1,7 +1,15 @@
 #include "CPG.h"
 
+/*
+ *
+ * Methods for Quadratic Programs
+ *
+*/
 
-// primal objective for QPs
+
+/*
+Primal objective
+*/
 double DQP::pobj(PDV& pdv){
   double ans;
   arma::mat term1;
@@ -11,23 +19,33 @@ double DQP::pobj(PDV& pdv){
 
   return ans;
 }
-// dual objective for QPs
+/*
+Dual objective
+*/
 double DQP::dobj(PDV& pdv){
   double ans;
-  arma::mat term1;
+  arma::mat term1, term2;
   term1(0,0) = 0.0;
+  term2(0,0) = 0.0;
 
   // dobj term for equality constraints
   term1 = pdv.get_y().t() * (A * pdv.get_x() - b);
 
   // dobj term for inequality constraints
-  // needs to be included
+  if(cList.get_K() > 0){
+    for(int i = 0; i < cList.get_K(); i++){
+      term2 = term2 + pdv.get_z()[i].t() *			\
+	(cList.get_Gmats()[i] * pdv.get_x() - cList.get_hvecs()[i]);
+    } 
+  }
 
-  ans = pobj(pdv) + term1(0,0);
+  ans = pobj(pdv) + term1(0,0) + term2(0,0);
 
   return ans;
 }
-
+/*
+  Main routine for solving a Quadratic Program
+*/
 CPS* DQP::cps(const CTRL& ctrl){
   // Initialising object
   PDV pdv;
