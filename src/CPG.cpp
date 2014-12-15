@@ -91,11 +91,12 @@ RCPP_MODULE(CPG){
 
   Rcpp::class_<CONEC>( "CONEC" )
     .constructor("Default constructor")
-    .constructor<Rcpp::CharacterVector, Rcpp::List, Rcpp::List, int>("sets the PDV-values")
+    .constructor<Rcpp::CharacterVector, Rcpp::List, Rcpp::List, Rcpp::IntegerVector, int>("sets the inequality constraints")
 
     .property("conTypes", &CONEC::get_conTypes, &CONEC::set_conTypes, "Getter and setter for conTypes")
     .property("Gmats", &CONEC::get_Gmats, &CONEC::set_Gmats, "Getter and setter for Gmats")
     .property("hvecs", &CONEC::get_hvecs, &CONEC::set_hvecs, "Getter and setter for hvecs")
+    .property("dims", &CONEC::get_dims, &CONEC::set_dims, "Getter and setter for dims")
     .property("K", &CONEC::get_K, &CONEC::set_K, "Getter and setter for hvecs")
     ;
 

@@ -84,12 +84,13 @@ class PDV {
 class CONEC {
  public:
  CONEC() : conTypes(std::vector<std::string>()), Gmats(std::vector<arma::mat>()), \
-    hvecs(std::vector<arma::vec>()), K(0) {}
- CONEC(Rcpp::CharacterVector conTypes_, Rcpp::List Gmats_, Rcpp::List hvecs_, int K_): \
+    hvecs(std::vector<arma::vec>()), dims(arma::uvec()), K(0) {}
+ CONEC(Rcpp::CharacterVector conTypes_, Rcpp::List Gmats_, Rcpp::List hvecs_, Rcpp::IntegerVector dims_, int K_): \
   conTypes(), Gmats(), hvecs(), K(K_){
     conTypes = Rcpp::as< std::vector<std::string> >(conTypes_);
     Gmats = Rcpp::as< std::vector<arma::mat> >(Gmats_);
     hvecs = Rcpp::as< std::vector<arma::vec> >(hvecs_);
+    dims = Rcpp::as<arma::uvec>(dims_);
   }
   // members
   std::vector<std::string> get_conTypes() {return conTypes;}
@@ -98,6 +99,8 @@ class CONEC {
   void set_Gmats(std::vector<arma::mat> Gmats_) {Gmats = Gmats_;}
   std::vector<arma::vec> get_hvecs() {return hvecs;}
   void set_hvecs(std::vector<arma::vec> hvecs_) {hvecs = hvecs_;}
+  arma::uvec get_dims() {return dims;}
+  void set_dims(arma::uvec dims_) {dims = dims_;}
   int get_K() {return K;}
   void set_K(int K_) {K = K_;}
 
@@ -105,6 +108,7 @@ class CONEC {
   std::vector<std::string> conTypes;
   std::vector<arma::mat> Gmats;
   std::vector<arma::vec> hvecs;
+  arma::uvec dims;
   int K;
 };
 
