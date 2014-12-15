@@ -19,6 +19,7 @@ double DQP::pobj(PDV& pdv){
 
   return ans;
 }
+
 /*
 Dual objective
 */
@@ -30,7 +31,6 @@ double DQP::dobj(PDV& pdv){
 
   // dobj term for equality constraints
   term1 = pdv.get_y().t() * (A * pdv.get_x() - b);
-
   // dobj term for inequality constraints
   if(cList.get_K() > 0){
     for(int i = 0; i < cList.get_K(); i++){
@@ -38,8 +38,105 @@ double DQP::dobj(PDV& pdv){
 	(cList.get_Gmats()[i] * pdv.get_x() - cList.get_hvecs()[i]);
     } 
   }
-
   ans = pobj(pdv) + term1(0,0) + term2(0,0);
+
+  return ans;
+}
+
+/*
+Primal Residuals
+*/
+arma::mat DQP::rprim(PDV& pdv){
+  int p = A.n_rows;
+  arma::mat ans(p,1);
+  ans.zeros();
+
+  ans = b - A * pdv.get_x();
+
+  return ans;
+}
+
+/*
+Centrality Resdiuals
+*/
+std::vector<arma::mat> DQP::rcent(PDV& pdv){
+  std::vector<arma::mat> ans;
+
+  for(int i = 0; i < cList.get_K(); i++){
+    ans[i] = pdv.get_s()[i] + cList.get_Gmats()[i] * pdv.get_x() - cList.get_hvecs()[i];
+  }
+
+  return ans;
+}
+
+/*
+Dual Residuals
+*/
+arma::mat DQP::rdual(PDV& pdv){
+  int n = P.n_rows;
+  arma::mat Gz(n,1);
+  arma::mat Ay(n,1);
+  arma::mat ans(n,1);
+  Gz.zeros();
+  Ay.zeros();
+  ans.zeros();
+
+  if(cList.get_K() > 0){
+    for(int i = 0; i < cList.get_K(); i++){
+      Gz = Gz + cList.get_Gmats()[i].t() * pdv.get_z()[i];
+    } 
+  }
+  if(A.n_rows > 0){
+    Ay = A.t() * pdv.get_y();
+  }
+  ans = P * pdv.get_x() + q + Gz + Ay;
+
+  return ans;
+}
+/*
+Certificate of primal infeasibilty
+*/
+double DQP::certp(PDV& pdv){
+  double nomin, denom, ans1 = 0.0, ans2 = 0.0, ans = 0.0;
+
+  nomin = arma::norm(rprim(pdv));
+  denom = std::max(1.0, arma::norm(b));
+  ans1 = nomin / denom;
+
+  if(cList.get_K() > 0){
+    std::vector<arma::mat> rz;
+    rz = rcent(pdv);
+    nomin = 0.0;
+    denom = std::max(1.0, arma::norm(q));
+    for(int i = 0; i < cList.get_K(); i++){
+      nomin += arma::norm(rz[i]);
+    } 
+    ans2 = nomin / denom;
+  }
+  ans = std::max(ans1, ans2);
+
+  return ans;
+}
+
+/*
+Certificate of dual infeasibilty
+*/
+double DQP::certd(PDV& pdv){
+  double nomin, denom, ans;
+
+  int n = P.n_rows;
+  arma::mat Gz(n,1);
+  Gz.zeros();
+
+  if(cList.get_K() > 0){
+    for(int i = 0; i < cList.get_K(); i++){
+      Gz = Gz + cList.get_Gmats()[i].t() * pdv.get_z()[i];
+    } 
+  }
+
+  nomin = arma::norm(P * pdv.get_x() + Gz + A.t() * pdv.get_y() + q);
+  denom = std::max(1.0, arma::norm(q));
+  ans = nomin / denom;
 
   return ans;
 }

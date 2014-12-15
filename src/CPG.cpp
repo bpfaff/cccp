@@ -51,6 +51,11 @@ RCPP_MODULE(CPG){
     .method("cps", &DQP::cps)
     .method("pobj", &DQP::pobj)
     .method("dobj", &DQP::dobj)
+    .method("certp", &DQP::certp)
+    .method("certd", &DQP::certp)
+    .method("rprim", &DQP::rprim)
+    .method("rcent", &DQP::rcent)
+    .method("rdual", &DQP::rdual)
     ;
 
   Rcpp::class_<CPS>( "CPS" )

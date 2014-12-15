@@ -136,6 +136,11 @@ class DQP {
 
   double pobj(PDV& pdv);
   double dobj(PDV& pdv);
+  double certp(PDV& pdv);
+  double certd(PDV& pdv);
+  arma::mat rprim(PDV& pdv);
+  std::vector<arma::mat> rcent(PDV& pdv);
+  arma::mat rdual(PDV& pdv);
   CPS* cps(const CTRL& ctrl);
 
 
