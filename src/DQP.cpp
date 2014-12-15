@@ -12,7 +12,8 @@ Primal objective
 */
 double DQP::pobj(PDV& pdv){
   double ans;
-  arma::mat term1;
+  arma::mat term1(1,1);
+  term1(0,0) = 0.0;
 
   term1 = (0.5 * pdv.get_x().t() * P * pdv.get_x());
   ans = term1(0,0) + arma::dot(pdv.get_x(), q);
@@ -25,7 +26,7 @@ Dual objective
 */
 double DQP::dobj(PDV& pdv){
   double ans;
-  arma::mat term1, term2;
+  arma::mat term1(1,1), term2(1,1);
   term1(0,0) = 0.0;
   term2(0,0) = 0.0;
 
@@ -179,8 +180,9 @@ CPS* DQP::cps(CTRL& ctrl){
     } catch(...) {
       ::Rf_error("C++ exception (unknown reason)");
     }
+
     pdv.set_y(Si * (A * Piq + b));
-    pdv.set_x(Pi * (-A.t() * pdv.get_y() - q));
+    pdv.set_x(Pi * (-(A.t() * pdv.get_y()) - q));
     cps->set_pdv(pdv);
     state["pobj"] = pobj(pdv);
     state["dobj"] = dobj(pdv);
@@ -190,7 +192,7 @@ CPS* DQP::cps(CTRL& ctrl){
     if((state["certp"] <= ftol) && (state["certd"] <= ftol)){
       cps->set_status("optimal");
     } else {
-      cps->set_status("optimal");
+      cps->set_status("unknown");
     }
   }
   return cps;

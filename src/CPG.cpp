@@ -16,7 +16,7 @@ RCPP_MODULE(CPG){
 
   Rcpp::class_<PDV>( "PDV" )
     .constructor("Default constructor")
-    .constructor<arma::vec, arma::vec, std::vector<arma::mat>, std::vector<arma::mat>, double, double>("sets the PDV-values")
+    .constructor<arma::mat, arma::mat, std::vector<arma::mat>, std::vector<arma::mat>, double, double>("sets the PDV-values")
 
     .property("x", &PDV::get_x, &PDV::set_x, "Getter and setter for x")
     .property("y", &PDV::get_y, &PDV::set_y, "Getter and setter for y")
