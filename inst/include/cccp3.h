@@ -11,6 +11,9 @@
 #include <RcppArmadillo.h>
 #endif
 
+double sdot_nls(arma::mat s, arma::mat z);
+double sdot_p(arma::mat s, arma::mat z, int m);
+
 #include "NLF.h"
 #include "NNO.h"
 #include "SOC.h"
