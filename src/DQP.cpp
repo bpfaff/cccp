@@ -43,6 +43,7 @@ double DQP::dobj(PDV& pdv){
 
   return ans;
 }
+
 /*
   Main routine for solving a Quadratic Program
 */

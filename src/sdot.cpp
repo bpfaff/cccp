@@ -1,15 +1,18 @@
+#include "cccp3.h"
+
 #ifndef ARMA_H
 #define ARMA_H
 #include <RcppArmadillo.h>
 #endif
+
 /*
  * Inner product of two vectors in S.
- * udot_nls is used for nonlinear, linear and second-order cone constraints.
- * udot_p is used for positive semi-definite constraints.
+ * sdot_nls is used for nonlinear, linear and second-order cone constraints.
+ * sdot_p is used for positive semi-definite constraints.
 */
 double sdot_nls(arma::mat s, arma::mat z) {
   double ans = arma::dot(s, z);
-  return(ans);
+  return ans;
 }
 double sdot_p(arma::mat s, arma::mat z, int m) {
   double ans = 0.0;
@@ -27,5 +30,5 @@ double sdot_p(arma::mat s, arma::mat z, int m) {
       }
     }
   }
-  return(ans);
+  return ans;
 }

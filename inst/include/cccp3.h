@@ -13,6 +13,8 @@
 
 double sdot_nls(arma::mat s, arma::mat z);
 double sdot_p(arma::mat s, arma::mat z, int m);
+double snrm2_nls(arma::mat s);
+double snrm2_p(arma::mat s, int m);
 
 #include "NLF.h"
 #include "NNO.h"
