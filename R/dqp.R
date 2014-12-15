@@ -19,7 +19,8 @@ dqp <- function(P, q, A = NULL, b = NULL, cList = list()){
         K <- length(cList)
         Gmats <- lapply(cList, function(x) x[["G"]])
         hvecs <- lapply(cList, function(x) x[["h"]])
-        cList <- new(CONEC, conTypes, Gmats, hvecs, K)
+        dims <- as.integer(unlist(lapply(cList, function(x) x[["dims"]])))
+        cList <- new(CONEC, conTypes, Gmats, hvecs, dims, K)
     } else {
         cList <- new(CONEC)
     }

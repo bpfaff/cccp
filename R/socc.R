@@ -5,5 +5,5 @@ socc <- function(F, g, d, f){
     G[1, ] <- -d
     G[-1, ] <- -F
     h <- c(f, g)   
-    return(list(conType = "SOCC", G = G, h = h))    
+    return(list(conType = "SOCC", G = G, h = h, dims = nrow(G)))    
 }
