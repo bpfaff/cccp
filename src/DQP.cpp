@@ -144,7 +144,7 @@ double DQP::certd(PDV& pdv){
 /*
   Main routine for solving a Quadratic Program
 */
-CPS* DQP::cps(const CTRL& ctrl){
+CPS* DQP::cps(CTRL& ctrl){
   // Initialising object
   PDV pdv;
   CPS* cps = new CPS();
@@ -156,6 +156,42 @@ CPS* DQP::cps(const CTRL& ctrl){
     state["pobj"] = pobj(pdv);
     cps->set_state(state);
     cps->set_status("optimal");
+  }
+  // Case 2: Equality constrained QP
+  if((cList.get_K() == 0) && (A.n_rows > 0)){
+    arma::mat Pi, PiA, Piq, S, Si;
+    double ftol = ctrl.get_feastol();
+    try{
+      Pi = inv(P);
+    } catch(std::runtime_error &ex){
+      forward_exception_to_r(ex);
+    } catch(...){
+      ::Rf_error("C++ exception (unknown reason)");
+    }
+    Piq = Pi * q;
+    PiA = Pi * A.t();
+    S = -A * PiA;
+    try{
+      Si = inv(S);
+    } catch(std::runtime_error &ex){
+      throw std::range_error("Inversion of Schur complement failed.");
+      forward_exception_to_r(ex);
+    } catch(...) {
+      ::Rf_error("C++ exception (unknown reason)");
+    }
+    pdv.set_y(Si * (A * Piq + b));
+    pdv.set_x(Pi * (-A.t() * pdv.get_y() - q));
+    cps->set_pdv(pdv);
+    state["pobj"] = pobj(pdv);
+    state["dobj"] = dobj(pdv);
+    state["certp"] = certp(pdv);
+    state["certd"] = certd(pdv);
+    cps->set_state(state);
+    if((state["certp"] <= ftol) && (state["certd"] <= ftol)){
+      cps->set_status("optimal");
+    } else {
+      cps->set_status("optimal");
+    }
   }
   return cps;
 }

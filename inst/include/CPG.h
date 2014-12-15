@@ -141,7 +141,7 @@ class DQP {
   arma::mat rprim(PDV& pdv);
   std::vector<arma::mat> rcent(PDV& pdv);
   arma::mat rdual(PDV& pdv);
-  CPS* cps(const CTRL& ctrl);
+  CPS* cps(CTRL& ctrl);
 
 
  private:
