@@ -51,10 +51,6 @@ arma::mat ssnt_l(arma::mat s, std::map<std::string,arma::mat> W, bool invers);
 arma::mat ssnt_p(arma::mat s, std::map<std::string,arma::mat> W, bool invers);
 arma::mat ssnt_s(arma::mat s, std::map<std::string,arma::mat> W, bool invers, bool transp);
 
-#include "NLF.h"
-#include "NNO.h"
-#include "SOC.h"
-#include "PSD.h"
 #include "CPG.h"
 
 #endif
