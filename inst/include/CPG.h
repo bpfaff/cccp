@@ -44,41 +44,6 @@ maxiters(maxiters_), abstol(abstol_), reltol(reltol_), feastol(feastol_), trace(
 };
 
 /*
- * Class definition for primal/dual variables
-*/
-class PDV {
- public:
-
-  // constructors
- PDV() : x(arma::mat()), y(arma::mat()), s(std::vector<arma::mat>()), z(std::vector<arma::mat>()), \
-    kappa(1.0), tau(1.0) {}
- PDV(arma::mat x_, arma::mat y_, std::vector<arma::mat> s_, std::vector<arma::mat> z_, \
-     double kappa_, double tau_):  \
-  x(x_), y(y_), s(s_), z(z_), kappa(kappa_), tau(tau_) {}
-  // members
-  arma::mat get_x() {return x;}
-  void set_x(arma::mat x_) {x = x_;}
-  arma::mat get_y() {return y;}
-  void set_y(arma::mat y_) {y = y_;}
-  std::vector<arma::mat> get_s() {return s;}
-  void set_s(std::vector<arma::mat> s_) {s = s_;}
-  std::vector<arma::mat> get_z() {return z;}
-  void set_z(std::vector<arma::mat> z_) {z = z_;}
-  double get_kappa() {return kappa;}
-  void set_kappa(double kappa_) {kappa = kappa_;}
-  double get_tau() {return tau;}
-  void set_tau(double tau_) {tau = tau_;}
-
- private:
-  arma::mat x;
-  arma::mat y;
-  std::vector<arma::mat> s;
-  std::vector<arma::mat> z;
-  double kappa;
-  double tau;
-};
-
-/*
  * Class definition for inequality (cone) constraints
 */
 class CONEC {
@@ -103,6 +68,8 @@ class CONEC {
   void set_dims(arma::uvec dims_) {dims = dims_;}
   int get_K() {return K;}
   void set_K(int K_) {K = K_;}
+
+  friend class DQP;
 
  private:
   std::vector<std::string> conTypes;
@@ -143,13 +110,49 @@ class DQP {
   arma::mat rdual(PDV& pdv);
   CPS* cps(CTRL& ctrl);
 
-
  private:
   arma::mat P;
   arma::vec q;
   arma::mat A;
   arma::vec b;
   CONEC cList;
+};
+
+/*
+ * Class definition for primal/dual variables
+*/
+class PDV {
+ public:
+
+  // constructors
+ PDV() : x(arma::mat()), y(arma::mat()), s(std::vector<arma::mat>()), z(std::vector<arma::mat>()), \
+    kappa(1.0), tau(1.0) {}
+ PDV(arma::mat x_, arma::mat y_, std::vector<arma::mat> s_, std::vector<arma::mat> z_, \
+     double kappa_, double tau_):  \
+  x(x_), y(y_), s(s_), z(z_), kappa(kappa_), tau(tau_) {}
+  // members
+  arma::mat get_x() {return x;}
+  void set_x(arma::mat x_) {x = x_;}
+  arma::mat get_y() {return y;}
+  void set_y(arma::mat y_) {y = y_;}
+  std::vector<arma::mat> get_s() {return s;}
+  void set_s(std::vector<arma::mat> s_) {s = s_;}
+  std::vector<arma::mat> get_z() {return z;}
+  void set_z(std::vector<arma::mat> z_) {z = z_;}
+  double get_kappa() {return kappa;}
+  void set_kappa(double kappa_) {kappa = kappa_;}
+  double get_tau() {return tau;}
+  void set_tau(double tau_) {tau = tau_;}
+
+  friend class DQP;
+
+ private:
+  arma::mat x;
+  arma::mat y;
+  std::vector<arma::mat> s;
+  std::vector<arma::mat> z;
+  double kappa;
+  double tau;
 };
 
 /*

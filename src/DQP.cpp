@@ -15,12 +15,11 @@ double DQP::pobj(PDV& pdv){
   arma::mat term1(1,1);
   term1(0,0) = 0.0;
 
-  term1 = (0.5 * pdv.get_x().t() * P * pdv.get_x());
-  ans = term1(0,0) + arma::dot(pdv.get_x(), q);
+  term1 = (0.5 * pdv.x.t() * P * pdv.x);
+  ans = term1(0,0) + arma::dot(pdv.x, q);
 
   return ans;
 }
-
 /*
 Dual objective
 */
@@ -31,19 +30,18 @@ double DQP::dobj(PDV& pdv){
   term2(0,0) = 0.0;
 
   // dobj term for equality constraints
-  term1 = pdv.get_y().t() * (A * pdv.get_x() - b);
+  term1 = pdv.y.t() * (A * pdv.x - b);
   // dobj term for inequality constraints
-  if(cList.get_K() > 0){
-    for(int i = 0; i < cList.get_K(); i++){
-      term2 = term2 + pdv.get_z()[i].t() *			\
-	(cList.get_Gmats()[i] * pdv.get_x() - cList.get_hvecs()[i]);
+  if(cList.K > 0){
+    for(int i = 0; i < cList.K; i++){
+      term2 = term2 + pdv.z[i].t() *			\
+	(cList.Gmats[i] * pdv.x - cList.hvecs[i]);
     } 
   }
   ans = pobj(pdv) + term1(0,0) + term2(0,0);
 
   return ans;
 }
-
 /*
 Primal Residuals
 */
@@ -52,7 +50,7 @@ arma::mat DQP::rprim(PDV& pdv){
   arma::mat ans(p,1);
   ans.zeros();
 
-  ans = b - A * pdv.get_x();
+  ans = b - A * pdv.x;
 
   return ans;
 }
@@ -63,8 +61,8 @@ Centrality Resdiuals
 std::vector<arma::mat> DQP::rcent(PDV& pdv){
   std::vector<arma::mat> ans;
 
-  for(int i = 0; i < cList.get_K(); i++){
-    ans[i] = pdv.get_s()[i] + cList.get_Gmats()[i] * pdv.get_x() - cList.get_hvecs()[i];
+  for(int i = 0; i < cList.K; i++){
+    ans[i] = pdv.s[i] + cList.Gmats[i] * pdv.x - cList.hvecs[i];
   }
 
   return ans;
@@ -82,15 +80,15 @@ arma::mat DQP::rdual(PDV& pdv){
   Ay.zeros();
   ans.zeros();
 
-  if(cList.get_K() > 0){
-    for(int i = 0; i < cList.get_K(); i++){
-      Gz = Gz + cList.get_Gmats()[i].t() * pdv.get_z()[i];
+  if(cList.K > 0){
+    for(int i = 0; i < cList.K; i++){
+      Gz = Gz + cList.Gmats[i].t() * pdv.z[i];
     } 
   }
   if(A.n_rows > 0){
-    Ay = A.t() * pdv.get_y();
+    Ay = A.t() * pdv.y;
   }
-  ans = P * pdv.get_x() + q + Gz + Ay;
+  ans = P * pdv.x + q + Gz + Ay;
 
   return ans;
 }
@@ -104,12 +102,12 @@ double DQP::certp(PDV& pdv){
   denom = std::max(1.0, arma::norm(b));
   ans1 = nomin / denom;
 
-  if(cList.get_K() > 0){
+  if(cList.K > 0){
     std::vector<arma::mat> rz;
     rz = rcent(pdv);
     nomin = 0.0;
     denom = std::max(1.0, arma::norm(q));
-    for(int i = 0; i < cList.get_K(); i++){
+    for(int i = 0; i < cList.K; i++){
       nomin += arma::norm(rz[i]);
     } 
     ans2 = nomin / denom;
@@ -118,7 +116,6 @@ double DQP::certp(PDV& pdv){
 
   return ans;
 }
-
 /*
 Certificate of dual infeasibilty
 */
@@ -129,13 +126,13 @@ double DQP::certd(PDV& pdv){
   arma::mat Gz(n,1);
   Gz.zeros();
 
-  if(cList.get_K() > 0){
-    for(int i = 0; i < cList.get_K(); i++){
-      Gz = Gz + cList.get_Gmats()[i].t() * pdv.get_z()[i];
+  if(cList.K > 0){
+    for(int i = 0; i < cList.K; i++){
+      Gz = Gz + cList.Gmats[i].t() * pdv.z[i];
     } 
   }
 
-  nomin = arma::norm(P * pdv.get_x() + Gz + A.t() * pdv.get_y() + q);
+  nomin = arma::norm(P * pdv.x + Gz + A.t() * pdv.y + q);
   denom = std::max(1.0, arma::norm(q));
   ans = nomin / denom;
 
@@ -151,7 +148,7 @@ CPS* DQP::cps(CTRL& ctrl){
   CPS* cps = new CPS();
   Rcpp::NumericVector state = cps->get_state();
   // Case 1: Unconstrained QP
-  if((cList.get_K() == 0) && (A.n_rows == 0)){
+  if((cList.K == 0) && (A.n_rows == 0)){
     pdv.set_x(solve(P, -q));
     cps->set_pdv(pdv);
     state["pobj"] = pobj(pdv);
@@ -159,7 +156,7 @@ CPS* DQP::cps(CTRL& ctrl){
     cps->set_status("optimal");
   }
   // Case 2: Equality constrained QP
-  if((cList.get_K() == 0) && (A.n_rows > 0)){
+  if((cList.K == 0) && (A.n_rows > 0)){
     arma::mat Pi, PiA, Piq, S, Si;
     double ftol = ctrl.get_feastol();
     try{
@@ -181,8 +178,8 @@ CPS* DQP::cps(CTRL& ctrl){
       ::Rf_error("C++ exception (unknown reason)");
     }
 
-    pdv.set_y(Si * (A * Piq + b));
-    pdv.set_x(Pi * (-(A.t() * pdv.get_y()) - q));
+    pdv.y = Si * (A * Piq + b);
+    pdv.x = Pi * (-(A.t() * pdv.get_y()) - q);
     cps->set_pdv(pdv);
     state["pobj"] = pobj(pdv);
     state["dobj"] = dobj(pdv);
