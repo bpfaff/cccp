@@ -9,5 +9,8 @@ test.QPEC <- function(){
     cpd <- dqp(P = P, q = q, A = A, b = b)
     ctl <- ctrl()
     ans <- cpd$cps(ctl)
+    checkTrue(ans$status == "optimal")
+    checkEqualsNumeric(drop(getx(ans)), c(0.25, 0.75))
+    checkEqualsNumeric(ans$state[1], 1.875)
     return()
 }
