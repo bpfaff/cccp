@@ -35,6 +35,21 @@ arma::mat sams1_s(arma::mat s, double alpha, int m);
 arma::mat sams2_nl(arma::mat s, double alpha);
 arma::mat sams2_p(arma::mat s, double alpha);
 arma::mat sams2_s(arma::mat s, double alpha, arma::mat lambda, arma::vec sigma, int m);
+std::map<std::string,arma::mat> ntsc_n(arma::mat s, arma::mat z);
+std::map<std::string,arma::mat> ntsc_l(arma::mat s, arma::mat z);
+std::map<std::string,arma::mat> ntsc_p(arma::mat s, arma::mat z);
+std::map<std::string,arma::mat> ntsc_s(arma::mat s, arma::mat z, int m);
+std::map<std::string,arma::mat> ntsu_n(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z);
+std::map<std::string,arma::mat> ntsu_l(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z);
+std::map<std::string,arma::mat> ntsu_p(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z);
+std::map<std::string,arma::mat> ntsu_s(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z, int m);
+arma::mat sslb_nl(arma::mat s, arma::mat lambda, bool invers);
+arma::mat sslb_p(arma::mat s, arma::mat lambda, bool invers);
+arma::mat sslb_s(arma::mat s, arma::mat lambda, bool invers, int m);
+arma::mat ssnt_n(arma::mat s, std::map<std::string,arma::mat> W, bool invers);
+arma::mat ssnt_l(arma::mat s, std::map<std::string,arma::mat> W, bool invers);
+arma::mat ssnt_p(arma::mat s, std::map<std::string,arma::mat> W, bool invers);
+arma::mat ssnt_s(arma::mat s, std::map<std::string,arma::mat> W, bool invers, bool transp);
 
 #include "NLF.h"
 #include "NNO.h"

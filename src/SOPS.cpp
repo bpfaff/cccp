@@ -257,3 +257,351 @@ arma::mat sams2_s(arma::mat s, double alpha, arma::mat lambda, arma::vec sigma, 
 
   return s;
 }
+/*
+ * Initial computation of Nesterov-Todd scalings.
+ * ntsc_n is used for nonlinear constraints.
+ * ntsc_l is used for linear cone constraints.
+ * ntsc_p is used for second-order cone constraints.
+ * ntsc_s is used for positive semidefinite cone constraints.
+*/
+std::map<std::string,arma::mat> ntsc_n(arma::mat s, arma::mat z){
+  std::map<std::string,arma::mat> W;
+  int n = s.n_rows;
+  arma::mat dnl(n, 1), dnli(n, 1), lambda(n, 1); 
+  for(int i = 0; i < n; i++){
+    dnl.at(i, 0) = sqrt(s.at(i, 0) / z.at(i, 0));
+    dnli.at(i, 0) = sqrt(z.at(i, 0) / s.at(i, 0));
+    lambda.at(i, 0) = sqrt(s.at(i, 0) * z.at(i, 0));
+  }
+  W["dnl"] = dnl;
+  W["dnli"] = dnli;
+  W["lambda"] = lambda;
+
+  return W;
+}
+std::map<std::string,arma::mat> ntsc_l(arma::mat s, arma::mat z){
+  std::map<std::string,arma::mat> W;
+  int n = s.n_rows;
+  arma::mat d(n, 1), di(n, 1), lambda(n, 1); 
+  for(int i = 0; i < n; i++){
+    d.at(i, 0) = sqrt(s.at(i, 0) / z.at(i, 0));
+    di.at(i, 0) = sqrt(z.at(i, 0) / s.at(i, 0));
+    lambda.at(i, 0) = sqrt(s.at(i, 0) * z.at(i, 0));
+  }
+  W["d"] = d;
+  W["di"] = di;
+  W["lambda"] = lambda;
+
+  return W;
+}
+std::map<std::string,arma::mat> ntsc_p(arma::mat s, arma::mat z){
+  std::map<std::string,arma::mat> W;
+  int n = s.n_rows;
+  arma::mat v(n,1), beta(1,1), lambda(n,1);
+  double aa, bb, cc, dd, szdot;
+
+  aa = jnrm2_p(s);
+  bb = jnrm2_p(z);
+  beta.at(0,0) = sqrt(aa / bb);
+  szdot = sdot_nlp(s, z);
+  cc = sqrt((szdot / aa / bb + 1.0) / 2.0);
+  v = -z / bb;
+  v.at(0,0) = -v.at(0,0);
+  for(int i = 0; i < n; i++){
+    v.at(i,0) += s.at(i,0) / aa;
+    v.at(i,0) *= (1.0 / 2.0 / cc);
+  }
+  v.at(0,0) = v.at(0, 0) + 1.0;
+  v *= 1.0 / sqrt(2.0 * v.at(0,0));
+  lambda.at(0,0) = cc;
+  dd = 2 * cc + s.at(0,0) / aa + z.at(0,0) / bb;
+  for(int i = 1; i < n; i++){
+    lambda.at(i,0) = s.at(i,0);
+    lambda.at(i,0) = (cc + z.at(0,0) / bb) / dd / aa * lambda.at(i,0);
+    lambda.at(i,0) = (cc + s.at(0,0) / aa) / dd / bb * z.at(i,0) + lambda.at(i,0); 
+    lambda.at(i,0) *= sqrt(aa * bb);
+  }
+  W["v"] = v;
+  W["beta"] = beta;
+  W["lambda"] = lambda;
+
+  return W;
+}
+std::map<std::string,arma::mat> ntsc_s(arma::mat s, arma::mat z, int m){
+  std::map<std::string,arma::mat> W;
+  arma::mat sc, zc, szc, U, V;
+  arma::vec l;
+  arma::mat r, rti, lambda;
+
+  s.reshape(m,m);
+  z.reshape(m,m);
+  arma::chol(sc, s);
+  arma::chol(zc, z);
+  szc = zc * sc.t();
+  svd(U, l, V, szc);
+  r = zc.i() * U * diagmat(sqrt(l));
+  rti = zc.t() * U * diagmat(1.0 / sqrt(l));
+  lambda = diagmat(l);
+  lambda.reshape(m * m, 1);
+  W["r"] = r;
+  W["rti"] = rti;
+  W["lambda"] = lambda;
+
+  return W;
+}
+/*
+ * Updating Nesterov-Todd scalings.
+ * ntsu_n is used for nonlinear constraints.
+ * ntsu_l is used for linear cone constraints.
+ * ntsu_p is used for second-order cone constraints.
+ * ntsu_s is used for positive semidefinite cone constraints.
+*/
+std::map<std::string,arma::mat> ntsu_n(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z){
+  int n = s.n_rows;
+  double ssqrt, zsqrt;
+
+  for(int i = 0; i < n; i++){
+    ssqrt = sqrt(s.at(i, 0));
+    zsqrt = sqrt(z.at(i, 0));
+    W["dnl"].at(i, 0) = W["dnl"].at(i, 0) * ssqrt / zsqrt;
+    W["dnli"].at(i, 0) = 1.0 / W["dnl"].at(i, 0);
+    W["lambda"].at(i, 0) = ssqrt * zsqrt;
+  }
+
+  return W;
+}
+std::map<std::string,arma::mat> ntsu_l(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z){
+  int n = s.n_rows;
+  double ssqrt, zsqrt;
+
+  for(int i = 0; i < n; i++){
+    ssqrt = sqrt(s.at(i, 0));
+    zsqrt = sqrt(z.at(i, 0));
+    W["d"].at(i, 0) = W["d"].at(i, 0) * ssqrt / zsqrt;
+    W["di"].at(i, 0) = 1.0 / W["d"].at(i, 0);
+    W["lambda"].at(i, 0) = ssqrt * zsqrt;
+  }
+
+  return W;
+}
+std::map<std::string,arma::mat> ntsu_p(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z){
+  int n = s.n_rows;
+  double aa, bb, cc, dd, vs, vz, vq, vu, wk0;
+
+  aa = jnrm2_p(s);
+  bb = jnrm2_p(z);
+  s /=  aa;
+  z /=  bb;
+  cc = sqrt((1 + arma::dot(s, z)) / 2.0);
+  vs = arma::dot(W["v"], s);
+  vz = W["v"].at(0,0) * z.at(0,0);
+  for(int i = 1; i < n; i++){
+    vz -= W["v"].at(i,0) * z.at(i,0);
+  }
+  vq = (vs + vz) / 2.0 / cc;
+  vu = vs - vz;
+  W["lambda"].at(0,0) = cc;
+  wk0 = 2 * W["v"].at(0,0) * vq - (s.at(0,0) + z.at(0,0)) / 2.0 / cc;
+  dd = (W["v"].at(0,0) * vu - s.at(0,0) / 2.0 + z.at(0,0) / 2.0) / (wk0 + 1.0);
+  for(int i = 1; i < n; i++){
+    W["lambda"].at(i,0) = W["v"].at(i,0);
+    W["lambda"].at(i,0) *= 2.0 * (-dd * vq + 0.5 * vu); 
+    W["lambda"].at(i,0) += 0.5 * (1.0 - dd / cc) * s.at(i,0); 
+    W["lambda"].at(i,0) += 0.5 * (1.0 + dd / cc) * z.at(i,0); 
+    W["lambda"].at(i,0) *= sqrt(aa * bb);
+  }
+  W["v"] *= 2.0 * vq;
+  W["v"].at(0,0) -= s.at(0,0) / 2.0 / cc;
+  for(int i = 1; i < n; i++){
+    W["v"].at(i,0) += 0.5 / cc * s.at(i,0);
+  }
+  W["v"] += -0.5 / cc * z;
+  W["v"].at(0,0) += 1.0;
+  W["v"] *= 1.0 / sqrt(2.0 * W["v"].at(0, 0));
+  W["beta"].at(0,0) *= sqrt(aa / bb);
+
+  return W;
+}
+std::map<std::string,arma::mat> ntsu_s(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z, int m){
+  arma::mat zts, U, V, DiagL, lu;
+  arma::vec l;
+
+  s.reshape(m,m);
+  z.reshape(m,m);
+  zts = z.t() * s;
+  svd(U, l, V, zts);
+  DiagL = diagmat(1.0 / sqrt(l));
+  W["r"] = W["r"] * s * V * DiagL;
+  W["rti"] = W["rti"] * z * U * DiagL;
+  W["lambda"] = diagmat(l);
+  W["lambda"].reshape(m * m, 1);
+
+  return W;
+}
+/*
+ * Scaling of vector in S by log-barrier function.
+ * sslb_nl is used for nonlinear and linear cone constraints.
+ * sslb_p is used for second-order cone constraints.
+ * sslb_s is used for positive semidefinite cone constraints.
+*/
+arma::mat sslb_nl(arma::mat s, arma::mat lambda, bool invers){
+  int n = s.n_rows;
+
+  if(invers){
+    for(int i = 0; i < n; i++){
+      s.at(i,0) *= lambda.at(i,0);
+    }
+  } else {
+    for(int i = 0; i < n; i++){
+      s.at(i,0) /= lambda.at(i, 0);
+    }
+  }
+
+  return s;
+}
+arma::mat sslb_p(arma::mat s, arma::mat lambda, bool invers){
+  int n = s.n_rows;
+  double a, cc, lx, s0;
+
+  a = jnrm2_p(lambda);
+  if(invers){
+    lx = arma::dot(lambda, s) / a;
+  } else {
+    lx = jdot_p(lambda, s) / a;
+  }
+  s0 = s.at(0,0);
+  s.at(0,0) = lx;
+  cc = (lx + s0) / (lambda.at(0,0) / a + 1) / a;
+  if(invers == false){
+    cc = -cc;
+    a = 1 / a;
+  }
+  for(int i = 1; i < n; i++){
+    s.at(i,0) = cc * lambda.at(i,0) + s.at(i,0);
+  }
+  s = a * s; 
+
+  return s;
+}
+arma::mat sslb_s(arma::mat s, arma::mat lambda, bool invers, int m){
+  arma::vec ld, ls;
+
+  s.reshape(m,m);
+  lambda.reshape(m,m);
+  ld = lambda.diag();
+  for(int i = 0; i < m; i++){
+    ls = sqrt(ld(i)) * sqrt(ld);
+    if(invers){
+      s.col(i) = s.col(i) % ls;
+    } else {
+      s.col(i) = s.col(i) / ls;
+    }
+  }
+  s.reshape(m * m, 1);
+
+  return s;
+}
+/*
+ * Scaling of vector in S by Nesterov-Todd function.
+ * ssnt_n is used for nonlinear constraints.
+ * ssnt_l is used for linear cone constraints.
+ * ssnt_p is used for second-order cone constraints.
+ * ssnt_s is used for positive semidefinite cone constraints.
+*/
+arma::mat ssnt_n(arma::mat s, std::map<std::string,arma::mat> W, bool invers){
+  arma::mat w;
+  int m = s.n_rows;
+  int n = s.n_cols;
+
+  if(invers){
+    w = W["dnli"];
+  } else {
+    w = W["dnl"];
+  }
+  for(int i = 0; i < m; i++){
+    for(int j = 0; j < n; j++){
+      s.at(i, j) *= w.at(i, 0);
+    }
+  }
+
+  return s;
+}
+arma::mat ssnt_l(arma::mat s, std::map<std::string,arma::mat> W, bool invers){
+  arma::mat w;
+  int m = s.n_rows;
+  int n = s.n_cols;
+
+  if(invers){
+    w = W["di"];
+  } else {
+    w = W["d"];
+  }
+  for(int i = 0; i < m; i++){
+    for(int j = 0; j < n; j++){
+      s.at(i, j) *= w.at(i, 0);
+    }
+  }
+
+  return s;
+}
+arma::mat ssnt_p(arma::mat s, std::map<std::string,arma::mat> W, bool invers){
+  double a;
+  arma::mat w;
+
+  if(invers){
+    s.row(0) = -s.row(0);
+  }
+  w = s.t() * W["v"];
+  s.row(0) = -s.row(0);
+  s = 2 * W["v"] * w.t() + s;
+  if(invers){
+    s.row(0) = -s.row(0);
+    a = 1 / W["beta"].at(0,0);
+  } else {
+    a = W["beta"].at(0,0);
+  }
+  s = a * s;
+
+  return s;
+}
+arma::mat ssnt_s(arma::mat s, std::map<std::string,arma::mat> W, bool invers, bool transp){
+  int n, m;
+  bool tt;
+  arma::mat w, S, a, ans;
+
+  if(invers){
+    w = W["rti"];
+    tt = transp;
+  } else {
+    w = W["r"];
+    if(transp){
+      tt = false;
+    } else {
+      tt = true;
+    }
+  }
+  m = w.n_cols;
+  n = s.n_cols;
+  for(int i = 0; i < n; i++){
+    S = s.col(i);
+    S.reshape(m,m);
+    S.diag() = 0.5 * S.diag();
+    for(int k = 0; k < m; k++){
+      for(int r = 0; r < k; r++){
+	S.at(r,k) = 0.0;
+      }
+    } 
+    if(tt){
+      a = S * w;
+      ans = w.t() * a + a.t() * w;
+    } else {
+      a = w * S;
+      ans = w * a.t() + a * w.t();
+    }
+    ans.reshape(m * m, 1);
+    s.col(i) = ans;
+  }
+
+  return s;
+}
+
