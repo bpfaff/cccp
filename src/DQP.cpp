@@ -149,13 +149,13 @@ PDV* DQP::initpdv(){
   pdv->y = arma::zeros(A.n_rows,1);
   for(int i = 0; i < cList.K; i++){
     if((cList.conTypes[i] == "NLFC") || (cList.conTypes[i] == "NNOC")){
-      ans = arma::ones(n, 1);
+      ans = arma::ones(cList.dims[i], 1);
     } else if(cList.conTypes[i] == "SOCC"){
-      ans = arma::zeros(n, 1);
+      ans = arma::zeros(cList.dims[i], 1);
       ans.at(0,0) = 1.0;
     } else if(cList.conTypes[i] == "PSDC") {
-      ans = arma::eye(n,n);
-      ans.reshape(n * n, 1);
+      ans = arma::eye(cList.dims[i],cList.dims[i]);
+      ans.reshape(cList.dims[i] * cList.dims[i], 1);
     } else {
       ans = arma::zeros(cList.dims[i], 1);
     }
@@ -168,6 +168,48 @@ PDV* DQP::initpdv(){
   pdv->kappa = 1.0;
 
   return pdv;
+}
+/*
+Initial Nesterov-Todd scalings
+*/
+std::vector<std::map<std::string,arma::mat> > DQP::initnts(){
+  std::vector<std::map<std::string,arma::mat> > WList;
+  std::map<std::string,arma::mat> W;
+  arma::mat ans;
+
+  for(int i = 0; i < cList.K; i++){
+    if(cList.conTypes[i] == "NLFC"){
+      ans = arma::ones(cList.dims[i],1);
+      W["dnl"] = ans;
+      W["dnli"] = ans;
+      ans = arma::zeros(cList.dims[i],1);
+      W["lambda"] = ans;
+    } else if(cList.conTypes[i] == "NNOC"){
+      ans = arma::ones(cList.dims[i],1);
+      W["d"] = ans;
+      W["di"] = ans;
+      ans = arma::zeros(cList.dims[i],1);
+      W["lambda"] = ans;
+    } else if(cList.conTypes[i] == "SOCC"){
+      ans = arma::ones(1,1);
+      W["beta"] = ans;
+      ans = arma::zeros(cList.dims[i],1);
+      ans.at(0,0) = 1.0;
+      W["v"] = ans;
+      ans = arma::zeros(cList.dims[i],1);
+      W["lambda"] = ans;
+    } else if(cList.conTypes[i] == "PSDC"){
+      ans = arma::eye(cList.dims[i],cList.dims[i]);
+      ans.reshape(cList.dims[i] * cList.dims[i], 1);
+      W["r"] = ans;
+      W["rti"] = ans;
+      ans = arma::zeros(cList.dims[i] * cList.dims[i], 1);
+      W["lambda"] = ans;
+    }
+    WList[i] = W;
+  }
+
+  return WList;
 }
 /*
   Main routine for solving a Quadratic Program
@@ -232,6 +274,7 @@ CPS* DQP::cps(CTRL& ctrl){
   cvgdvals["dinf"] = NA_REAL;
   cvgdvals["dgap"] = NA_REAL;
   std::vector<std::map<std::string,arma::mat> > WList;
+  WList = initnts();
 
  
   return cps;

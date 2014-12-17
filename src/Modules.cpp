@@ -57,6 +57,7 @@ RCPP_MODULE(CPG){
     .method("rcent", &DQP::rcent)
     .method("rdual", &DQP::rdual)
     .method("initpdv", &DQP::initpdv)
+    .method("initnts", &DQP::initnts)
     ;
 
   Rcpp::class_<CPS>( "CPS" )

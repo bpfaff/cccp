@@ -109,6 +109,7 @@ class DQP {
   std::vector<arma::mat> rcent(PDV& pdv);
   arma::mat rdual(PDV& pdv);
   PDV* initpdv();
+  std::vector<std::map<std::string,arma::mat> > initnts();
   CPS* cps(CTRL& ctrl);
 
  private:
