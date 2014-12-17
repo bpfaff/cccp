@@ -33,9 +33,9 @@ RCPP_MODULE(CPG){
 
     .property("conTypes", &CONEC::get_conTypes, &CONEC::set_conTypes, "Getter and setter for conTypes")
     .property("Gmats", &CONEC::get_Gmats, &CONEC::set_Gmats, "Getter and setter for Gmats")
-    .property("hvecs", &CONEC::get_hvecs, &CONEC::set_hvecs, "Getter and setter for hvecs")
+    .property("hmats", &CONEC::get_hmats, &CONEC::set_hmats, "Getter and setter for hmats")
     .property("dims", &CONEC::get_dims, &CONEC::set_dims, "Getter and setter for dims")
-    .property("K", &CONEC::get_K, &CONEC::set_K, "Getter and setter for hvecs")
+    .property("K", &CONEC::get_K, &CONEC::set_K, "Getter and setter for K")
     ;
 
   Rcpp::class_<DQP>( "DQP" )

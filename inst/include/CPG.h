@@ -49,12 +49,12 @@ maxiters(maxiters_), abstol(abstol_), reltol(reltol_), feastol(feastol_), trace(
 class CONEC {
  public:
  CONEC() : conTypes(std::vector<std::string>()), Gmats(std::vector<arma::mat>()), \
-    hvecs(std::vector<arma::vec>()), dims(arma::uvec()), K(0) {}
- CONEC(Rcpp::CharacterVector conTypes_, Rcpp::List Gmats_, Rcpp::List hvecs_, Rcpp::IntegerVector dims_, int K_): \
-  conTypes(), Gmats(), hvecs(), K(K_){
+    hmats(std::vector<arma::mat>()), dims(arma::uvec()), K(0) {}
+ CONEC(Rcpp::CharacterVector conTypes_, Rcpp::List Gmats_, Rcpp::List hmats_, Rcpp::IntegerVector dims_, int K_): \
+  conTypes(), Gmats(), hmats(), K(K_){
     conTypes = Rcpp::as< std::vector<std::string> >(conTypes_);
     Gmats = Rcpp::as< std::vector<arma::mat> >(Gmats_);
-    hvecs = Rcpp::as< std::vector<arma::vec> >(hvecs_);
+    hmats = Rcpp::as< std::vector<arma::mat> >(hmats_);
     dims = Rcpp::as<arma::uvec>(dims_);
   }
   // members
@@ -62,8 +62,8 @@ class CONEC {
   void set_conTypes(std::vector<std::string> conTypes_) {conTypes = conTypes_;}
   std::vector<arma::mat> get_Gmats() {return Gmats;}
   void set_Gmats(std::vector<arma::mat> Gmats_) {Gmats = Gmats_;}
-  std::vector<arma::vec> get_hvecs() {return hvecs;}
-  void set_hvecs(std::vector<arma::vec> hvecs_) {hvecs = hvecs_;}
+  std::vector<arma::mat> get_hmats() {return hmats;}
+  void set_hmats(std::vector<arma::mat> hmats_) {hmats = hmats_;}
   arma::uvec get_dims() {return dims;}
   void set_dims(arma::uvec dims_) {dims = dims_;}
   int get_K() {return K;}
@@ -74,7 +74,7 @@ class CONEC {
  private:
   std::vector<std::string> conTypes;
   std::vector<arma::mat> Gmats;
-  std::vector<arma::vec> hvecs;
+  std::vector<arma::mat> hmats;
   arma::uvec dims;
   int K;
 };
@@ -111,6 +111,7 @@ class DQP {
   PDV* initpdv();
   std::vector<std::map<std::string,arma::mat> > initnts();
   arma::mat gwwg(std::vector<std::map<std::string,arma::mat> > WList);
+  arma::mat gwwz(std::vector<std::map<std::string,arma::mat> > WList, std::vector<arma::mat> z);
   CPS* cps(CTRL& ctrl);
 
  private:

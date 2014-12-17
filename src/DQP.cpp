@@ -35,7 +35,7 @@ double DQP::dobj(PDV& pdv){
   if(cList.K > 0){
     for(int i = 0; i < cList.K; i++){
       term2 = term2 + pdv.z[i].t() *			\
-	(cList.Gmats[i] * pdv.x - cList.hvecs[i]);
+	(cList.Gmats[i] * pdv.x - cList.hmats[i]);
     } 
   }
   ans = pobj(pdv) + term1(0,0) + term2(0,0);
@@ -61,7 +61,7 @@ std::vector<arma::mat> DQP::rcent(PDV& pdv){
   std::vector<arma::mat> ans;
 
   for(int i = 0; i < cList.K; i++){
-    ans[i] = pdv.s[i] + cList.Gmats[i] * pdv.x - cList.hvecs[i];
+    ans[i] = pdv.s[i] + cList.Gmats[i] * pdv.x - cList.hmats[i];
   }
 
   return ans;
@@ -212,7 +212,7 @@ std::vector<std::map<std::string,arma::mat> > DQP::initnts(){
   return WList;
 }
 /*
-Computation of sum of G_i'W_i^-1W_i^-1'G_i
+Computation of: Sum of G_i'W_i^-1W_i^-1'G_i for i = 1, ..., K
 */
 arma::mat DQP::gwwg(std::vector<std::map<std::string,arma::mat> > WList){
   int n = P.n_cols;
@@ -243,6 +243,42 @@ arma::mat DQP::gwwg(std::vector<std::map<std::string,arma::mat> > WList){
 
   return gwwg;
 }
+/*
+Computation of: Sum of G_i'W_i^-1W_i^-1'G_i for i = 1, ..., K
+*/
+arma::mat DQP::gwwz(std::vector<std::map<std::string,arma::mat> > WList, std::vector<arma::mat> z){
+  int n = P.n_cols;
+  arma::mat gwwz(n,1), temp(n,1), witz, wiwitz;
+  gwwz.zeros();
+  temp.zeros();
+
+  for(int i = 0; i < cList.K; i++){
+    if(cList.conTypes[i] == "NLFC"){
+      witz = ssnt_n(z[i], WList[i], true);
+      wiwitz = ssnt_n(witz, WList[i], true);
+      temp = cList.Gmats[i].t() * wiwitz;
+    } else if(cList.conTypes[i] == "NNOC"){
+      witz = ssnt_l(z[i], WList[i], true);
+      wiwitz = ssnt_l(witz, WList[i], true);
+      temp = cList.Gmats[i].t() * wiwitz;
+    } else if(cList.conTypes[i] == "SOCC"){
+      witz = ssnt_p(z[i], WList[i], true);
+      wiwitz = ssnt_p(witz, WList[i], true);
+      temp = cList.Gmats[i].t() * wiwitz;
+    } else if(cList.conTypes[i] == "PSDC"){
+      witz = ssnt_s(z[i], WList[i], true, true);
+      wiwitz = ssnt_s(witz, WList[i], true, false);
+      temp = cList.Gmats[i].t() * wiwitz;
+    }
+    gwwz = gwwz + temp;
+  }
+
+  return gwwz;
+}
+/*
+Solving 'KKT-System'
+*/
+
 /*
   Main routine for solving a Quadratic Program
 */
@@ -297,7 +333,7 @@ CPS* DQP::cps(CTRL& ctrl){
     }
   }
   // Case 3: At least inequality constrained QP
-  // Initialising variables
+  // Initialising state variables
   int m = sum(cList.dims);
   std::map<std::string,double> cvgdvals;
   cvgdvals["pobj"] = NA_REAL;
@@ -305,6 +341,7 @@ CPS* DQP::cps(CTRL& ctrl){
   cvgdvals["pinf"] = NA_REAL;
   cvgdvals["dinf"] = NA_REAL;
   cvgdvals["dgap"] = NA_REAL;
+  // Initialising LHS and RHS matrices
   int n = P.n_cols;
   int sizeLHS = A.n_rows + A.n_cols;
   arma::mat LHS(sizeLHS, sizeLHS);
@@ -313,9 +350,14 @@ CPS* DQP::cps(CTRL& ctrl){
     LHS.submat(n, 0, sizeLHS-1, n-1) = A;
     LHS.submat(0, n, n-1, sizeLHS-1) = A.t();
   }
+  arma::mat RHS(sizeLHS, 1);
+  // Initialising Nesterov-Todd scalings
   std::vector<std::map<std::string,arma::mat> > WList;
   WList = initnts();
-
+  // Initialising PDV for determining (first) interior point
+  pdv->x = -q;
+  pdv->y = b;
+  pdv->z = cList.hmats;
  
   return cps;
 }
