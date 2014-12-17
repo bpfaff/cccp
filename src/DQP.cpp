@@ -358,6 +358,8 @@ CPS* DQP::cps(CTRL& ctrl){
   pdv->x = -q;
   pdv->y = b;
   pdv->z = cList.hmats;
+
+  Rcpp::Rcout << "test" << std::endl;
  
   return cps;
 }
