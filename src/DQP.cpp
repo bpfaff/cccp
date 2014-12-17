@@ -54,7 +54,6 @@ arma::mat DQP::rprim(PDV& pdv){
 
   return ans;
 }
-
 /*
 Centrality Resdiuals
 */
@@ -67,7 +66,6 @@ std::vector<arma::mat> DQP::rcent(PDV& pdv){
 
   return ans;
 }
-
 /*
 Dual Residuals
 */
@@ -138,20 +136,52 @@ double DQP::certd(PDV& pdv){
 
   return ans;
 }
+/*
+Initializing PDV
+*/
+PDV* DQP::initpdv(){
+  PDV* pdv = new PDV();
+  std::vector<arma::mat> s, z;
+  arma::mat ans;
+  int n = P.n_cols;
 
+  pdv->x = arma::zeros(n,1);
+  pdv->y = arma::zeros(A.n_rows,1);
+  for(int i = 0; i < cList.K; i++){
+    if((cList.conTypes[i] == "NLFC") || (cList.conTypes[i] == "NNOC")){
+      ans = arma::ones(n, 1);
+    } else if(cList.conTypes[i] == "SOCC"){
+      ans = arma::zeros(n, 1);
+      ans.at(0,0) = 1.0;
+    } else if(cList.conTypes[i] == "PSDC") {
+      ans = arma::eye(n,n);
+      ans.reshape(n * n, 1);
+    } else {
+      ans = arma::zeros(cList.dims[i], 1);
+    }
+    s[i] = ans;
+    z[i] = ans;
+  }
+  pdv->s = s;
+  pdv->z = s;
+  pdv->tau = 1.0;
+  pdv->kappa = 1.0;
+
+  return pdv;
+}
 /*
   Main routine for solving a Quadratic Program
 */
 CPS* DQP::cps(CTRL& ctrl){
   // Initialising object
-  PDV pdv;
+  PDV* pdv = initpdv();
   CPS* cps = new CPS();
   Rcpp::NumericVector state = cps->get_state();
   // Case 1: Unconstrained QP
   if((cList.K == 0) && (A.n_rows == 0)){
-    pdv.set_x(solve(P, -q));
-    cps->set_pdv(pdv);
-    state["pobj"] = pobj(pdv);
+    pdv->x = solve(P, -q);
+    cps->set_pdv(*pdv);
+    state["pobj"] = pobj(*pdv);
     cps->set_state(state);
     cps->set_status("optimal");
   }
@@ -178,13 +208,13 @@ CPS* DQP::cps(CTRL& ctrl){
       ::Rf_error("C++ exception (unknown reason)");
     }
 
-    pdv.y = Si * (A * Piq + b);
-    pdv.x = Pi * (-(A.t() * pdv.get_y()) - q);
-    cps->set_pdv(pdv);
-    state["pobj"] = pobj(pdv);
-    state["dobj"] = dobj(pdv);
-    state["certp"] = certp(pdv);
-    state["certd"] = certd(pdv);
+    pdv->y = Si * (A * Piq + b);
+    pdv->x = Pi * (-(A.t() * pdv->y) - q);
+    cps->set_pdv(*pdv);
+    state["pobj"] = pobj(*pdv);
+    state["dobj"] = dobj(*pdv);
+    state["certp"] = certp(*pdv);
+    state["certd"] = certd(*pdv);
     cps->set_state(state);
     if((state["certp"] <= ftol) && (state["certd"] <= ftol)){
       cps->set_status("optimal");
@@ -192,5 +222,17 @@ CPS* DQP::cps(CTRL& ctrl){
       cps->set_status("unknown");
     }
   }
+  // Case 3: At least inequality constrained QP
+  // Initialising variables
+  int m = sum(cList.dims);
+  std::map<std::string,double> cvgdvals;
+  cvgdvals["pobj"] = NA_REAL;
+  cvgdvals["dobj"] = NA_REAL;
+  cvgdvals["pinf"] = NA_REAL;
+  cvgdvals["dinf"] = NA_REAL;
+  cvgdvals["dgap"] = NA_REAL;
+  std::vector<std::map<std::string,arma::mat> > WList;
+
+ 
   return cps;
 }

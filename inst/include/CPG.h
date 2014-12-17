@@ -108,6 +108,7 @@ class DQP {
   arma::mat rprim(PDV& pdv);
   std::vector<arma::mat> rcent(PDV& pdv);
   arma::mat rdual(PDV& pdv);
+  PDV* initpdv();
   CPS* cps(CTRL& ctrl);
 
  private:
@@ -145,6 +146,7 @@ class PDV {
   void set_tau(double tau_) {tau = tau_;}
 
   friend class DQP;
+  friend class CONEC;
 
  private:
   arma::mat x;
