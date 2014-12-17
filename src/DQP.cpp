@@ -1,4 +1,4 @@
-#include "CPG.h"
+#include "cccp3.h"
 
 /*
  *
@@ -212,6 +212,38 @@ std::vector<std::map<std::string,arma::mat> > DQP::initnts(){
   return WList;
 }
 /*
+Computation of sum of G_i'W_i^-1W_i^-1'G_i
+*/
+arma::mat DQP::gwwg(std::vector<std::map<std::string,arma::mat> > WList){
+  int n = P.n_cols;
+  arma::mat gwwg(n,n), temp(n,n), witg, wiwitg;
+  gwwg.zeros();
+  temp.zeros();
+
+  for(int i = 0; i < cList.K; i++){
+    if(cList.conTypes[i] == "NLFC"){
+      witg = ssnt_n(cList.Gmats[i], WList[i], true);
+      wiwitg = ssnt_n(witg, WList[i], true);
+      temp = cList.Gmats[i].t() * wiwitg;
+    } else if(cList.conTypes[i] == "NNOC"){
+      witg = ssnt_l(cList.Gmats[i], WList[i], true);
+      wiwitg = ssnt_l(witg, WList[i], true);
+      temp = cList.Gmats[i].t() * wiwitg;
+    } else if(cList.conTypes[i] == "SOCC"){
+      witg = ssnt_p(cList.Gmats[i], WList[i], true);
+      wiwitg = ssnt_p(witg, WList[i], true);
+      temp = cList.Gmats[i].t() * wiwitg;
+    } else if(cList.conTypes[i] == "PSDC"){
+      witg = ssnt_s(cList.Gmats[i], WList[i], true, true);
+      wiwitg = ssnt_s(witg, WList[i], true, false);
+      temp = cList.Gmats[i].t() * wiwitg;
+    }
+    gwwg = gwwg + temp;
+  }
+
+  return gwwg;
+}
+/*
   Main routine for solving a Quadratic Program
 */
 CPS* DQP::cps(CTRL& ctrl){
@@ -273,6 +305,14 @@ CPS* DQP::cps(CTRL& ctrl){
   cvgdvals["pinf"] = NA_REAL;
   cvgdvals["dinf"] = NA_REAL;
   cvgdvals["dgap"] = NA_REAL;
+  int n = P.n_cols;
+  int sizeLHS = A.n_rows + A.n_cols;
+  arma::mat LHS(sizeLHS, sizeLHS);
+  LHS.zeros();
+  if(A.n_rows > 0){ // equality constraints
+    LHS.submat(n, 0, sizeLHS-1, n-1) = A;
+    LHS.submat(0, n, n-1, sizeLHS-1) = A.t();
+  }
   std::vector<std::map<std::string,arma::mat> > WList;
   WList = initnts();
 

@@ -110,6 +110,7 @@ class DQP {
   arma::mat rdual(PDV& pdv);
   PDV* initpdv();
   std::vector<std::map<std::string,arma::mat> > initnts();
+  arma::mat gwwg(std::vector<std::map<std::string,arma::mat> > WList);
   CPS* cps(CTRL& ctrl);
 
  private:

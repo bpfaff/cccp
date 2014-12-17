@@ -49,15 +49,6 @@ RCPP_MODULE(CPG){
     .property("cList", &DQP::get_cList, &DQP::set_cList, "Getter and setter for cList")
 
     .method("cps", &DQP::cps)
-    .method("pobj", &DQP::pobj)
-    .method("dobj", &DQP::dobj)
-    .method("certp", &DQP::certp)
-    .method("certd", &DQP::certp)
-    .method("rprim", &DQP::rprim)
-    .method("rcent", &DQP::rcent)
-    .method("rdual", &DQP::rdual)
-    .method("initpdv", &DQP::initpdv)
-    .method("initnts", &DQP::initnts)
     ;
 
   Rcpp::class_<CPS>( "CPS" )
