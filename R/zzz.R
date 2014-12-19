@@ -59,7 +59,7 @@ setMethod("show", signature = "Rcpp_CPS", function(object){
         cat(paste("Value of smallest primal slack:", signif(state["pslack"]), "\n"))
     }
     if(!is.na(state["dslack"])){
-        cat(paste("Value of smallest dual slack:", signif(status["dslack"]), "\n"))
+        cat(paste("Value of smallest dual slack:", signif(state["dslack"]), "\n"))
     }
     cat(paste("Status of solution:", object$status, "\n"))
     cat(paste("Count of iterations:", object$niter, "\n\n"))

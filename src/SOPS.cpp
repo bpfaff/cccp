@@ -32,6 +32,22 @@ double sdot_s(mat s, mat z, int m) {
   }
   return ans;
 }
+vec DQP::sdot(mat s, mat z){
+  vec ans = zeros<vec>(cList.K);
+
+  for(int i = 0; i < cList.K; i++){
+    if(cList.cone[i] != "PSDC") {
+      ans.at(i) = sdot_nlp(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
+			   z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
+    } else {
+      ans.at(i) = sdot_s(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
+			 z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
+			 cList.dims[i]);
+    }
+  }
+
+  return ans;
+}
 /*
  * J-dot product between two vectors related to second-order cone constraints.
  * Returns x' * J * y, whereby J = [1, 0; 0, -I]
@@ -59,6 +75,20 @@ double snrm2_nlp(mat s) {
 double snrm2_s(mat s, int m) {
   double ans = 0.0;
   ans = sqrt(sdot_s(s, s, m));
+  return ans;
+}
+double DQP::snrm2(mat s){
+  double ans = 0.0;
+
+  for(int i = 0; i < cList.K; i++){
+    if(cList.cone[i] != "PSDC"){
+      ans += snrm2_nlp(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
+    } else {
+      ans += snrm2_s(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
+		       cList.dims[i]);
+    } 
+  }
+
   return ans;
 }
 /*
@@ -194,6 +224,22 @@ double smss_s(mat s, int m){
 
   return -eval[0];
 }
+vec DQP::smss(mat s){
+  vec ans = zeros<vec>(cList.K);
+
+  for(int i = 0; i < cList.K; i++){
+    if((cList.cone[i] == "NLFC") || (cList.cone[i] == "NNOC")){
+      ans.at(i) = smss_nl(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
+    } else if(cList.cone[i] == "SOCC"){
+      ans.at(i) = smss_p(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
+    } else if(cList.cone[i] == "PSDC"){
+      ans.at(i) = smss_s(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
+			 cList.dims[i]);
+    }
+  }
+
+  return ans;
+}
 /*
  * Applying maximum step-size to a vector in S (initial).
  * sams1_nl is used for nonlinear and linear cone constraints.
@@ -220,11 +266,28 @@ mat sams1_s(mat s, double alpha, int m){
 
   return s;
 }
+mat DQP::sams1(mat s, double alpha){
+  mat temp;
+
+  for(int i = 0; i < cList.K; i++){
+    temp = s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
+    if((cList.cone[i] == "NLFC") || (cList.cone[i] == "NNOC")){
+      temp = sams1_nl(temp, alpha);
+    } else if(cList.cone[i] == "SOCC"){
+      temp = sams1_p(temp, alpha);
+    } else if(cList.cone[i] == "PSDC"){
+      temp = sams1_s(temp, alpha, cList.dims[i]);
+    }
+    s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = temp;
+  }
+
+  return s;
+}
 /*
  * Applying maximum step-size to a vector in S (during iterations).
- * sams1_nl is used for nonlinear and linear cone constraints.
- * sams1_p is used for second-order cone constraints.
- * sams1_s is used for positive semidefinite cone constraints.
+ * sams2_nl is used for nonlinear and linear cone constraints.
+ * sams2_p is used for second-order cone constraints.
+ * sams2_s is used for positive semidefinite cone constraints.
 */
 mat sams2_nl(mat s, double alpha){
   int n = s.n_rows;

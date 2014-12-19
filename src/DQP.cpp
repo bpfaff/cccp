@@ -34,9 +34,9 @@ double DQP::dobj(PDV& pdv){
   // dobj term for inequality constraints
   if(cList.K > 0){
     for(int i = 0; i < cList.K; i++){
-      term2 = term2 + pdv.z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * \
+      term2 = term2 + dot(pdv.z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
 	(cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) * pdv.x - \
-	 cList.h(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
+	 cList.h(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all)));
     } 
   }
   ans = pobj(pdv) + term1(0,0) + term2(0,0);
@@ -59,7 +59,7 @@ mat DQP::rprim(PDV& pdv){
 Centrality Resdiuals
 */
 mat DQP::rcent(PDV& pdv){
-  mat ans(cList.G.n_rows, P.n_cols);
+  mat ans(cList.G.n_rows, 1);
 
   for(int i = 0; i < cList.K; i++){
     ans(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = pdv.s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) + cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) * pdv.x - cList.h(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
@@ -373,8 +373,13 @@ CPS* DQP::cps(CTRL& ctrl){
     return cps;
   }
   // Case 3: At least inequality constrained QP
-  // Initialising state variables
+  // Computing fixed values
+  double ftol = ctrl.get_feastol();
   //int m = sum(cList.dims);
+  //double resx0 = std::max(1.0, norm(q));
+  //double resy0 = std::max(1.0, norm(b));
+  //double resz0 = std::max(1.0, snrm2(cList.h));
+  // Initialising state variables
   std::map<std::string,double> cvgdvals;
   cvgdvals["pobj"] = NA_REAL;
   cvgdvals["dobj"] = NA_REAL;
@@ -399,7 +404,37 @@ CPS* DQP::cps(CTRL& ctrl){
   pdv->y = b;
   pdv->z = cList.h;
   pdv = sxyz(pdv, LHS, RHS, WList);
+  pdv->s = -pdv->z;
+  double ts = smss(pdv->s).max();
+  double nrms = sum(snrm2(pdv->s));
+  double tz = smss(pdv->z).max();
+  double nrmz = sum(snrm2(pdv->z));
+  if(ts >= -1e-8 * std::max(1.0, nrms)){
+    pdv->s = sams1(pdv->s, ts);
+  }
+  if(tz >= -1e-8 * std::max(1.0, nrmz)){
+    pdv->z = sams1(pdv->z, tz);
+  }
+  double gap = sum(sdot(pdv->s, pdv->z));
+
   cps->set_pdv(*pdv);
+  // Starting iterations 
+
+
+  // Preparing result (not complete, yet)
+  state["pobj"] = pobj(*pdv);
+  state["dobj"] = dobj(*pdv);
+  state["dgap"] = gap;
+  state["certp"] = certp(*pdv);
+  state["certd"] = certd(*pdv);
+  state["pslack"] = -ts;
+  state["dslack"] = -tz;
+  cps->set_state(state);
+  if((state["certp"] <= ftol) && (state["certd"] <= ftol)){
+    cps->set_status("optimal");
+  } else {
+    cps->set_status("unknown");
+  }
 
   return cps;
 }
