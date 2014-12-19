@@ -16,10 +16,14 @@ All reference classes extend and inherit methods from \code{"\linkS4class{envRef
        
 \section{Fields}{
   \describe{
-    \item{\code{pdv}:}{Object of class \code{activeBindingFunction} ~~ }
-    \item{\code{state}:}{Object of class \code{activeBindingFunction} ~~ }
-    \item{\code{status}:}{Object of class \code{activeBindingFunction} ~~ }
-    \item{\code{niter}:}{Object of class \code{activeBindingFunction} ~~ }
+    \item{\code{pdv}:}{Object of class \code{activeBindingFunction}:
+      Primal-dual variables.}
+    \item{\code{state}:}{Object of class \code{activeBindingFunction}:
+      Vector of state variables in convex programs.}
+    \item{\code{status}:}{Object of class \code{activeBindingFunction}:
+      Character indicating the status of the returned solution.}
+    \item{\code{niter}:}{Object of class \code{activeBindingFunction}:
+      Integer, count of iterations.}
   }
 }
 

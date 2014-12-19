@@ -16,11 +16,16 @@ All reference classes extend and inherit methods from \code{"\linkS4class{envRef
        
 \section{Fields}{
   \describe{
-    \item{\code{P}:}{Object of class \code{activeBindingFunction} ~~ }
-    \item{\code{q}:}{Object of class \code{activeBindingFunction} ~~ }
-    \item{\code{A}:}{Object of class \code{activeBindingFunction} ~~ }
-    \item{\code{b}:}{Object of class \code{activeBindingFunction} ~~ }
-    \item{\code{cList}:}{Object of class \code{activeBindingFunction} ~~ }
+    \item{\code{P}:}{Object of class \code{activeBindingFunction}:
+      Matrix related to quadratic term in objective.}
+    \item{\code{q}:}{Object of class \code{activeBindingFunction}:
+      Matrix related to linear term in objective.}
+    \item{\code{A}:}{Object of class \code{activeBindingFunction}:
+      Left-hand side of equality cosntraints.}
+    \item{\code{b}:}{Object of class \code{activeBindingFunction}:
+      Right-hand side of equality cosntraints.}
+    \item{\code{cList}:}{Object of class \code{activeBindingFunction}:
+      Inequality constraints, class \code{CONEC}.}
   }
 }
 
@@ -28,8 +33,6 @@ All reference classes extend and inherit methods from \code{"\linkS4class{envRef
   \describe{
     \item{\code{initialize(...)}:}{ ~~ }
     \item{\code{finalize()}:}{ ~~ }
-    \item{\code{pobj()}:}{ ~~ }
-    \item{\code{dobj()}:}{ ~~ }
     \item{\code{cps()}:}{ ~~ }
   }
 }
