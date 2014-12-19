@@ -68,7 +68,7 @@ setMethod("show", signature = "Rcpp_CPS", function(object){
 })
 ## gets-methods
 setMethod("gets", signature = "Rcpp_PDV", function(object){
-    lapply(object$s, function(s) s$u)
+    object$s
 })
 setMethod("gets", signature = "Rcpp_CPS", function(object){
     pdv <- object$pdv
@@ -76,7 +76,7 @@ setMethod("gets", signature = "Rcpp_CPS", function(object){
 })
 ## getz-methods
 setMethod("getz", signature = "Rcpp_PDV", function(object){
-    lapply(object$z, function(s) z$u)
+    object$z
 })
 setMethod("getz", signature = "Rcpp_CPS", function(object){
     pdv <- object$pdv
