@@ -13,7 +13,7 @@ RCPP_EXPOSED_CLASS(CPS)
 #define ARMA_H
 #include <RcppArmadillo.h>
 #endif
-
+using namespace arma;
 /*
  * Class definition and methods for controlling optimization routines
 */
@@ -42,43 +42,39 @@ maxiters(maxiters_), abstol(abstol_), reltol(reltol_), feastol(feastol_), trace(
   double feastol;
   bool trace;
 };
-
 /*
  * Class definition for inequality (cone) constraints
 */
 class CONEC {
  public:
- CONEC() : conTypes(std::vector<std::string>()), Gmats(std::vector<arma::mat>()), \
-    hmats(std::vector<arma::mat>()), dims(arma::uvec()), K(0) {}
- CONEC(Rcpp::CharacterVector conTypes_, Rcpp::List Gmats_, Rcpp::List hmats_, Rcpp::IntegerVector dims_, int K_): \
-  conTypes(), Gmats(), hmats(), K(K_){
-    conTypes = Rcpp::as< std::vector<std::string> >(conTypes_);
-    Gmats = Rcpp::as< std::vector<arma::mat> >(Gmats_);
-    hmats = Rcpp::as< std::vector<arma::mat> >(hmats_);
-    dims = Rcpp::as<arma::uvec>(dims_);
-  }
+ CONEC() : cone(std::vector<std::string>()), G(mat()), \
+    h(mat()), sidx(umat()), dims(uvec()), K(0) {}
+ CONEC(std::vector<std::string> cone_, mat G_, mat h_, umat sidx_, uvec dims_, int K_): \
+  cone(cone_), G(G_), h(h_), sidx(sidx_), dims(dims_), K(K_){}
   // members
-  std::vector<std::string> get_conTypes() {return conTypes;}
-  void set_conTypes(std::vector<std::string> conTypes_) {conTypes = conTypes_;}
-  std::vector<arma::mat> get_Gmats() {return Gmats;}
-  void set_Gmats(std::vector<arma::mat> Gmats_) {Gmats = Gmats_;}
-  std::vector<arma::mat> get_hmats() {return hmats;}
-  void set_hmats(std::vector<arma::mat> hmats_) {hmats = hmats_;}
-  arma::uvec get_dims() {return dims;}
-  void set_dims(arma::uvec dims_) {dims = dims_;}
+  std::vector<std::string> get_cone() {return cone;}
+  void set_cone(std::vector<std::string> cone_) {cone = cone_;}
+  mat get_G() {return G;}
+  void set_G(mat G_) {G = G_;}
+  mat get_h() {return h;}
+  void set_h(mat h_) {h = h_;}
+  umat get_sidx() {return sidx;}
+  void set_sidx(umat sidx_) {sidx = sidx_;}
+  uvec get_dims() {return dims;}
+  void set_dims(uvec dims_) {dims = dims_;}
   int get_K() {return K;}
   void set_K(int K_) {K = K_;}
 
   friend class DQP;
 
  private:
-  std::vector<std::string> conTypes;
-  std::vector<arma::mat> Gmats;
-  std::vector<arma::mat> hmats;
-  arma::uvec dims;
+  std::vector<std::string> cone;
+  mat G;
+  mat h;
+  umat sidx;
+  uvec dims;
   int K;
 };
-
 /*
  * Class for definition of Quadratic program
 */
@@ -86,18 +82,18 @@ class DQP {
  public:
 
   // constructors
- DQP() : P(arma::mat()), q(arma::vec()), A(arma::mat()), b(arma::vec()), cList(CONEC()) {}
-  DQP(arma::mat P_, arma::vec q_, arma::mat A_, arma::vec b_, CONEC cList_): \
+ DQP() : P(mat()), q(vec()), A(mat()), b(vec()), cList(CONEC()) {}
+  DQP(mat P_, vec q_, mat A_, vec b_, CONEC cList_): \
   P(P_), q(q_), A(A_), b(b_), cList(cList_) {}
   // members
-  arma::mat get_P() {return P;}
-  void set_P(arma::mat P_) {P = P_;}
-  arma::vec get_q() {return q;}
-  void set_q(arma::vec q_) {q = q_;}
-  arma::mat get_A() {return A;}
-  void set_A(arma::mat A_) {A = A_;}
-  arma::vec get_b() {return b;}
-  void set_b(arma::vec b_) {b = b_;}
+  mat get_P() {return P;}
+  void set_P(mat P_) {P = P_;}
+  vec get_q() {return q;}
+  void set_q(vec q_) {q = q_;}
+  mat get_A() {return A;}
+  void set_A(mat A_) {A = A_;}
+  vec get_b() {return b;}
+  void set_b(vec b_) {b = b_;}
   CONEC get_cList() {return cList;}
   void set_cList(CONEC cList_) {cList = cList_;}
 
@@ -105,20 +101,22 @@ class DQP {
   double dobj(PDV& pdv);
   double certp(PDV& pdv);
   double certd(PDV& pdv);
-  arma::mat rprim(PDV& pdv);
-  std::vector<arma::mat> rcent(PDV& pdv);
-  arma::mat rdual(PDV& pdv);
+  mat rprim(PDV& pdv);
+  mat rcent(PDV& pdv);
+  mat rdual(PDV& pdv);
   PDV* initpdv();
-  std::vector<std::map<std::string,arma::mat> > initnts();
-  arma::mat gwwg(std::vector<std::map<std::string,arma::mat> > WList);
-  arma::mat gwwz(std::vector<std::map<std::string,arma::mat> > WList, std::vector<arma::mat> z);
+  std::vector<std::map<std::string,mat> > initnts();
+  mat gwwg(std::vector<std::map<std::string,mat> > WList);
+  mat gwwz(std::vector<std::map<std::string,mat> > WList, mat z);
+  PDV* sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList);
+  mat ssnt(mat s, std::vector<std::map<std::string,mat> > WList, bool invers, bool transp);
   CPS* cps(CTRL& ctrl);
 
  private:
-  arma::mat P;
-  arma::vec q;
-  arma::mat A;
-  arma::vec b;
+  mat P;
+  vec q;
+  mat A;
+  vec b;
   CONEC cList;
 };
 
@@ -129,20 +127,19 @@ class PDV {
  public:
 
   // constructors
- PDV() : x(arma::mat()), y(arma::mat()), s(std::vector<arma::mat>()), z(std::vector<arma::mat>()), \
-    kappa(1.0), tau(1.0) {}
- PDV(arma::mat x_, arma::mat y_, std::vector<arma::mat> s_, std::vector<arma::mat> z_, \
-     double kappa_, double tau_):  \
+ PDV() : x(mat()), y(mat()), s(mat()), z(mat()), kappa(1.0), tau(1.0) {}
+ PDV(mat x_, mat y_, mat s_, mat z_, double kappa_, double tau_):  \
   x(x_), y(y_), s(s_), z(z_), kappa(kappa_), tau(tau_) {}
+
   // members
-  arma::mat get_x() {return x;}
-  void set_x(arma::mat x_) {x = x_;}
-  arma::mat get_y() {return y;}
-  void set_y(arma::mat y_) {y = y_;}
-  std::vector<arma::mat> get_s() {return s;}
-  void set_s(std::vector<arma::mat> s_) {s = s_;}
-  std::vector<arma::mat> get_z() {return z;}
-  void set_z(std::vector<arma::mat> z_) {z = z_;}
+  mat get_x() {return x;}
+  void set_x(mat x_) {x = x_;}
+  mat get_y() {return y;}
+  void set_y(mat y_) {y = y_;}
+  mat get_s() {return s;}
+  void set_s(mat s_) {s = s_;}
+  mat get_z() {return z;}
+  void set_z(mat z_) {z = z_;}
   double get_kappa() {return kappa;}
   void set_kappa(double kappa_) {kappa = kappa_;}
   double get_tau() {return tau;}
@@ -152,10 +149,10 @@ class PDV {
   friend class CONEC;
 
  private:
-  arma::mat x;
-  arma::mat y;
-  std::vector<arma::mat> s;
-  std::vector<arma::mat> z;
+  mat x;
+  mat y;
+  mat s;
+  mat z;
   double kappa;
   double tau;
 };

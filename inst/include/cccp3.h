@@ -11,9 +11,6 @@
 #include <RcppArmadillo.h>
 #endif
 
-#include <Rcpp.h>
-
-
 double sdot_nlp(arma::mat s, arma::mat z);
 double sdot_s(arma::mat s, arma::mat z, int m);
 double jdot_p(arma::mat s, arma::mat z);

@@ -4,17 +4,17 @@
 #define ARMA_H
 #include <RcppArmadillo.h>
 #endif
-
+using namespace arma;
 /*
  * Inner product of two vectors in S.
  * sdot_nlp is used for nonlinear, linear and second-order cone constraints.
  * sdot_s is used for positive semi-definite constraints.
 */
-double sdot_nlp(arma::mat s, arma::mat z) {
-  double ans = arma::dot(s, z);
+double sdot_nlp(mat s, mat z) {
+  double ans = dot(s, z);
   return ans;
 }
-double sdot_s(arma::mat s, arma::mat z, int m) {
+double sdot_s(mat s, mat z, int m) {
   double ans = 0.0;
   int n = s.n_rows;
 
@@ -37,7 +37,7 @@ double sdot_s(arma::mat s, arma::mat z, int m) {
  * Returns x' * J * y, whereby J = [1, 0; 0, -I]
  * jdot_p
 */
-double jdot_p(arma::mat s, arma::mat z){
+double jdot_p(mat s, mat z){
   int n = s.n_rows;
   double ans;
 
@@ -53,10 +53,10 @@ double jdot_p(arma::mat s, arma::mat z){
  * snrm2_nlp is used for nonlinear, linear and second-order cone constraints.
  * snrm2_s is used for positive semi-definite constraints.
 */
-double snrm2_nlp(arma::mat s) {
-  return arma::norm(s);
+double snrm2_nlp(mat s) {
+  return norm(s);
 }
-double snrm2_s(arma::mat s, int m) {
+double snrm2_s(mat s, int m) {
   double ans = 0.0;
   ans = sqrt(sdot_s(s, s, m));
   return ans;
@@ -66,7 +66,7 @@ double snrm2_s(arma::mat s, int m) {
  * Returns the square-root of x' * J * y, whereby J = [1, 0; 0, -I]
  * jnrm2_p
 */
-double jnrm2_p(arma::mat s){
+double jnrm2_p(mat s){
   double ans = sqrt(jdot_p(s, s));
   return ans;
 }
@@ -76,22 +76,22 @@ double jnrm2_p(arma::mat s){
  * sprd_p is used for second-order cone constraints.
  * sprd_s is used for positive semidefinite cone constraints.
 */
-arma::mat sprd_nl(arma::mat s, arma::mat z){
+mat sprd_nl(mat s, mat z){
   return s % z;
 }
-arma::mat sprd_p(arma::mat s, arma::mat z){
+mat sprd_p(mat s, mat z){
   int n = s.n_rows;
-  arma::mat ans(n, 1);
+  mat ans(n, 1);
 
-  ans(0, 0) = arma::dot(s, z);
+  ans(0, 0) = dot(s, z);
   for(int i = 1; i < n; i++){
     ans(i, 0) = s(0, 0) * z(i, 0) + z(0, 0) * s(i, 0);
   }
 
   return ans;
 }
-arma::mat sprd_s(arma::mat s, arma::mat z, int m){
-  arma::mat ans(m,m);
+mat sprd_s(mat s, mat z, int m){
+  mat ans(m,m);
   s.reshape(m,m);
   z.reshape(m,m);
 
@@ -106,19 +106,19 @@ arma::mat sprd_s(arma::mat s, arma::mat z, int m){
  * sone_p is used for second-order cone constraints.
  * sone_s is used for positive semidefinite cone constraints.
 */
-arma::mat sone_nl(arma::mat s){
-  arma::mat ans(s.n_rows, 1);
+mat sone_nl(mat s){
+  mat ans(s.n_rows, 1);
   ans.ones();
   return ans;
 }
-arma::mat sone_p(arma::mat s){
-  arma::mat ans(s.n_rows, 1);
+mat sone_p(mat s){
+  mat ans(s.n_rows, 1);
   ans.zeros();
   ans.at(0,0) = 1.0;
   return ans;
 }
-arma::mat sone_s(int m){
-  arma::mat ans = arma::eye(m, m);
+mat sone_s(int m){
+  mat ans = eye(m, m);
   ans.reshape(m * m, 1);
   return ans;
 }
@@ -128,14 +128,14 @@ arma::mat sone_s(int m){
  * sinv_p is used for second-order cone constraints.
  * sinv_s is used for positive semidefinite cone constraints.
 */
-arma::mat sinv_nl(arma::mat s, arma::mat z){
-  arma::mat ans(s.n_rows, 1);
+mat sinv_nl(mat s, mat z){
+  mat ans(s.n_rows, 1);
   ans = s / z;
   return ans;
 }
-arma::mat sinv_p(arma::mat s, arma::mat z){
+mat sinv_p(mat s, mat z){
   int n = s.n_rows;
-  arma::mat ans(n,1);
+  mat ans(n,1);
   double aa = jdot_p(z, z);
   double cc = s(0, 0);
   double dd = 0.0;
@@ -154,8 +154,8 @@ arma::mat sinv_p(arma::mat s, arma::mat z){
 
   return ans;
 }
-arma::mat sinv_s(arma::mat s, arma::mat z, int m){
-  arma::mat ans(m,m);
+mat sinv_s(mat s, mat z, int m){
+  mat ans(m,m);
 
   s.reshape(m,m);
   z.reshape(m,m);
@@ -170,10 +170,10 @@ arma::mat sinv_s(arma::mat s, arma::mat z, int m){
  * smss_p is used for second-order cone constraints.
  * smss_s is used for positive semidefinite cone constraints.
 */
-double smss_nl(arma::mat s){
+double smss_nl(mat s){
   return s.min();
 }
-double smss_p(arma::mat s){
+double smss_p(mat s){
   double ans = 0.0;
   int n = s.n_rows;
 
@@ -185,12 +185,12 @@ double smss_p(arma::mat s){
 
   return ans;
 }
-double smss_s(arma::mat s, int m){
-  arma::vec eval;
-  arma::mat evec;
+double smss_s(mat s, int m){
+  vec eval;
+  mat evec;
 
   s.reshape(m,m);
-  arma::eig_sym(eval, evec, s);
+  eig_sym(eval, evec, s);
 
   return -eval[0];
 }
@@ -200,20 +200,20 @@ double smss_s(arma::mat s, int m){
  * sams1_p is used for second-order cone constraints.
  * sams1_s is used for positive semidefinite cone constraints.
 */
-arma::mat sams1_nl(arma::mat s, double alpha){
-  arma::mat adj(1,1);
+mat sams1_nl(mat s, double alpha){
+  mat adj(1,1);
 
   adj.at(0,0) = 1 + alpha;
   s.each_row() += adj;
 
   return s; 
 }
-arma::mat sams1_p(arma::mat s, double alpha){
+mat sams1_p(mat s, double alpha){
   s.at(0,0) += 1.0 + alpha;
 
   return s;
 }
-arma::mat sams1_s(arma::mat s, double alpha, int m){
+mat sams1_s(mat s, double alpha, int m){
   s.reshape(m,m);
   s.diag() = s.diag() + (1 + alpha);
   s.reshape(m * m, 1);
@@ -226,7 +226,7 @@ arma::mat sams1_s(arma::mat s, double alpha, int m){
  * sams1_p is used for second-order cone constraints.
  * sams1_s is used for positive semidefinite cone constraints.
 */
-arma::mat sams2_nl(arma::mat s, double alpha){
+mat sams2_nl(mat s, double alpha){
   int n = s.n_rows;
 
   for(int i = 0; i < n; i++){
@@ -235,7 +235,7 @@ arma::mat sams2_nl(arma::mat s, double alpha){
 
   return s; 
 }
-arma::mat sams2_p(arma::mat s, double alpha){
+mat sams2_p(mat s, double alpha){
   int n = s.n_rows;
 
   for(int i = 0; i < n; i++){
@@ -245,7 +245,7 @@ arma::mat sams2_p(arma::mat s, double alpha){
 
   return s;
 }
-arma::mat sams2_s(arma::mat s, double alpha, arma::mat lambda, arma::vec sigma, int m){
+mat sams2_s(mat s, double alpha, mat lambda, vec sigma, int m){
   s.reshape(m,m);
   lambda.reshape(m,m);
 
@@ -264,10 +264,10 @@ arma::mat sams2_s(arma::mat s, double alpha, arma::mat lambda, arma::vec sigma, 
  * ntsc_p is used for second-order cone constraints.
  * ntsc_s is used for positive semidefinite cone constraints.
 */
-std::map<std::string,arma::mat> ntsc_n(arma::mat s, arma::mat z){
-  std::map<std::string,arma::mat> W;
+std::map<std::string,mat> ntsc_n(mat s, mat z){
+  std::map<std::string,mat> W;
   int n = s.n_rows;
-  arma::mat dnl(n, 1), dnli(n, 1), lambda(n, 1); 
+  mat dnl(n, 1), dnli(n, 1), lambda(n, 1); 
   for(int i = 0; i < n; i++){
     dnl.at(i, 0) = sqrt(s.at(i, 0) / z.at(i, 0));
     dnli.at(i, 0) = sqrt(z.at(i, 0) / s.at(i, 0));
@@ -279,10 +279,10 @@ std::map<std::string,arma::mat> ntsc_n(arma::mat s, arma::mat z){
 
   return W;
 }
-std::map<std::string,arma::mat> ntsc_l(arma::mat s, arma::mat z){
-  std::map<std::string,arma::mat> W;
+std::map<std::string,mat> ntsc_l(mat s, mat z){
+  std::map<std::string,mat> W;
   int n = s.n_rows;
-  arma::mat d(n, 1), di(n, 1), lambda(n, 1); 
+  mat d(n, 1), di(n, 1), lambda(n, 1); 
   for(int i = 0; i < n; i++){
     d.at(i, 0) = sqrt(s.at(i, 0) / z.at(i, 0));
     di.at(i, 0) = sqrt(z.at(i, 0) / s.at(i, 0));
@@ -294,10 +294,10 @@ std::map<std::string,arma::mat> ntsc_l(arma::mat s, arma::mat z){
 
   return W;
 }
-std::map<std::string,arma::mat> ntsc_p(arma::mat s, arma::mat z){
-  std::map<std::string,arma::mat> W;
+std::map<std::string,mat> ntsc_p(mat s, mat z){
+  std::map<std::string,mat> W;
   int n = s.n_rows;
-  arma::mat v(n,1), beta(1,1), lambda(n,1);
+  mat v(n,1), beta(1,1), lambda(n,1);
   double aa, bb, cc, dd, szdot;
 
   aa = jnrm2_p(s);
@@ -327,16 +327,16 @@ std::map<std::string,arma::mat> ntsc_p(arma::mat s, arma::mat z){
 
   return W;
 }
-std::map<std::string,arma::mat> ntsc_s(arma::mat s, arma::mat z, int m){
-  std::map<std::string,arma::mat> W;
-  arma::mat sc, zc, szc, U, V;
-  arma::vec l;
-  arma::mat r, rti, lambda;
+std::map<std::string,mat> ntsc_s(mat s, mat z, int m){
+  std::map<std::string,mat> W;
+  mat sc, zc, szc, U, V;
+  vec l;
+  mat r, rti, lambda;
 
   s.reshape(m,m);
   z.reshape(m,m);
-  arma::chol(sc, s);
-  arma::chol(zc, z);
+  chol(sc, s);
+  chol(zc, z);
   szc = zc * sc.t();
   svd(U, l, V, szc);
   r = zc.i() * U * diagmat(sqrt(l));
@@ -356,7 +356,7 @@ std::map<std::string,arma::mat> ntsc_s(arma::mat s, arma::mat z, int m){
  * ntsu_p is used for second-order cone constraints.
  * ntsu_s is used for positive semidefinite cone constraints.
 */
-std::map<std::string,arma::mat> ntsu_n(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z){
+std::map<std::string,mat> ntsu_n(std::map<std::string,mat> W, mat s, mat z){
   int n = s.n_rows;
   double ssqrt, zsqrt;
 
@@ -370,7 +370,7 @@ std::map<std::string,arma::mat> ntsu_n(std::map<std::string,arma::mat> W, arma::
 
   return W;
 }
-std::map<std::string,arma::mat> ntsu_l(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z){
+std::map<std::string,mat> ntsu_l(std::map<std::string,mat> W, mat s, mat z){
   int n = s.n_rows;
   double ssqrt, zsqrt;
 
@@ -384,7 +384,7 @@ std::map<std::string,arma::mat> ntsu_l(std::map<std::string,arma::mat> W, arma::
 
   return W;
 }
-std::map<std::string,arma::mat> ntsu_p(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z){
+std::map<std::string,mat> ntsu_p(std::map<std::string,mat> W, mat s, mat z){
   int n = s.n_rows;
   double aa, bb, cc, dd, vs, vz, vq, vu, wk0;
 
@@ -392,8 +392,8 @@ std::map<std::string,arma::mat> ntsu_p(std::map<std::string,arma::mat> W, arma::
   bb = jnrm2_p(z);
   s /=  aa;
   z /=  bb;
-  cc = sqrt((1 + arma::dot(s, z)) / 2.0);
-  vs = arma::dot(W["v"], s);
+  cc = sqrt((1 + dot(s, z)) / 2.0);
+  vs = dot(W["v"], s);
   vz = W["v"].at(0,0) * z.at(0,0);
   for(int i = 1; i < n; i++){
     vz -= W["v"].at(i,0) * z.at(i,0);
@@ -422,9 +422,9 @@ std::map<std::string,arma::mat> ntsu_p(std::map<std::string,arma::mat> W, arma::
 
   return W;
 }
-std::map<std::string,arma::mat> ntsu_s(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z, int m){
-  arma::mat zts, U, V, DiagL, lu;
-  arma::vec l;
+std::map<std::string,mat> ntsu_s(std::map<std::string,mat> W, mat s, mat z, int m){
+  mat zts, U, V, DiagL, lu;
+  vec l;
 
   s.reshape(m,m);
   z.reshape(m,m);
@@ -444,7 +444,7 @@ std::map<std::string,arma::mat> ntsu_s(std::map<std::string,arma::mat> W, arma::
  * sslb_p is used for second-order cone constraints.
  * sslb_s is used for positive semidefinite cone constraints.
 */
-arma::mat sslb_nl(arma::mat s, arma::mat lambda, bool invers){
+mat sslb_nl(mat s, mat lambda, bool invers){
   int n = s.n_rows;
 
   if(invers){
@@ -459,13 +459,13 @@ arma::mat sslb_nl(arma::mat s, arma::mat lambda, bool invers){
 
   return s;
 }
-arma::mat sslb_p(arma::mat s, arma::mat lambda, bool invers){
+mat sslb_p(mat s, mat lambda, bool invers){
   int n = s.n_rows;
   double a, cc, lx, s0;
 
   a = jnrm2_p(lambda);
   if(invers){
-    lx = arma::dot(lambda, s) / a;
+    lx = dot(lambda, s) / a;
   } else {
     lx = jdot_p(lambda, s) / a;
   }
@@ -483,8 +483,8 @@ arma::mat sslb_p(arma::mat s, arma::mat lambda, bool invers){
 
   return s;
 }
-arma::mat sslb_s(arma::mat s, arma::mat lambda, bool invers, int m){
-  arma::vec ld, ls;
+mat sslb_s(mat s, mat lambda, bool invers, int m){
+  vec ld, ls;
 
   s.reshape(m,m);
   lambda.reshape(m,m);
@@ -508,8 +508,8 @@ arma::mat sslb_s(arma::mat s, arma::mat lambda, bool invers, int m){
  * ssnt_p is used for second-order cone constraints.
  * ssnt_s is used for positive semidefinite cone constraints.
 */
-arma::mat ssnt_n(arma::mat s, std::map<std::string,arma::mat> W, bool invers){
-  arma::mat w;
+mat ssnt_n(mat s, std::map<std::string,mat> W, bool invers){
+  mat w;
   int m = s.n_rows;
   int n = s.n_cols;
 
@@ -526,8 +526,8 @@ arma::mat ssnt_n(arma::mat s, std::map<std::string,arma::mat> W, bool invers){
 
   return s;
 }
-arma::mat ssnt_l(arma::mat s, std::map<std::string,arma::mat> W, bool invers){
-  arma::mat w;
+mat ssnt_l(mat s, std::map<std::string,mat> W, bool invers){
+  mat w;
   int m = s.n_rows;
   int n = s.n_cols;
 
@@ -544,9 +544,9 @@ arma::mat ssnt_l(arma::mat s, std::map<std::string,arma::mat> W, bool invers){
 
   return s;
 }
-arma::mat ssnt_p(arma::mat s, std::map<std::string,arma::mat> W, bool invers){
+mat ssnt_p(mat s, std::map<std::string,mat> W, bool invers){
   double a;
-  arma::mat w;
+  mat w;
 
   if(invers){
     s.row(0) = -s.row(0);
@@ -564,10 +564,10 @@ arma::mat ssnt_p(arma::mat s, std::map<std::string,arma::mat> W, bool invers){
 
   return s;
 }
-arma::mat ssnt_s(arma::mat s, std::map<std::string,arma::mat> W, bool invers, bool transp){
+mat ssnt_s(mat s, std::map<std::string,mat> W, bool invers, bool transp){
   int n, m;
   bool tt;
-  arma::mat w, S, a, ans;
+  mat w, S, a, ans;
 
   if(invers){
     w = W["rti"];

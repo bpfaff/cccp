@@ -12,15 +12,18 @@ dqp <- function(P, q, A = NULL, b = NULL, cList = list()){
         b <- numeric()
     } 
     if(length(cList) > 0){
-        conTypes <- unlist(lapply(cList, function(x) x[["conType"]]))
-        if(!all(conTypes %in% c("NNOC", "SOCC", "PSDC"))){
+        cone <- unlist(lapply(cList, function(x) x[["conType"]]))
+        if(!all(cone %in% c("NNOC", "SOCC", "PSDC"))){
             stop("List elements of cone constraints must be either created by calls to:\n'nnoc()', or 'socc()', or 'psdc()'.\n")
         }
         K <- length(cList)
-        Gmats <- lapply(cList, function(x) x[["G"]])
-        hvecs <- lapply(cList, function(x) x[["h"]])
+        GList <- lapply(cList, function(x) x[["G"]])
+        G <- do.call("rbind", GList)
+        h <- do.call("rbind", lapply(cList, function(x) x[["h"]]))
+        ridx <- cumsum(unlist(lapply(GList, nrow)))
+        sidx <- cbind(c(0, ridx[-length(ridx)]), ridx - 1)
         dims <- as.integer(unlist(lapply(cList, function(x) x[["dims"]])))
-        cList <- new(CONEC, conTypes, Gmats, hvecs, dims, K)
+        cList <- new(CONEC, cone, G, h, sidx, dims, K)
     } else {
         cList <- new(CONEC)
     }
