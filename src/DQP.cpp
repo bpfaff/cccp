@@ -180,33 +180,33 @@ std::vector<std::map<std::string,mat> > DQP::initnts(){
   for(int i = 0; i < cList.K; i++){
     if(cList.cone[i] == "NLFC"){
       ans = ones(cList.dims[i],1);
-      W["dnl"] = ans;
-      W["dnli"] = ans;
+      W.insert(std::pair<std::string,mat>("dnl", ans));
+      W.insert(std::pair<std::string,mat>("dnli", ans));
       ans = zeros(cList.dims[i],1);
-      W["lambda"] = ans;
+      W.insert(std::pair<std::string,mat>("lambda", ans));
     } else if(cList.cone[i] == "NNOC"){
       ans = ones(cList.dims[i],1);
-      W["d"] = ans;
-      W["di"] = ans;
+      W.insert(std::pair<std::string,mat>("d", ans));
+      W.insert(std::pair<std::string,mat>("di", ans));
       ans = zeros(cList.dims[i],1);
-      W["lambda"] = ans;
+      W.insert(std::pair<std::string,mat>("lambda", ans));
     } else if(cList.cone[i] == "SOCC"){
       ans = ones(1,1);
-      W["beta"] = ans;
+      W.insert(std::pair<std::string,mat>("beta", ans));
       ans = zeros(cList.dims[i],1);
       ans.at(0,0) = 1.0;
-      W["v"] = ans;
+      W.insert(std::pair<std::string,mat>("v", ans));
       ans = zeros(cList.dims[i],1);
-      W["lambda"] = ans;
+      W.insert(std::pair<std::string,mat>("lambda", ans));
     } else if(cList.cone[i] == "PSDC"){
       ans = eye(cList.dims[i],cList.dims[i]);
       ans.reshape(cList.dims[i] * cList.dims[i], 1);
-      W["r"] = ans;
-      W["rti"] = ans;
+      W.insert(std::pair<std::string,mat>("r", ans));
+      W.insert(std::pair<std::string,mat>("rti", ans));
       ans = zeros(cList.dims[i] * cList.dims[i], 1);
-      W["lambda"] = ans;
+      W.insert(std::pair<std::string,mat>("lambda", ans));
     }
-    WList[i] = W;
+    WList.push_back(W);
   }
 
   return WList;
@@ -373,38 +373,33 @@ CPS* DQP::cps(CTRL& ctrl){
     return cps;
   }
   // Case 3: At least inequality constrained QP
-    /* 
-
-  if(cList.K > 0){
-    // Initialising state variables
-    //int m = sum(cList.dims);
-   std::map<std::string,double> cvgdvals;
-    cvgdvals["pobj"] = NA_REAL;
-    cvgdvals["dobj"] = NA_REAL;
-    cvgdvals["pinf"] = NA_REAL;
-    cvgdvals["dinf"] = NA_REAL;
-    cvgdvals["dgap"] = NA_REAL;
-
-    // Initialising LHS and RHS matrices
-    int n = P.n_cols;
-    int sizeLHS = A.n_rows + A.n_cols;
-    mat LHS(sizeLHS, sizeLHS);
-    LHS.zeros();
-    if(A.n_rows > 0){ // equality constraints
-      LHS.submat(n, 0, sizeLHS-1, n-1) = A;
-      LHS.submat(0, n, n-1, sizeLHS-1) = A.t();
-    }
-    mat RHS(sizeLHS, 1);
-    // Initialising Nesterov-Todd scalings
-    std::vector<std::map<std::string,mat> > WList;
-    WList = initnts();
-    // Initialising PDV for determining (first) interior point
-    pdv->x = -q;
-    pdv->y = b;
-    pdv->z = cList.hmats;
-    pdv = sxyz(pdv, LHS, RHS, WList);
-    cps->set_pdv(*pdv);
+  // Initialising state variables
+  //int m = sum(cList.dims);
+  std::map<std::string,double> cvgdvals;
+  cvgdvals["pobj"] = NA_REAL;
+  cvgdvals["dobj"] = NA_REAL;
+  cvgdvals["pinf"] = NA_REAL;
+  cvgdvals["dinf"] = NA_REAL;
+  cvgdvals["dgap"] = NA_REAL;
+  // Initialising LHS and RHS matrices
+  int n = P.n_cols;
+  int sizeLHS = A.n_rows + A.n_cols;
+  mat LHS(sizeLHS, sizeLHS);
+  LHS.zeros();
+  if(A.n_rows > 0){ // equality constraints
+    LHS.submat(n, 0, sizeLHS-1, n-1) = A;
+    LHS.submat(0, n, n-1, sizeLHS-1) = A.t();
   }
-    */ 
+  mat RHS(sizeLHS, 1);
+  // Initialising Nesterov-Todd scalings
+  std::vector<std::map<std::string,mat> > WList;
+  WList = initnts();
+  // Initialising PDV for determining (first) interior point
+  pdv->x = -q;
+  pdv->y = b;
+  pdv->z = cList.h;
+  pdv = sxyz(pdv, LHS, RHS, WList);
+  cps->set_pdv(*pdv);
+
   return cps;
 }

@@ -14,6 +14,7 @@ RCPP_EXPOSED_CLASS(CPS)
 #include <RcppArmadillo.h>
 #endif
 using namespace arma;
+
 /*
  * Class definition and methods for controlling optimization routines
 */
