@@ -1,12 +1,12 @@
 #include "cccp3.h"
-
 /*
  *
  * Methods for Quadratic Programs
  *
 */
 using namespace arma;
-
+const int TraceFieldWidth = 10;
+const int TracePrintPrecs = 5;
 /*
 Primal objective
 */
@@ -374,18 +374,10 @@ CPS* DQP::cps(CTRL& ctrl){
   }
   // Case 3: At least inequality constrained QP
   // Computing fixed values
-  double ftol = ctrl.get_feastol();
   //int m = sum(cList.dims);
-  //double resx0 = std::max(1.0, norm(q));
-  //double resy0 = std::max(1.0, norm(b));
-  //double resz0 = std::max(1.0, snrm2(cList.h));
-  // Initialising state variables
-  std::map<std::string,double> cvgdvals;
-  cvgdvals["pobj"] = NA_REAL;
-  cvgdvals["dobj"] = NA_REAL;
-  cvgdvals["pinf"] = NA_REAL;
-  cvgdvals["dinf"] = NA_REAL;
-  cvgdvals["dgap"] = NA_REAL;
+  double resx0 = std::max(1.0, norm(q));
+  double resy0 = std::max(1.0, norm(b));
+  double resz0 = std::max(1.0, snrm2(cList.h));
   // Initialising LHS and RHS matrices
   int n = P.n_cols;
   int sizeLHS = A.n_rows + A.n_cols;
@@ -415,10 +407,85 @@ CPS* DQP::cps(CTRL& ctrl){
   if(tz >= -1e-8 * std::max(1.0, nrmz)){
     pdv->z = sams1(pdv->z, tz);
   }
-  double gap = sum(sdot(pdv->s, pdv->z));
-
+  // Defining variables used in iterations
+  bool trace = ctrl.get_trace(), checkRgap = false;
+  int maxiters = ctrl.get_maxiters();
+  double resx, resy, resz, pcost, dcost, gap, rgap = NA_REAL, pres, dres;
+  double atol = ctrl.get_abstol();
+  double ftol = ctrl.get_feastol();
+  double rtol = ctrl.get_reltol();
+  mat rx, ry, rz;
+  // Duality gap for initial solution
+  gap = sum(sdot(pdv->s, pdv->z));
   cps->set_pdv(*pdv);
-  // Starting iterations 
+  //
+  // Starting iterations
+  //
+  for(int i = 0; i < maxiters; i++){
+    // Dual Residuals
+    rx = rdual(*pdv);
+    resx = norm(rx);
+    // Primal Residuals
+    ry = rprim(*pdv);
+    resy = norm(ry);
+    // Central Residuals 
+    rz = rcent(*pdv);
+    resz = snrm2(rz);
+    // Statistics for stopping criteria
+    pcost = pobj(*pdv);
+    dcost = pcost + dot(pdv->y, ry) + sdot(pdv->z, rz).at(0, 0) - gap;
+    if(pcost < 0.0) rgap = gap / (-pcost);
+    if(dcost > 0.0) rgap = gap / dcost;
+    pres = std::max(resy / resy0, resz / resz0); 
+    dres = resx / resx0;
+    // Tracing status quo of IPM
+    if(trace){
+      Rcpp::Rcout << "Iteration: " << i + 1 << std::endl;
+      Rcpp::Rcout << std::setiosflags(ios::left) 
+		  << std::setw(TraceFieldWidth) << "pobj" 
+		  << std::setw(TraceFieldWidth) << "dobj" 
+		  << std::setw(TraceFieldWidth) << "pinf" 
+		  << std::setw(TraceFieldWidth) << "dinf" 
+		  << std::setw(TraceFieldWidth) << "dgap" 
+		  << std::endl;
+      Rcpp::Rcout << std::setiosflags(ios::left) 
+		  << std::setw(TraceFieldWidth) << std::setprecision(TracePrintPrecs) << pcost 
+		  << std::setw(TraceFieldWidth) << std::setprecision(TracePrintPrecs) << dcost 
+		  << std::setw(TraceFieldWidth) << std::setprecision(TracePrintPrecs) << pres 
+		  << std::setw(TraceFieldWidth) << std::setprecision(TracePrintPrecs) << dres 
+		  << std::setw(TraceFieldWidth) << std::setprecision(TracePrintPrecs) << gap 
+		  << std::endl;
+    }
+    // Checking convergence
+    if(!std::isnan(rgap)){
+      checkRgap = (rgap <= rtol);
+    }
+    if((pres <= ftol) && (dres <= ftol) && ((gap <= atol) || checkRgap)){
+      cps->set_pdv(*pdv);
+
+      ts = smss(pdv->s).max();
+      tz = smss(pdv->z).max();
+      state["pobj"] = pobj(*pdv);
+      state["dobj"] = dobj(*pdv);
+      state["dgap"] = gap;
+      state["certp"] = certp(*pdv);
+      state["certd"] = certd(*pdv);
+      state["pslack"] = -ts;
+      state["dslack"] = -tz;
+      cps->set_state(state);
+      cps->set_status("optimal");
+      cps->set_niter(i + 1);
+      if(trace){
+	Rcpp::Rcout << "Optimal solution found." << std::endl;
+      }
+
+    }
+    /*
+      Computing initial scalings
+    */
+
+
+  } 
 
 
   // Preparing result (not complete, yet)
@@ -430,10 +497,15 @@ CPS* DQP::cps(CTRL& ctrl){
   state["pslack"] = -ts;
   state["dslack"] = -tz;
   cps->set_state(state);
+  cps->set_niter(maxiters);
+
   if((state["certp"] <= ftol) && (state["certd"] <= ftol)){
     cps->set_status("optimal");
   } else {
     cps->set_status("unknown");
+  }
+  if(trace){
+    Rcpp::Rcout << "Optimal solution not determined in " << maxiters << " iteration(s)." << std::endl;
   }
 
   return cps;

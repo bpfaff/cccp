@@ -15,6 +15,8 @@ RCPP_EXPOSED_CLASS(CPS)
 #endif
 using namespace arma;
 
+#include <iomanip>
+
 /*
  * Class definition and methods for controlling optimization routines
 */

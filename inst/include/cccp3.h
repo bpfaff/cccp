@@ -53,4 +53,7 @@ arma::mat ssnt_s(arma::mat s, std::map<std::string,arma::mat> W, bool invers, bo
 
 #include "CPG.h"
 
+extern const int TraceFieldWidth;
+extern const int TracePrintPrecs;
+
 #endif
