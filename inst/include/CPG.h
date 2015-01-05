@@ -98,9 +98,9 @@ class DQP {
   CONEC get_cList() {return cList;}
   void set_cList(CONEC cList_) {cList = cList_;}
 
-  double snrm2(mat s);
-  vec sdot(mat s, mat z);
-  vec smss(mat s);
+  double snrm2(mat u);
+  vec sdot(mat u, mat v);
+  vec smss(mat u);
   double pobj(PDV& pdv);
   double dobj(PDV& pdv);
   double certp(PDV& pdv);
@@ -108,7 +108,7 @@ class DQP {
   mat rprim(PDV& pdv);
   mat rcent(PDV& pdv);
   mat rdual(PDV& pdv);
-  mat sams1(mat s, double alpha);
+  mat sams1(mat u, double alpha);
   PDV* initpdv();
   std::vector<std::map<std::string,mat> > initnts();
   mat gwwg(std::vector<std::map<std::string,mat> > WList);

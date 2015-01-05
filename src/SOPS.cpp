@@ -32,16 +32,16 @@ double sdot_s(mat s, mat z, int m) {
   }
   return ans;
 }
-vec DQP::sdot(mat s, mat z){
+vec DQP::sdot(mat u, mat v){
   vec ans = zeros<vec>(cList.K);
 
   for(int i = 0; i < cList.K; i++){
     if(cList.cone[i] != "PSDC") {
-      ans.at(i) = sdot_nlp(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
-			   z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
+      ans.at(i) = sdot_nlp(u(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
+			   v(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
     } else {
-      ans.at(i) = sdot_s(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
-			 z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
+      ans.at(i) = sdot_s(u(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
+			 v(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
 			 cList.dims[i]);
     }
   }
@@ -77,14 +77,14 @@ double snrm2_s(mat s, int m) {
   ans = sqrt(sdot_s(s, s, m));
   return ans;
 }
-double DQP::snrm2(mat s){
+double DQP::snrm2(mat u){
   double ans = 0.0;
 
   for(int i = 0; i < cList.K; i++){
     if(cList.cone[i] != "PSDC"){
-      ans += snrm2_nlp(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
+      ans += snrm2_nlp(u(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
     } else {
-      ans += snrm2_s(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
+      ans += snrm2_s(u(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
 		       cList.dims[i]);
     } 
   }
@@ -201,7 +201,7 @@ mat sinv_s(mat s, mat z, int m){
  * smss_s is used for positive semidefinite cone constraints.
 */
 double smss_nl(mat s){
-  return s.min();
+  return -s.min();
 }
 double smss_p(mat s){
   double ans = 0.0;
@@ -224,16 +224,16 @@ double smss_s(mat s, int m){
 
   return -eval[0];
 }
-vec DQP::smss(mat s){
+vec DQP::smss(mat u){
   vec ans = zeros<vec>(cList.K);
 
   for(int i = 0; i < cList.K; i++){
     if((cList.cone[i] == "NLFC") || (cList.cone[i] == "NNOC")){
-      ans.at(i) = smss_nl(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
+      ans.at(i) = smss_nl(u(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
     } else if(cList.cone[i] == "SOCC"){
-      ans.at(i) = smss_p(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
+      ans.at(i) = smss_p(u(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
     } else if(cList.cone[i] == "PSDC"){
-      ans.at(i) = smss_s(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
+      ans.at(i) = smss_s(u(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
 			 cList.dims[i]);
     }
   }
@@ -266,11 +266,11 @@ mat sams1_s(mat s, double alpha, int m){
 
   return s;
 }
-mat DQP::sams1(mat s, double alpha){
+mat DQP::sams1(mat u, double alpha){
   mat temp;
 
   for(int i = 0; i < cList.K; i++){
-    temp = s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
+    temp = u(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
     if((cList.cone[i] == "NLFC") || (cList.cone[i] == "NNOC")){
       temp = sams1_nl(temp, alpha);
     } else if(cList.cone[i] == "SOCC"){
@@ -278,10 +278,10 @@ mat DQP::sams1(mat s, double alpha){
     } else if(cList.cone[i] == "PSDC"){
       temp = sams1_s(temp, alpha, cList.dims[i]);
     }
-    s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = temp;
+    u(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = temp;
   }
 
-  return s;
+  return u;
 }
 /*
  * Applying maximum step-size to a vector in S (during iterations).

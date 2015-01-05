@@ -404,7 +404,7 @@ CPS* DQP::cps(CTRL& ctrl){
   pdv->y = b;
   pdv->z = cList.h;
   pdv = sxyz(pdv, LHS, RHS, WList);
-  pdv->s = -pdv->z;
+  pdv->s = -1.0 * (pdv->z);
   double ts = smss(pdv->s).max();
   double nrms = sum(snrm2(pdv->s));
   double tz = smss(pdv->z).max();
