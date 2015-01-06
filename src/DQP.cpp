@@ -62,7 +62,10 @@ mat DQP::rcent(PDV& pdv){
   mat ans(cList.G.n_rows, 1);
 
   for(int i = 0; i < cList.K; i++){
-    ans(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = pdv.s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) + cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) * pdv.x - cList.h(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
+    ans(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = 
+      pdv.s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) + 
+      cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) * pdv.x - 
+      cList.h(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
   }
 
   return ans;
@@ -81,7 +84,8 @@ mat DQP::rdual(PDV& pdv){
 
   if(cList.K > 0){
     for(int i = 0; i < cList.K; i++){
-      Gz = Gz + cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * pdv.z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
+      Gz = Gz + cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * 
+	pdv.z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
     } 
   }
   if(A.n_rows > 0){
@@ -127,7 +131,8 @@ double DQP::certd(PDV& pdv){
 
   if(cList.K > 0){
     for(int i = 0; i < cList.K; i++){
-      Gz = Gz + cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * pdv.z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
+      Gz = Gz + cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * 
+	pdv.z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
     } 
   }
 
@@ -170,46 +175,24 @@ PDV* DQP::initpdv(){
   return pdv;
 }
 /*
-Initial Nesterov-Todd scalings
+Product of Lagrange-Multipliers for each cone constraint
 */
-std::vector<std::map<std::string,mat> > DQP::initnts(){
-  std::vector<std::map<std::string,mat> > WList;
-  std::map<std::string,mat> W;
+std::vector<mat> DQP::lsq(std::vector<std::map<std::string,mat> > WList){
+  std::vector<mat> LambdaProd;
   mat ans;
 
   for(int i = 0; i < cList.K; i++){
-    if(cList.cone[i] == "NLFC"){
-      ans = ones(cList.dims[i],1);
-      W.insert(std::pair<std::string,mat>("dnl", ans));
-      W.insert(std::pair<std::string,mat>("dnli", ans));
-      ans = zeros(cList.dims[i],1);
-      W.insert(std::pair<std::string,mat>("lambda", ans));
-    } else if(cList.cone[i] == "NNOC"){
-      ans = ones(cList.dims[i],1);
-      W.insert(std::pair<std::string,mat>("d", ans));
-      W.insert(std::pair<std::string,mat>("di", ans));
-      ans = zeros(cList.dims[i],1);
-      W.insert(std::pair<std::string,mat>("lambda", ans));
+    if((cList.cone[i] == "NLFC") || (cList.cone[i] == "NNOC")){
+      ans = sprd_nl(WList[i]["lambda"], WList[i]["lambda"]);
     } else if(cList.cone[i] == "SOCC"){
-      ans = ones(1,1);
-      W.insert(std::pair<std::string,mat>("beta", ans));
-      ans = zeros(cList.dims[i],1);
-      ans.at(0,0) = 1.0;
-      W.insert(std::pair<std::string,mat>("v", ans));
-      ans = zeros(cList.dims[i],1);
-      W.insert(std::pair<std::string,mat>("lambda", ans));
+      ans = sprd_p(WList[i]["lambda"], WList[i]["lambda"]);
     } else if(cList.cone[i] == "PSDC"){
-      ans = eye(cList.dims[i],cList.dims[i]);
-      ans.reshape(cList.dims[i] * cList.dims[i], 1);
-      W.insert(std::pair<std::string,mat>("r", ans));
-      W.insert(std::pair<std::string,mat>("rti", ans));
-      ans = zeros(cList.dims[i] * cList.dims[i], 1);
-      W.insert(std::pair<std::string,mat>("lambda", ans));
+      ans = sprd_s(WList[i]["lambda"], WList[i]["lambda"], cList.dims[i]);
     }
-    WList.push_back(W);
+    LambdaProd.push_back(ans);
   }
 
-  return WList;
+  return LambdaProd;
 }
 /*
 Computation of: Sum of G_i'W_i^-1W_i^-1'G_i for i = 1, ..., K
@@ -276,26 +259,7 @@ mat DQP::gwwz(std::vector<std::map<std::string,mat> > WList, mat z){
   return gwwz;
 }
 /*
-Nesterov-Todd scaling for all inequality constraints
-*/
-mat DQP::ssnt(mat s, std::vector<std::map<std::string,mat> > WList, bool invers, bool transp){
-
-  for(int i = 0; i < cList.K; i++){
-    if(cList.cone[i] == "NLFC"){
-      s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = ssnt_n(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), WList[i], invers);
-    } else if(cList.cone[i] == "NNOC"){
-      s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = ssnt_l(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), WList[i], invers);
-    } else if(cList.cone[i] == "SOCC"){
-      s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = ssnt_p(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), WList[i], invers);
-    } else if(cList.cone[i] == "PSDC"){
-      s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = ssnt_s(s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all)(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), WList[i], invers, transp);
-    }
-  }
-
-  return s;
-}
-/*
-Solving 'KKT-System'
+  Solving 'KKT-System'
 */
 PDV* DQP::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList){
   int n = P.n_cols;
@@ -310,9 +274,11 @@ PDV* DQP::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat>
   pdv->x = ans.submat(0, 0, n - 1, 0);
   pdv->y = ans.submat(n, 0, RHS.n_rows - 1, 0);
   for(int i = 0; i < cList.K; i++){
-    pdv->z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) * pdv->x - pdv->z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
+    pdv->z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = 
+      cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) * pdv->x - 
+      pdv->z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
   }
-  pdv->z = ssnt(pdv->z, WList, true, true);
+  pdv->z = cList.ssnt(pdv->z, WList, true, true);
 
   return pdv;
 }
@@ -373,50 +339,53 @@ CPS* DQP::cps(CTRL& ctrl){
     return cps;
   }
   // Case 3: At least inequality constrained QP
-  // Computing fixed values
-  //int m = sum(cList.dims);
-  double resx0 = std::max(1.0, norm(q));
-  double resy0 = std::max(1.0, norm(b));
-  double resz0 = std::max(1.0, snrm2(cList.h));
-  // Initialising LHS and RHS matrices
-  int n = P.n_cols;
-  int sizeLHS = A.n_rows + A.n_cols;
+  // Defining variables used in iterations
+  bool trace = ctrl.get_trace(), checkRgap = false;
+  int m = sum(cList.dims), n = P.n_cols, sizeLHS = A.n_rows + A.n_cols, 
+    maxiters = ctrl.get_maxiters();
+  double resx, resx0, resy, resy0, resz, resz0, 
+    pcost, dcost, gap, rgap = NA_REAL, pres, dres, 
+    ts, nrms, tz, nrmz, tm, step, mu, sigma, dsdz;
+  double atol = ctrl.get_abstol();
+  double ftol = ctrl.get_feastol();
+  double rtol = ctrl.get_reltol();
+  double sadj = 0.99;
   mat LHS(sizeLHS, sizeLHS);
+  mat RHS(sizeLHS, 1);
+  mat rx, ry, rz, Lambda, LambdaPrd, Ws3;
+  mat OneE = cList.sone();
+  std::vector<std::map<std::string,mat> > WList;
+  PDV* dpdv = initpdv();
+  // Computing fixed values
+  resx0 = std::max(1.0, norm(q));
+  resy0 = std::max(1.0, norm(b));
+  resz0 = std::max(1.0, cList.snrm2(cList.h));
+  // Initialising LHS and RHS matrices
   LHS.zeros();
   if(A.n_rows > 0){ // equality constraints
     LHS.submat(n, 0, sizeLHS-1, n-1) = A;
     LHS.submat(0, n, n-1, sizeLHS-1) = A.t();
   }
-  mat RHS(sizeLHS, 1);
   // Initialising Nesterov-Todd scalings
-  std::vector<std::map<std::string,mat> > WList;
-  WList = initnts();
+  WList = cList.initnts();
   // Initialising PDV for determining (first) interior point
   pdv->x = -q;
   pdv->y = b;
   pdv->z = cList.h;
   pdv = sxyz(pdv, LHS, RHS, WList);
   pdv->s = -1.0 * (pdv->z);
-  double ts = smss(pdv->s).max();
-  double nrms = sum(snrm2(pdv->s));
-  double tz = smss(pdv->z).max();
-  double nrmz = sum(snrm2(pdv->z));
+  ts = cList.smss(pdv->s).max();
+  nrms = sum(cList.snrm2(pdv->s));
+  tz = cList.smss(pdv->z).max();
+  nrmz = sum(cList.snrm2(pdv->z));
   if(ts >= -1e-8 * std::max(1.0, nrms)){
     pdv->s = sams1(pdv->s, ts);
   }
   if(tz >= -1e-8 * std::max(1.0, nrmz)){
     pdv->z = sams1(pdv->z, tz);
   }
-  // Defining variables used in iterations
-  bool trace = ctrl.get_trace(), checkRgap = false;
-  int maxiters = ctrl.get_maxiters();
-  double resx, resy, resz, pcost, dcost, gap, rgap = NA_REAL, pres, dres;
-  double atol = ctrl.get_abstol();
-  double ftol = ctrl.get_feastol();
-  double rtol = ctrl.get_reltol();
-  mat rx, ry, rz;
   // Duality gap for initial solution
-  gap = sum(sdot(pdv->s, pdv->z));
+  gap = sum(cList.sdot(pdv->s, pdv->z));
   cps->set_pdv(*pdv);
   //
   // Starting iterations
@@ -430,10 +399,10 @@ CPS* DQP::cps(CTRL& ctrl){
     resy = norm(ry);
     // Central Residuals 
     rz = rcent(*pdv);
-    resz = snrm2(rz);
+    resz = cList.snrm2(rz);
     // Statistics for stopping criteria
     pcost = pobj(*pdv);
-    dcost = pcost + dot(pdv->y, ry) + sdot(pdv->z, rz).at(0, 0) - gap;
+    dcost = pcost + dot(pdv->y, ry) + cList.sdot(pdv->z, rz).at(0, 0) - gap;
     if(pcost < 0.0) rgap = gap / (-pcost);
     if(dcost > 0.0) rgap = gap / dcost;
     pres = std::max(resy / resy0, resz / resz0); 
@@ -462,9 +431,8 @@ CPS* DQP::cps(CTRL& ctrl){
     }
     if((pres <= ftol) && (dres <= ftol) && ((gap <= atol) || checkRgap)){
       cps->set_pdv(*pdv);
-
-      ts = smss(pdv->s).max();
-      tz = smss(pdv->z).max();
+      ts = cList.smss(pdv->s).max();
+      tz = cList.smss(pdv->z).max();
       state["pobj"] = pobj(*pdv);
       state["dobj"] = dobj(*pdv);
       state["dgap"] = gap;
@@ -478,17 +446,58 @@ CPS* DQP::cps(CTRL& ctrl){
       if(trace){
 	Rcpp::Rcout << "Optimal solution found." << std::endl;
       }
-
     }
-    /*
-      Computing initial scalings
-    */
+    // Computing initial scalings
+    if(i == 0){
+      WList = cList.ntsc(pdv->s, pdv->z);
+    }
+    Lambda = cList.getLambda(WList);
+    LambdaPrd = cList.sprd(Lambda, Lambda);
+    mu = gap / m;
+    sigma = 0.0;
+    // Solving for affine and combined direction in two-round for-loop
+    for(int ii = 0; ii < 2; ii++){
+      dpdv->x = -rx;
+      dpdv->y = -ry;
+      dpdv->z = -rz;
+      dpdv->s = -LambdaPrd + OneE * sigma * mu;
+      dpdv->s = cList.sinv(dpdv->s, Lambda);
+      Ws3 = cList.ssnt(dpdv->s, WList, false, true);
+      dpdv->z = dpdv->z - Ws3;
+      dpdv = sxyz(dpdv, LHS, RHS, WList);
+      dpdv->s = dpdv->s - dpdv->z;
+      // ds o dz for Mehrotra correction
+      dsdz = sum(cList.sdot(dpdv->s, dpdv->z));
+      dpdv->s = cList.sslb(dpdv->s, Lambda, false);
+      dpdv->z = cList.sslb(dpdv->z, Lambda, false);
 
+      ts = cList.smss(dpdv->s).max();
+      tz = cList.smss(dpdv->z).max();
+      vec ss(3);
+      ss << 0.0 << ts << tz << endr;
+      tm = ss.max();
+      if(tm == 0.0){
+      step = 1.0;
+    } else {
+      if(ii == 0) {
+      step = std::min(1.0, 1.0 / tm);
+    } else {
+      step = std::min(1.0, sadj / tm);
+    }
+    }
+      if(ii == 0){
+      sigma = pow(std::min(1.0, 
+	std::max(0.0, 1.0 - step + dsdz / gap * std::pow(step, 2.0))), 3.0);
+    }
+    } // end ii-loop
+    // Updating x, y; s and z (in current scaling)
+    pdv->x = pdv->x + step * dpdv->x;
+    pdv->y = pdv->y + step * dpdv->y;
 
-  } 
+  } // end for-loop in maxiters
 
-
-  // Preparing result (not complete, yet)
+  // Preparing result for non-convergence
+  cps->set_pdv(*pdv);
   state["pobj"] = pobj(*pdv);
   state["dobj"] = dobj(*pdv);
   state["dgap"] = gap;
@@ -500,13 +509,12 @@ CPS* DQP::cps(CTRL& ctrl){
   cps->set_niter(maxiters);
 
   if((state["certp"] <= ftol) && (state["certd"] <= ftol)){
-    cps->set_status("optimal");
+      cps->set_status("optimal");
   } else {
     cps->set_status("unknown");
   }
   if(trace){
     Rcpp::Rcout << "Optimal solution not determined in " << maxiters << " iteration(s)." << std::endl;
   }
-
   return cps;
 }

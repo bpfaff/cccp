@@ -10,46 +10,47 @@
 #define ARMA_H
 #include <RcppArmadillo.h>
 #endif
+using namespace arma;
 
-double sdot_nlp(arma::mat s, arma::mat z);
-double sdot_s(arma::mat s, arma::mat z, int m);
-double jdot_p(arma::mat s, arma::mat z);
-double snrm2_nlp(arma::mat s);
-double snrm2_s(arma::mat s, int m);
-double jnrm2_p(arma::mat s);
-arma::mat sprd_nl(arma::mat s, arma::mat z);
-arma::mat sprd_p(arma::mat s, arma::mat z);
-arma::mat sprd_s(arma::mat s, arma::mat z, int m);
-arma::mat sone_nl(arma::mat s);
-arma::mat sone_p(arma::mat s);
-arma::mat sone_s(int m);
-arma::mat sinv_nl(arma::mat s, arma::mat z);
-arma::mat sinv_p(arma::mat s, arma::mat z);
-arma::mat sinv_s(arma::mat s, arma::mat z, int m);
-double smss_nl(arma::mat s);
-double smss_p(arma::mat s);
-double smss_s(arma::mat s, int m);
-arma::mat sams1_nl(arma::mat s, double alpha);
-arma::mat sams1_p(arma::mat s, double alpha);
-arma::mat sams1_s(arma::mat s, double alpha, int m);
-arma::mat sams2_nl(arma::mat s, double alpha);
-arma::mat sams2_p(arma::mat s, double alpha);
-arma::mat sams2_s(arma::mat s, double alpha, arma::mat lambda, arma::vec sigma, int m);
-std::map<std::string,arma::mat> ntsc_n(arma::mat s, arma::mat z);
-std::map<std::string,arma::mat> ntsc_l(arma::mat s, arma::mat z);
-std::map<std::string,arma::mat> ntsc_p(arma::mat s, arma::mat z);
-std::map<std::string,arma::mat> ntsc_s(arma::mat s, arma::mat z, int m);
-std::map<std::string,arma::mat> ntsu_n(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z);
-std::map<std::string,arma::mat> ntsu_l(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z);
-std::map<std::string,arma::mat> ntsu_p(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z);
-std::map<std::string,arma::mat> ntsu_s(std::map<std::string,arma::mat> W, arma::mat s, arma::mat z, int m);
-arma::mat sslb_nl(arma::mat s, arma::mat lambda, bool invers);
-arma::mat sslb_p(arma::mat s, arma::mat lambda, bool invers);
-arma::mat sslb_s(arma::mat s, arma::mat lambda, bool invers, int m);
-arma::mat ssnt_n(arma::mat s, std::map<std::string,arma::mat> W, bool invers);
-arma::mat ssnt_l(arma::mat s, std::map<std::string,arma::mat> W, bool invers);
-arma::mat ssnt_p(arma::mat s, std::map<std::string,arma::mat> W, bool invers);
-arma::mat ssnt_s(arma::mat s, std::map<std::string,arma::mat> W, bool invers, bool transp);
+double sdot_nlp(mat s, mat z);
+double sdot_s(mat s, mat z, int m);
+double jdot_p(mat s, mat z);
+double snrm2_nlp(mat s);
+double snrm2_s(mat s, int m);
+double jnrm2_p(mat s);
+mat sprd_nl(mat s, mat z);
+mat sprd_p(mat s, mat z);
+mat sprd_s(mat s, mat z, int m);
+mat sone_nl(int m);
+mat sone_p(int m);
+mat sone_s(int m);
+mat sinv_nl(mat s, mat z);
+mat sinv_p(mat s, mat z);
+mat sinv_s(mat s, mat z, int m);
+double smss_nl(mat s);
+double smss_p(mat s);
+double smss_s(mat s, int m);
+mat sams1_nl(mat s, double alpha);
+mat sams1_p(mat s, double alpha);
+mat sams1_s(mat s, double alpha, int m);
+mat sams2_nl(mat s, double alpha);
+mat sams2_p(mat s, double alpha);
+mat sams2_s(mat s, double alpha, mat lambda, vec sigma, int m);
+std::map<std::string,mat> ntsc_n(mat s, mat z);
+std::map<std::string,mat> ntsc_l(mat s, mat z);
+std::map<std::string,mat> ntsc_p(mat s, mat z);
+std::map<std::string,mat> ntsc_s(mat s, mat z, int m);
+std::map<std::string,mat> ntsu_n(std::map<std::string,mat> W, mat s, mat z);
+std::map<std::string,mat> ntsu_l(std::map<std::string,mat> W, mat s, mat z);
+std::map<std::string,mat> ntsu_p(std::map<std::string,mat> W, mat s, mat z);
+std::map<std::string,mat> ntsu_s(std::map<std::string,mat> W, mat s, mat z, int m);
+mat sslb_nl(mat s, mat lambda, bool invers);
+mat sslb_p(mat s, mat lambda, bool invers);
+mat sslb_s(mat s, mat lambda, bool invers, int m);
+mat ssnt_n(mat s, std::map<std::string,mat> W, bool invers);
+mat ssnt_l(mat s, std::map<std::string,mat> W, bool invers);
+mat ssnt_p(mat s, std::map<std::string,mat> W, bool invers);
+mat ssnt_s(mat s, std::map<std::string,mat> W, bool invers, bool transp);
 
 #include "CPG.h"
 

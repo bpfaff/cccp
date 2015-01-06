@@ -69,6 +69,17 @@ class CONEC {
   void set_K(int K_) {K = K_;}
 
   friend class DQP;
+  double snrm2(mat s);
+  vec sdot(mat s, mat z);
+  vec smss(mat u);
+  mat sone();
+  mat sprd(mat s, mat z);
+  mat sinv(mat s, mat z);
+  mat getLambda(std::vector<std::map<std::string,mat> > WList);
+  mat sslb(mat s, mat lambda, bool invers);
+  mat ssnt(mat s, std::vector<std::map<std::string,mat> > WList, bool invers, bool transp);
+  std::vector<std::map<std::string,mat> > initnts();
+  std::vector<std::map<std::string,mat> > ntsc(mat s, mat z);
 
  private:
   std::vector<std::string> cone;
@@ -100,9 +111,6 @@ class DQP {
   CONEC get_cList() {return cList;}
   void set_cList(CONEC cList_) {cList = cList_;}
 
-  double snrm2(mat u);
-  vec sdot(mat u, mat v);
-  vec smss(mat u);
   double pobj(PDV& pdv);
   double dobj(PDV& pdv);
   double certp(PDV& pdv);
@@ -112,11 +120,10 @@ class DQP {
   mat rdual(PDV& pdv);
   mat sams1(mat u, double alpha);
   PDV* initpdv();
-  std::vector<std::map<std::string,mat> > initnts();
+  std::vector<mat> lsq(std::vector<std::map<std::string,mat> > WList);
   mat gwwg(std::vector<std::map<std::string,mat> > WList);
   mat gwwz(std::vector<std::map<std::string,mat> > WList, mat z);
   PDV* sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList);
-  mat ssnt(mat s, std::vector<std::map<std::string,mat> > WList, bool invers, bool transp);
   CPS* cps(CTRL& ctrl);
 
  private:
