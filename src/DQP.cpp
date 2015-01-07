@@ -33,11 +33,7 @@ double DQP::dobj(PDV& pdv){
   term1 = pdv.y.t() * (A * pdv.x - b);
   // dobj term for inequality constraints
   if(cList.K > 0){
-    for(int i = 0; i < cList.K; i++){
-      term2 = term2 + dot(pdv.z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), \
-	(cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) * pdv.x - \
-	 cList.h(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all)));
-    } 
+    term2 = dot(pdv.z, cList.G * pdv.x - cList.h);
   }
   ans = pobj(pdv) + term1(0,0) + term2(0,0);
 
@@ -61,12 +57,7 @@ Centrality Resdiuals
 mat DQP::rcent(PDV& pdv){
   mat ans(cList.G.n_rows, 1);
 
-  for(int i = 0; i < cList.K; i++){
-    ans(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = 
-      pdv.s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) + 
-      cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) * pdv.x - 
-      cList.h(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
-  }
+  ans = pdv.s + cList.G * pdv.x - cList.h;
 
   return ans;
 }
@@ -83,10 +74,7 @@ mat DQP::rdual(PDV& pdv){
   ans.zeros();
 
   if(cList.K > 0){
-    for(int i = 0; i < cList.K; i++){
-      Gz = Gz + cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * 
-	pdv.z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
-    } 
+    Gz = cList.G.t() * pdv.z;
   }
   if(A.n_rows > 0){
     Ay = A.t() * pdv.y;
@@ -110,9 +98,7 @@ double DQP::certp(PDV& pdv){
     rz = rcent(pdv);
     nomin = 0.0;
     denom = std::max(1.0, norm(q));
-    for(int i = 0; i < cList.K; i++){
-      nomin += norm(rz(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
-    } 
+    nomin = cList.snrm2(rz);
     ans2 = nomin / denom;
   }
   ans = std::max(ans1, ans2);
@@ -125,18 +111,7 @@ Certificate of dual infeasibilty
 double DQP::certd(PDV& pdv){
   double nomin, denom, ans;
 
-  int n = P.n_rows;
-  mat Gz(n,1);
-  Gz.zeros();
-
-  if(cList.K > 0){
-    for(int i = 0; i < cList.K; i++){
-      Gz = Gz + cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * 
-	pdv.z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
-    } 
-  }
-
-  nomin = norm(P * pdv.x + Gz + A.t() * pdv.y + q);
+  nomin = norm(rdual(pdv));
   denom = std::max(1.0, norm(q));
   ans = nomin / denom;
 
@@ -173,26 +148,6 @@ PDV* DQP::initpdv(){
   pdv->kappa = 1.0;
 
   return pdv;
-}
-/*
-Product of Lagrange-Multipliers for each cone constraint
-*/
-std::vector<mat> DQP::lsq(std::vector<std::map<std::string,mat> > WList){
-  std::vector<mat> LambdaProd;
-  mat ans;
-
-  for(int i = 0; i < cList.K; i++){
-    if((cList.cone[i] == "NLFC") || (cList.cone[i] == "NNOC")){
-      ans = sprd_nl(WList[i]["lambda"], WList[i]["lambda"]);
-    } else if(cList.cone[i] == "SOCC"){
-      ans = sprd_p(WList[i]["lambda"], WList[i]["lambda"]);
-    } else if(cList.cone[i] == "PSDC"){
-      ans = sprd_s(WList[i]["lambda"], WList[i]["lambda"], cList.dims[i]);
-    }
-    LambdaProd.push_back(ans);
-  }
-
-  return LambdaProd;
 }
 /*
 Computation of: Sum of G_i'W_i^-1W_i^-1'G_i for i = 1, ..., K
@@ -268,16 +223,17 @@ PDV* DQP::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat>
   lhs1 = gwwg(WList);
   LHS.submat(0, 0, n-1, n-1) = P + lhs1;
   rhs1 = gwwz(WList, pdv->z);
+
   RHS.submat(0, 0, n - 1, 0) = pdv->x + rhs1;
-  RHS.submat(n, 0, RHS.n_rows - 1, 0) = pdv->y;
+  if(pdv->y.n_rows > 0){
+    RHS.submat(n, 0, RHS.n_rows - 1, 0) = pdv->y;
+  }
   ans = solve(LHS, RHS);
   pdv->x = ans.submat(0, 0, n - 1, 0);
-  pdv->y = ans.submat(n, 0, RHS.n_rows - 1, 0);
-  for(int i = 0; i < cList.K; i++){
-    pdv->z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = 
-      cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) * pdv->x - 
-      pdv->z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
+  if(pdv->y.n_rows > 0){
+    pdv->y = ans.submat(n, 0, RHS.n_rows - 1, 0);
   }
+  pdv->z = cList.G * pdv->x - pdv->z;
   pdv->z = cList.ssnt(pdv->z, WList, true, true);
 
   return pdv;
@@ -349,7 +305,7 @@ CPS* DQP::cps(CTRL& ctrl){
   double atol = ctrl.get_abstol();
   double ftol = ctrl.get_feastol();
   double rtol = ctrl.get_reltol();
-  double sadj = 0.99;
+  double sadj = 0.98;
   vec ss(3), eval;
   mat LHS(sizeLHS, sizeLHS);
   mat RHS(sizeLHS, 1);

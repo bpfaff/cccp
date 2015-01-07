@@ -121,7 +121,6 @@ class DQP {
   mat rcent(PDV& pdv);
   mat rdual(PDV& pdv);
   PDV* initpdv();
-  std::vector<mat> lsq(std::vector<std::map<std::string,mat> > WList);
   mat gwwg(std::vector<std::map<std::string,mat> > WList);
   mat gwwz(std::vector<std::map<std::string,mat> > WList, mat z);
   PDV* sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList);

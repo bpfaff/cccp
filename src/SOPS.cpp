@@ -439,8 +439,8 @@ std::map<std::string,mat> ntsc_p(mat s, mat z){
     lambda.at(i,0) = s.at(i,0);
     lambda.at(i,0) = (cc + z.at(0,0) / bb) / dd / aa * lambda.at(i,0);
     lambda.at(i,0) = (cc + s.at(0,0) / aa) / dd / bb * z.at(i,0) + lambda.at(i,0); 
-    lambda.at(i,0) *= sqrt(aa * bb);
   }
+  lambda = sqrt(aa * bb) * lambda;
   W.insert(std::pair<std::string,mat>("v", v));
   W.insert(std::pair<std::string,mat>("beta", beta));
   W.insert(std::pair<std::string,mat>("lambda", lambda));
@@ -554,8 +554,8 @@ std::map<std::string,mat> ntsu_p(std::map<std::string,mat> W, mat s, mat z){
     W["lambda"].at(i,0) *= 2.0 * (-dd * vq + 0.5 * vu); 
     W["lambda"].at(i,0) += 0.5 * (1.0 - dd / cc) * s.at(i,0); 
     W["lambda"].at(i,0) += 0.5 * (1.0 + dd / cc) * z.at(i,0); 
-    W["lambda"].at(i,0) *= sqrt(aa * bb);
   }
+  W["lambda"] = sqrt(aa * bb) * W["lambda"];
   W["v"] *= 2.0 * vq;
   W["v"].at(0,0) -= s.at(0,0) / 2.0 / cc;
   for(int i = 1; i < n; i++){
