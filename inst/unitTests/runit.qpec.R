@@ -1,5 +1,5 @@
 ##
-## Unit testing of NLF
+## Unit testing of Quadratic Program with equality constraints
 test.QPEC <- function(){
     P <- 2 * matrix(c(2, .5, .5, 1), nrow = 2, ncol = 2)
     q <- c(1.0, 1.0)
