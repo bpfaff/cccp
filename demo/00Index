@@ -1,5 +1,6 @@
 QPUC	Solving an unconstrained Quadratic Program
 QPEC	Solving an equality constrained Quadratic Program
+QPQC	Solving a Quadratic Program with quadratic (SOC) constraints
 
 
 
