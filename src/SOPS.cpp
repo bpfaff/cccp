@@ -323,19 +323,19 @@ mat sams1_s(mat s, double alpha, int m){
 
   return s;
 }
-mat DQP::sams1(mat u, double alpha){
+mat CONEC::sams1(mat u, double alpha){
   mat temp;
 
-  for(int i = 0; i < cList.K; i++){
-    temp = u(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
-    if((cList.cone[i] == "NLFC") || (cList.cone[i] == "NNOC")){
+  for(int i = 0; i < K; i++){
+    temp = u(span(sidx.at(i, 0), sidx.at(i, 1)), span::all);
+    if((cone[i] == "NLFC") || (cone[i] == "NNOC")){
       temp = sams1_nl(temp, alpha);
-    } else if(cList.cone[i] == "SOCC"){
+    } else if(cone[i] == "SOCC"){
       temp = sams1_p(temp, alpha);
-    } else if(cList.cone[i] == "PSDC"){
-      temp = sams1_s(temp, alpha, cList.dims[i]);
+    } else if(cone[i] == "PSDC"){
+      temp = sams1_s(temp, alpha, dims[i]);
     }
-    u(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = temp;
+    u(span(sidx.at(i, 0), sidx.at(i, 1)), span::all) = temp;
   }
 
   return u;
@@ -584,6 +584,34 @@ std::map<std::string,mat> ntsu_s(std::map<std::string,mat> W, mat s, mat z, int 
 
   return W;
 }
+/*
+Update of Nesterov-Todd Scaling
+*/
+std::vector<std::map<std::string,mat> > CONEC::ntsu(mat s, mat z, std::vector<std::map<std::string,mat> > WList){ 
+  std::map<std::string,mat> W;
+
+  for(int i = 0; i < K; i++){
+    if(cone[i] == "NLFC"){
+      W = ntsu_n(WList[i], s(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), 
+		 z(span(sidx.at(i, 0), sidx.at(i, 1)), span::all));
+    } else if(cone[i] == "NNOC"){
+      W = ntsu_l(WList[i], s(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), 
+		 z(span(sidx.at(i, 0), sidx.at(i, 1)), span::all));
+    } else if(cone[i] == "SOCC"){
+      W = ntsu_p(WList[i], s(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), 
+		 z(span(sidx.at(i, 0), sidx.at(i, 1)), span::all));
+    } else if(cone[i] == "PSDC"){
+      W = ntsu_s(WList[i], s(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), 
+		 z(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), dims[i]);
+    }
+    WList[i] = W;
+  }
+
+  return WList;
+}
+
+
+
 /*
  * Scaling of vector in S by log-barrier function.
  * sslb_nl is used for nonlinear and linear cone constraints.

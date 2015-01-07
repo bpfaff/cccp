@@ -350,9 +350,10 @@ CPS* DQP::cps(CTRL& ctrl){
   double ftol = ctrl.get_feastol();
   double rtol = ctrl.get_reltol();
   double sadj = 0.99;
+  vec ss(3), eval;
   mat LHS(sizeLHS, sizeLHS);
   mat RHS(sizeLHS, 1);
-  mat rx, ry, rz, Lambda, LambdaPrd, Ws3;
+  mat rx, ry, rz, Lambda, LambdaPrd, Ws3, evec, tmpmat;
   mat OneE = cList.sone();
   std::vector<std::map<std::string,mat> > WList;
   PDV* dpdv = initpdv();
@@ -379,10 +380,10 @@ CPS* DQP::cps(CTRL& ctrl){
   tz = cList.smss(pdv->z).max();
   nrmz = sum(cList.snrm2(pdv->z));
   if(ts >= -1e-8 * std::max(1.0, nrms)){
-    pdv->s = sams1(pdv->s, ts);
+    pdv->s = cList.sams1(pdv->s, ts);
   }
   if(tz >= -1e-8 * std::max(1.0, nrmz)){
-    pdv->z = sams1(pdv->z, tz);
+    pdv->z = cList.sams1(pdv->z, tz);
   }
   // Duality gap for initial solution
   gap = sum(cList.sdot(pdv->s, pdv->z));
@@ -446,6 +447,7 @@ CPS* DQP::cps(CTRL& ctrl){
       if(trace){
 	Rcpp::Rcout << "Optimal solution found." << std::endl;
       }
+      return cps;
     }
     // Computing initial scalings
     if(i == 0){
@@ -473,30 +475,83 @@ CPS* DQP::cps(CTRL& ctrl){
 
       ts = cList.smss(dpdv->s).max();
       tz = cList.smss(dpdv->z).max();
-      vec ss(3);
       ss << 0.0 << ts << tz << endr;
       tm = ss.max();
       if(tm == 0.0){
-      step = 1.0;
-    } else {
-      if(ii == 0) {
-      step = std::min(1.0, 1.0 / tm);
-    } else {
-      step = std::min(1.0, sadj / tm);
-    }
-    }
+	step = 1.0;
+      } else {
+	if(ii == 0) {
+	  step = std::min(1.0, 1.0 / tm);
+	} else {
+	  step = std::min(1.0, sadj / tm);
+	}
+      }
       if(ii == 0){
-      sigma = pow(std::min(1.0, 
-	std::max(0.0, 1.0 - step + dsdz / gap * std::pow(step, 2.0))), 3.0);
-    }
+	sigma = pow(std::min(1.0, std::max(0.0, 1.0 - step + dsdz / gap * std::pow(step, 2.0))), 3.0);
+      }
     } // end ii-loop
+
     // Updating x, y; s and z (in current scaling)
     pdv->x = pdv->x + step * dpdv->x;
     pdv->y = pdv->y + step * dpdv->y;
 
+    for(int j = 0; j < cList.K; j++){
+      if((cList.cone[j] == "NLFC") || (cList.cone[j] == "NNOC")){
+	dpdv->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sams2_nl(dpdv->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), step);
+	dpdv->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sams2_nl(dpdv->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), step);
+	dpdv->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sslb_nl(dpdv->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		  Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), true);
+	dpdv->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sslb_nl(dpdv->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		  Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), true);
+      } else if(cList.cone[j] == "SOCC"){
+        dpdv->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sams2_p(dpdv->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), step);
+	dpdv->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sams2_p(dpdv->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), step);
+        dpdv->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sslb_p(dpdv->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		 Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), true);
+	dpdv->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sslb_p(dpdv->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		 Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), true);
+      } else if(cList.cone[j] == "PSDC"){
+	tmpmat = dpdv->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all);
+	tmpmat.reshape(cList.dims[j], cList.dims[j]);
+	eig_sym(eval, evec, tmpmat);
+	evec.reshape(cList.dims[j] * cList.dims[j], 1);
+	dpdv->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sslb_s(evec, Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		 true, cList.dims[j]);
+	dpdv->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sams2_s(dpdv->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		  step, Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		  eval, cList.dims[j]);
+	tmpmat = dpdv->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all);
+	tmpmat.reshape(cList.dims[j], cList.dims[j]);
+	eig_sym(eval, evec, tmpmat);
+	evec.reshape(cList.dims[j] * cList.dims[j], 1);
+	dpdv->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sslb_s(evec, Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		 true, cList.dims[j]);
+	dpdv->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sams2_s(dpdv->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		  step, Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		  eval, cList.dims[j]);
+      }
+    }
+    // Updating NT-scaling and Lagrange Multipliers
+    WList = cList.ntsu(dpdv->s, dpdv->z, WList);
+    Lambda = cList.getLambda(WList);
+    pdv->s = cList.ssnt(Lambda, WList, false, true);
+    pdv->z = cList.ssnt(Lambda, WList, true, false);
+    gap = sum(cList.sdot(Lambda, Lambda));
   } // end for-loop in maxiters
 
-  // Preparing result for non-convergence
+  // Preparing result for non-convergence in maxiters iterations
   cps->set_pdv(*pdv);
   state["pobj"] = pobj(*pdv);
   state["dobj"] = dobj(*pdv);
@@ -509,12 +564,12 @@ CPS* DQP::cps(CTRL& ctrl){
   cps->set_niter(maxiters);
 
   if((state["certp"] <= ftol) && (state["certd"] <= ftol)){
-      cps->set_status("optimal");
+    cps->set_status("optimal");
   } else {
+    if(trace){
+      Rcpp::Rcout << "Optimal solution not determined in " << maxiters << " iteration(s)." << std::endl;
+    }
     cps->set_status("unknown");
-  }
-  if(trace){
-    Rcpp::Rcout << "Optimal solution not determined in " << maxiters << " iteration(s)." << std::endl;
   }
   return cps;
 }

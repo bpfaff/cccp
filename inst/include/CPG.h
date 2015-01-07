@@ -75,11 +75,13 @@ class CONEC {
   mat sone();
   mat sprd(mat s, mat z);
   mat sinv(mat s, mat z);
-  mat getLambda(std::vector<std::map<std::string,mat> > WList);
+  mat sams1(mat u, double alpha);
   mat sslb(mat s, mat lambda, bool invers);
   mat ssnt(mat s, std::vector<std::map<std::string,mat> > WList, bool invers, bool transp);
+  mat getLambda(std::vector<std::map<std::string,mat> > WList);
   std::vector<std::map<std::string,mat> > initnts();
   std::vector<std::map<std::string,mat> > ntsc(mat s, mat z);
+  std::vector<std::map<std::string,mat> > ntsu(mat s, mat z, std::vector<std::map<std::string,mat> > WList);
 
  private:
   std::vector<std::string> cone;
@@ -118,7 +120,6 @@ class DQP {
   mat rprim(PDV& pdv);
   mat rcent(PDV& pdv);
   mat rdual(PDV& pdv);
-  mat sams1(mat u, double alpha);
   PDV* initpdv();
   std::vector<mat> lsq(std::vector<std::map<std::string,mat> > WList);
   mat gwwg(std::vector<std::map<std::string,mat> > WList);
