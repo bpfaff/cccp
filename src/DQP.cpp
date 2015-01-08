@@ -50,7 +50,7 @@ mat DQP::rprim(PDV& pdv){
   return ans;
 }
 /*
-Centrality Resdiuals
+Centrality Residuals
 */
 mat DQP::rcent(PDV& pdv){
   mat ans(cList.G.n_rows, 1);

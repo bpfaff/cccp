@@ -53,7 +53,9 @@ class CONEC {
   int get_K() {return K;}
   void set_K(int K_) {K = K_;}
 
+  friend class DLP;
   friend class DQP;
+
   double snrm2(mat s);
   vec sdot(mat s, mat z);
   vec smss(mat u);
@@ -139,6 +141,12 @@ class DLP {
   CONEC get_cList() {return cList;}
   void set_cList(CONEC cList_) {cList = cList_;}
 
+  double pobj(PDV& pdv);
+  double dobj(PDV& pdv);
+  mat rprim(PDV& pdv);
+  mat rcent(PDV& pdv);
+  mat rdual(PDV& pdv);
+
  private:
   vec q;
   mat A;
@@ -171,6 +179,7 @@ class PDV {
   double get_tau() {return tau;}
   void set_tau(double tau_) {tau = tau_;}
 
+  friend class DLP;
   friend class DQP;
   friend class CONEC;
 
