@@ -11,6 +11,12 @@
 \alias{getz}
 \alias{getz,Rcpp_PDV-method}
 \alias{getz,Rcpp_CPS-method}
+\alias{getstate}
+\alias{getstate,Rcpp_CPS-method}
+\alias{getstatus}
+\alias{getstatus,Rcpp_CPS-method}
+\alias{getniter}
+\alias{getniter,Rcpp_CPS-method}
 
 \title{
   Extractor methods for reference class objects
@@ -29,6 +35,9 @@
 \S4method{gets}{Rcpp_CPS}(object)  
 \S4method{getz}{Rcpp_PDV}(object)  
 \S4method{getz}{Rcpp_CPS}(object)  
+\S4method{getstate}{Rcpp_CPS}(object)  
+\S4method{getstatus}{Rcpp_CPS}(object)  
+\S4method{getniter}{Rcpp_CPS}(object)  
 }
 
 \arguments{

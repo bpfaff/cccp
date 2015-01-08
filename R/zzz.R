@@ -98,4 +98,14 @@ setMethod("gety", signature = "Rcpp_CPS", function(object){
     pdv <- object$pdv
     gety(pdv)
 })
+## other get-methods for Rcpp_CPS
+setMethod("getstatus", signature = "Rcpp_CPS", function(object){
+    object$status
+})
+setMethod("getstate", signature = "Rcpp_CPS", function(object){
+    object$state
+})
+setMethod("getniter", signature = "Rcpp_CPS", function(object){
+    object$niter
+})
 })
