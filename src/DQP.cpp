@@ -246,6 +246,7 @@ CPS* DQP::cps(CTRL& ctrl){
   PDV* pdv = initpdv();
   CPS* cps = new CPS();
   cps->set_pdv(*pdv);
+  Rcpp::List params(ctrl.get_params());
   Rcpp::NumericVector state = cps->get_state();
   // Case 1: Unconstrained QP
   if((cList.K == 0) && (A.n_rows == 0)){
@@ -259,7 +260,7 @@ CPS* DQP::cps(CTRL& ctrl){
   // Case 2: Equality constrained QP
   if((cList.K == 0) && (A.n_rows > 0)){
     mat Pi, PiA, Piq, S, Si;
-    double ftol = ctrl.get_feastol();
+    double ftol = Rcpp::as<double>(params["feastol"]);
     try{
       Pi = inv(P);
     } catch(std::runtime_error &ex){
@@ -296,16 +297,17 @@ CPS* DQP::cps(CTRL& ctrl){
   }
   // Case 3: At least inequality constrained QP
   // Defining variables used in iterations
-  bool trace = ctrl.get_trace(), checkRgap = false;
-  int m = sum(cList.dims), n = P.n_cols, sizeLHS = A.n_rows + A.n_cols, 
-    maxiters = ctrl.get_maxiters();
+  bool trace = Rcpp::as<bool>(params["trace"]);
+  bool checkRgap = false;
+  int m = sum(cList.dims), n = P.n_cols, sizeLHS = A.n_rows + A.n_cols; 
+  int maxiters = Rcpp::as<int>(params["maxiters"]);
   double resx, resx0, resy, resy0, resz, resz0, 
     pcost, dcost, gap, rgap = NA_REAL, pres, dres, 
     ts, nrms, tz, nrmz, tm, step, mu, sigma, dsdz;
-  double atol = ctrl.get_abstol();
-  double ftol = ctrl.get_feastol();
-  double rtol = ctrl.get_reltol();
-  double sadj = 0.98;
+  double atol = Rcpp::as<double>(params["abstol"]);
+  double ftol = Rcpp::as<double>(params["feastol"]);
+  double rtol = Rcpp::as<double>(params["reltol"]);
+  double sadj = Rcpp::as<double>(params["stepadj"]);
   vec ss(3), eval;
   mat LHS(sizeLHS, sizeLHS);
   mat RHS(sizeLHS, 1);

@@ -16,16 +16,8 @@ All reference classes extend and inherit methods from \code{"\linkS4class{envRef
        
 \section{Fields}{
   \describe{
-    \item{\code{maxiters}:}{Object of class
-      \code{activeBindingFunction}: Integer, maximum count of iterations.}
-    \item{\code{abstol}:}{Object of class \code{activeBindingFunction}:
-      Numeric, absolute tolerance.}
-    \item{\code{reltol}:}{Object of class \code{activeBindingFunction}:
-      Numeric, relative tolerance.}
-    \item{\code{feastol}:}{Object of class \code{activeBindingFunction}:
-      Numeric, feasible tolerance.}
-    \item{\code{trace}:}{Object of class \code{activeBindingFunction}:
-      Logical, tracing progress during iterations.}
+    \item{\code{ctrlparams}:}{Object of class
+      \code{activeBindingFunction}: List of control parameters.}
   }
 }
 

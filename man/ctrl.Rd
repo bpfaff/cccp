@@ -13,7 +13,7 @@
 
 \usage{
 ctrl(maxiters = 100L, abstol = 1e-07, reltol = 1e-06,
-     feastol = 1e-07, trace = TRUE)
+     feastol = 1e-07, stepadj = 0.98, trace = TRUE)
 }
 
 \arguments{
@@ -24,6 +24,7 @@ ctrl(maxiters = 100L, abstol = 1e-07, reltol = 1e-06,
     achieved.}
   \item{feastol}{\code{numeric}, the feasable level for convergence to be
     achieved.}
+  \item{stepadj}{\code{numeric}, step size adjustment in combined step.}
   \item{trace}{\code{logical}, if \code{TRUE} (the default), the
     solver's progress during the iterations is shown.}
 }
