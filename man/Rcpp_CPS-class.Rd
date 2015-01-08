@@ -24,6 +24,8 @@ All reference classes extend and inherit methods from \code{"\linkS4class{envRef
       Character indicating the status of the returned solution.}
     \item{\code{niter}:}{Object of class \code{activeBindingFunction}:
       Integer, count of iterations.}
+    \item{\code{sidx}:}{Object of class \code{activeBindingFunction}:
+      Integer matrix, start and end indices of slack variables.}
   }
 }
 

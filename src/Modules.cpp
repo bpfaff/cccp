@@ -53,12 +53,13 @@ RCPP_MODULE(CPG){
 
   Rcpp::class_<CPS>( "CPS" )
     .constructor("Default constructor")
-    .constructor<PDV, Rcpp::NumericVector, Rcpp::String, int>("sets the CPS-values")
+    .constructor<PDV, Rcpp::NumericVector, Rcpp::String, int, umat>("sets the CPS-values")
 
     .property("pdv", &CPS::get_pdv, &CPS::set_pdv, "Getter and setter for pdv")
     .property("state", &CPS::get_state, &CPS::set_state, "Getter and setter for state")
     .property("status", &CPS::get_status, &CPS::set_status, "Getter and setter for status")
     .property("niter", &CPS::get_niter, &CPS::set_niter, "Getter and setter for niter")
+    .property("sidx", &CPS::get_sidx, &CPS::set_sidx, "Getter and setter for sidx")
     ;
 }
 

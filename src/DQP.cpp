@@ -380,6 +380,7 @@ CPS* DQP::cps(CTRL& ctrl){
     }
     if((pres <= ftol) && (dres <= ftol) && ((gap <= atol) || checkRgap)){
       cps->set_pdv(*pdv);
+      cps->set_sidx(cList.sidx);
       ts = cList.smss(pdv->s).max();
       tz = cList.smss(pdv->z).max();
       state["pobj"] = pobj(*pdv);
@@ -501,6 +502,7 @@ CPS* DQP::cps(CTRL& ctrl){
 
   // Preparing result for non-convergence in maxiters iterations
   cps->set_pdv(*pdv);
+  cps->set_sidx(cList.sidx);
   state["pobj"] = pobj(*pdv);
   state["dobj"] = dobj(*pdv);
   state["dgap"] = gap;

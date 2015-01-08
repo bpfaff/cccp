@@ -72,7 +72,18 @@ setMethod("gets", signature = "Rcpp_PDV", function(object){
 })
 setMethod("gets", signature = "Rcpp_CPS", function(object){
     pdv <- object$pdv
-    gets(pdv)
+    sidx <- object$sidx
+    if(nrow(sidx) > 1){
+        sidx <- sidx + 1
+        ans <- list()
+        length(ans) <- nrow(sidx)
+        for(i in 1:nrow(sidx)){
+            ans[[i]] <- pdv$s[sidx[i, 1]:sidx[i, 2], 1]
+        }
+    } else {
+       ans <- gets(pdv)
+    }
+    ans
 })
 ## getz-methods
 setMethod("getz", signature = "Rcpp_PDV", function(object){
@@ -80,7 +91,18 @@ setMethod("getz", signature = "Rcpp_PDV", function(object){
 })
 setMethod("getz", signature = "Rcpp_CPS", function(object){
     pdv <- object$pdv
-    getz(pdv)
+    sidx <- object$sidx
+    if(nrow(sidx) > 1){
+        sidx <- sidx + 1
+        ans <- list()
+        length(ans) <- nrow(sidx)
+        for(i in 1:nrow(sidx)){
+            ans[[i]] <- pdv$z[sidx[i, 1]:sidx[i, 2], 1]
+        }
+    } else {
+       ans <- getz(pdv)
+    }
+    ans
 })
 ## getx-methods
 setMethod("getx", signature = "Rcpp_PDV", function(object){

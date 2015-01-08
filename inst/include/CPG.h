@@ -164,7 +164,7 @@ class CPS {
  public:
 
   // constructors
- CPS() : pdv(PDV()), state(Rcpp::NumericVector::create()), status("unknown"), niter(0) 
+ CPS() : pdv(PDV()), state(Rcpp::NumericVector::create()), status("unknown"), niter(0), sidx(umat()) 
     {
       state["pobj"] = NA_REAL;
       state["dobj"] = NA_REAL;
@@ -176,8 +176,8 @@ class CPS {
       state["dslack"] = NA_REAL;
       status = "unknown";
     }
- CPS(PDV pdv_, Rcpp::NumericVector state_, Rcpp::String status_, int niter_):	\
-  pdv(pdv_), state(state_), status(status_), niter(niter_) {}
+ CPS(PDV pdv_, Rcpp::NumericVector state_, Rcpp::String status_, int niter_, umat sidx_): \
+  pdv(pdv_), state(state_), status(status_), niter(niter_) , sidx(sidx_){}
   // members
   PDV get_pdv() {return pdv;}
   void set_pdv(PDV pdv_) {pdv = pdv_;}
@@ -187,11 +187,15 @@ class CPS {
   void set_status(Rcpp::String status_) {status = status_;}
   int get_niter() {return niter;}
   void set_niter(int niter_) {niter = niter_;}
+  umat get_sidx() {return sidx;}
+  void set_sidx(umat sidx_) {sidx = sidx_;}
+
 
  private:
   PDV pdv;
   Rcpp::NumericVector state;
   Rcpp::String status;
   int niter;
+  umat sidx;
 };
 
