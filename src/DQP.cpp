@@ -366,7 +366,7 @@ CPS* DQP::cps(CTRL& ctrl){
     dres = resx / resx0;
     // Tracing status quo of IPM
     if(trace){
-      Rcpp::Rcout << "Iteration: " << i + 1 << std::endl;
+      Rcpp::Rcout << "Iteration: " << i << std::endl;
       Rcpp::Rcout << "pobj: " << pcost << std::endl;
       Rcpp::Rcout << "dobj: " << dcost << std::endl;
       Rcpp::Rcout << "pinf: " << pres << std::endl;
@@ -391,7 +391,7 @@ CPS* DQP::cps(CTRL& ctrl){
       state["dslack"] = -tz;
       cps->set_state(state);
       cps->set_status("optimal");
-      cps->set_niter(i + 1);
+      cps->set_niter(i);
       if(trace){
 	Rcpp::Rcout << "Optimal solution found." << std::endl;
       }
