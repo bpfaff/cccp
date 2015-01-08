@@ -7,6 +7,7 @@ RCPP_EXPOSED_CLASS(CTRL)
 RCPP_EXPOSED_CLASS(CONEC)
 RCPP_EXPOSED_CLASS(PDV)
 RCPP_EXPOSED_CLASS(DQP)
+RCPP_EXPOSED_CLASS(DLP)
 RCPP_EXPOSED_CLASS(CPS)
 
 #ifndef ARMA_H
@@ -14,8 +15,6 @@ RCPP_EXPOSED_CLASS(CPS)
 #include <RcppArmadillo.h>
 #endif
 using namespace arma;
-
-#include <iomanip>
 
 /*
  * Class definition and methods for controlling optimization routines
@@ -78,7 +77,7 @@ class CONEC {
   int K;
 };
 /*
- * Class for definition of Quadratic program
+ * Class for definition of Quadratic programs
 */
 class DQP {
  public:
@@ -114,6 +113,33 @@ class DQP {
 
  private:
   mat P;
+  vec q;
+  mat A;
+  vec b;
+  CONEC cList;
+};
+
+/*
+ * Class for definition of Linear programs
+*/
+class DLP {
+ public:
+
+  // constructors
+ DLP() : q(vec()), A(mat()), b(vec()), cList(CONEC()) {}
+  DLP(vec q_, mat A_, vec b_, CONEC cList_): \
+  q(q_), A(A_), b(b_), cList(cList_) {}
+  // members
+  vec get_q() {return q;}
+  void set_q(vec q_) {q = q_;}
+  mat get_A() {return A;}
+  void set_A(mat A_) {A = A_;}
+  vec get_b() {return b;}
+  void set_b(vec b_) {b = b_;}
+  CONEC get_cList() {return cList;}
+  void set_cList(CONEC cList_) {cList = cList_;}
+
+ private:
   vec q;
   mat A;
   vec b;

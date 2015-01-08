@@ -3,6 +3,7 @@
 \alias{CPG}
 \alias{CONEC}
 \alias{PDV}
+\alias{DLP}
 \alias{DQP}
 \alias{CPS}
 
@@ -20,6 +21,7 @@
     \item{CTRL}{Class for control parameters used in optimizations.}
     \item{CONEC}{Class for inequality (cone) constraints.}
     \item{PDV}{Class for primal/dual variables.}
+    \item{DLP}{Class for definition of linear programs.}
     \item{DQP}{Class for definition of quadratic programs.}
     \item{CPS}{Class for solution of convex programs.}
   }
