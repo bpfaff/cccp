@@ -5,8 +5,6 @@
  *
 */
 using namespace arma;
-const int TraceFieldWidth = 10;
-const int TracePrintPrecs = 5;
 /*
 Primal objective
 */
@@ -369,20 +367,12 @@ CPS* DQP::cps(CTRL& ctrl){
     // Tracing status quo of IPM
     if(trace){
       Rcpp::Rcout << "Iteration: " << i + 1 << std::endl;
-      Rcpp::Rcout << std::setiosflags(ios::left) 
-		  << std::setw(TraceFieldWidth) << "pobj" 
-		  << std::setw(TraceFieldWidth) << "dobj" 
-		  << std::setw(TraceFieldWidth) << "pinf" 
-		  << std::setw(TraceFieldWidth) << "dinf" 
-		  << std::setw(TraceFieldWidth) << "dgap" 
-		  << std::endl;
-      Rcpp::Rcout << std::setiosflags(ios::left) 
-		  << std::setw(TraceFieldWidth) << std::setprecision(TracePrintPrecs) << pcost 
-		  << std::setw(TraceFieldWidth) << std::setprecision(TracePrintPrecs) << dcost 
-		  << std::setw(TraceFieldWidth) << std::setprecision(TracePrintPrecs) << pres 
-		  << std::setw(TraceFieldWidth) << std::setprecision(TracePrintPrecs) << dres 
-		  << std::setw(TraceFieldWidth) << std::setprecision(TracePrintPrecs) << gap 
-		  << std::endl;
+      Rcpp::Rcout << "pobj: " << pcost << std::endl;
+      Rcpp::Rcout << "dobj: " << dcost << std::endl;
+      Rcpp::Rcout << "pinf: " << pres << std::endl;
+      Rcpp::Rcout << "dinf: " << dres << std::endl;
+      Rcpp::Rcout << "dgap: " << gap << std::endl;
+      Rcpp::Rcout << std::endl;
     }
     // Checking convergence
     if(!std::isnan(rgap)){

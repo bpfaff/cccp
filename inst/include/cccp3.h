@@ -54,7 +54,4 @@ mat ssnt_s(mat s, std::map<std::string,mat> W, bool invers, bool transp);
 
 #include "CPG.h"
 
-extern const int TraceFieldWidth;
-extern const int TracePrintPrecs;
-
 #endif
