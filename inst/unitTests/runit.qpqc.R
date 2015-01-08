@@ -16,9 +16,7 @@ test.QPIC <- function(){
     d = rep(0, 3)
     f = 1
     soc1 <- socc(F = F, g = g, d = d, f = f)
-    cpd <- dqp(P = P, q = q, cList = list(nno1, soc1))
-    ctl <- ctrl()
-    ans <- cpd$cps(ctl)
+    ans <- cccp(P = P, q = q, cList = list(nno1, soc1))
     checkTrue(ans$status == "optimal")
     return()
 }
