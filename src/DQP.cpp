@@ -295,6 +295,10 @@ CPS* DQP::cps(CTRL& ctrl){
       state["certd"] = certd(*pdv);
       state["pslack"] = -ts;
       state["dslack"] = -tz;
+      if(!std::isnan(rgap)){
+	state["rgap"] = rgap;
+      }
+
       cps->set_state(state);
       cps->set_status("optimal");
       cps->set_niter(i);
@@ -415,6 +419,9 @@ CPS* DQP::cps(CTRL& ctrl){
   state["certd"] = certd(*pdv);
   state["pslack"] = -ts;
   state["dslack"] = -tz;
+  if(!std::isnan(rgap)){
+    state["rgap"] = rgap;
+  }
   cps->set_state(state);
   cps->set_niter(maxiters);
 

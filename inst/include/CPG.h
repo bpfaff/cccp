@@ -153,7 +153,7 @@ class DLP {
   mat rprim(PDV& pdv);
   mat rcent(PDV& pdv);
   mat rdual(PDV& pdv);
-  PDV* initpdv();
+  PDV* sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList);
   CPS* cps(CTRL& ctrl);
 
  private:
