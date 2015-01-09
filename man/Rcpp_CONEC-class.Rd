@@ -28,6 +28,8 @@ All reference classes extend and inherit methods from \code{"\linkS4class{envRef
       Dimension of cone constraints.}  
     \item{\code{K}:}{Object of class \code{activeBindingFunction}: Count
       of inequality constraints.}  
+    \item{\code{n}:}{Object of class \code{activeBindingFunction}: Count
+      of variables in objective.}  
   }
 }
 

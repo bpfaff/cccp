@@ -23,7 +23,7 @@ dqp <- function(P, q, A = NULL, b = NULL, cList = list()){
         ridx <- cumsum(unlist(lapply(GList, nrow)))
         sidx <- cbind(c(0, ridx[-length(ridx)]), ridx - 1)
         dims <- as.integer(unlist(lapply(cList, function(x) x[["dims"]])))
-        cList <- new(CONEC, cone, G, h, sidx, dims, K)
+        cList <- new(CONEC, cone, G, h, sidx, dims, K, n)
     } else {
         cList <- new(CONEC)
     }

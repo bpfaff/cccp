@@ -876,3 +876,98 @@ mat CONEC::getLambda(std::vector<std::map<std::string,mat> > WList){
 
   return ans;
 }
+/*
+Computation of: Sum of G_i'W_i^-1W_i^-1'G_i for i = 1, ..., K
+*/
+mat CONEC::gwwg(std::vector<std::map<std::string,mat> > WList){
+  int n = G.n_cols;
+  mat gwwg(n,n), temp(n,n), witg, wiwitg;
+  gwwg.zeros();
+  temp.zeros();
+
+  for(int i = 0; i < K; i++){
+    if(cone[i] == "NLFC"){
+      witg = ssnt_n(G(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), WList[i], true);
+      wiwitg = ssnt_n(witg, WList[i], true);
+      temp = G(span(sidx.at(i, 0), sidx.at(i, 1)), span::all).t() * wiwitg;
+    } else if(cone[i] == "NNOC"){
+      witg = ssnt_l(G(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), WList[i], true);
+      wiwitg = ssnt_l(witg, WList[i], true);
+      temp = G(span(sidx.at(i, 0), sidx.at(i, 1)), span::all).t() * wiwitg;
+    } else if(cone[i] == "SOCC"){
+      witg = ssnt_p(G(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), WList[i], true);
+      wiwitg = ssnt_p(witg, WList[i], true);
+      temp = G(span(sidx.at(i, 0), sidx.at(i, 1)), span::all).t() * wiwitg;
+    } else if(cone[i] == "PSDC"){
+      witg = ssnt_s(G(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), WList[i], true, true);
+      wiwitg = ssnt_s(witg, WList[i], true, false);
+      temp = G(span(sidx.at(i, 0), sidx.at(i, 1)), span::all).t() * wiwitg;
+    }
+    gwwg = gwwg + temp;
+  }
+
+  return gwwg;
+}
+/*
+Computation of: Sum of G_i'W_i^-1W_i^-1'G_i for i = 1, ..., K
+*/
+mat CONEC::gwwz(std::vector<std::map<std::string,mat> > WList, mat z){
+  int n = G.n_cols;
+  mat gwwz(n,1), temp(n,1), witz, wiwitz;
+  gwwz.zeros();
+  temp.zeros();
+
+  for(int i = 0; i < K; i++){
+    if(cone[i] == "NLFC"){
+      witz = ssnt_n(z(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), WList[i], true);
+      wiwitz = ssnt_n(witz, WList[i], true);
+      temp = G(span(sidx.at(i, 0), sidx.at(i, 1)), span::all).t() * wiwitz;
+    } else if(cone[i] == "NNOC"){
+      witz = ssnt_l(z(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), WList[i], true);
+      wiwitz = ssnt_l(witz, WList[i], true);
+      temp = G(span(sidx.at(i, 0), sidx.at(i, 1)), span::all).t() * wiwitz;
+    } else if(cone[i] == "SOCC"){
+      witz = ssnt_p(z(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), WList[i], true);
+      wiwitz = ssnt_p(witz, WList[i], true);
+      temp = G(span(sidx.at(i, 0), sidx.at(i, 1)), span::all).t() * wiwitz;
+    } else if(cone[i] == "PSDC"){
+      witz = ssnt_s(z(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), WList[i], true, true);
+      wiwitz = ssnt_s(witz, WList[i], true, false);
+      temp = G(span(sidx.at(i, 0), sidx.at(i, 1)), span::all).t() * wiwitz;
+    }
+    gwwz = gwwz + temp;
+  }
+
+  return gwwz;
+}
+/*
+Initializing PDV
+*/
+PDV* CONEC::initpdv(int p){
+  PDV* pdv = new PDV();
+  mat s(G.n_rows, 1);
+  mat ans;
+
+  pdv->x = zeros(n,1);
+  pdv->y = zeros(p,1);
+  for(int i = 0; i < K; i++){
+    if((cone[i] == "NLFC") || (cone[i] == "NNOC")){
+      ans = ones(dims[i], 1);
+    } else if(cone[i] == "SOCC"){
+      ans = zeros(dims[i], 1);
+      ans.at(0,0) = 1.0;
+    } else if(cone[i] == "PSDC") {
+      ans = eye(dims[i],dims[i]);
+      ans.reshape(dims[i] * dims[i], 1);
+    } else {
+      ans = zeros(dims[i], 1);
+    }
+    s(span(sidx.at(i, 0), sidx.at(i, 1)), span::all) = ans;
+  }
+  pdv->s = s;
+  pdv->z = s;
+  pdv->tau = 1.0;
+  pdv->kappa = 1.0;
+
+  return pdv;
+}

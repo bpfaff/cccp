@@ -116,111 +116,15 @@ double DQP::certd(PDV& pdv){
   return ans;
 }
 /*
-Initializing PDV
-*/
-PDV* DQP::initpdv(){
-  PDV* pdv = new PDV();
-  mat s(cList.G.n_rows, 1);
-  mat ans;
-  int n = P.n_cols;
-
-  pdv->x = zeros(n,1);
-  pdv->y = zeros(A.n_rows,1);
-  for(int i = 0; i < cList.K; i++){
-    if((cList.cone[i] == "NLFC") || (cList.cone[i] == "NNOC")){
-      ans = ones(cList.dims[i], 1);
-    } else if(cList.cone[i] == "SOCC"){
-      ans = zeros(cList.dims[i], 1);
-      ans.at(0,0) = 1.0;
-    } else if(cList.cone[i] == "PSDC") {
-      ans = eye(cList.dims[i],cList.dims[i]);
-      ans.reshape(cList.dims[i] * cList.dims[i], 1);
-    } else {
-      ans = zeros(cList.dims[i], 1);
-    }
-    s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = ans;
-  }
-  pdv->s = s;
-  pdv->z = s;
-  pdv->tau = 1.0;
-  pdv->kappa = 1.0;
-
-  return pdv;
-}
-/*
-Computation of: Sum of G_i'W_i^-1W_i^-1'G_i for i = 1, ..., K
-*/
-mat DQP::gwwg(std::vector<std::map<std::string,mat> > WList){
-  int n = P.n_cols;
-  mat gwwg(n,n), temp(n,n), witg, wiwitg;
-  gwwg.zeros();
-  temp.zeros();
-
-  for(int i = 0; i < cList.K; i++){
-    if(cList.cone[i] == "NLFC"){
-      witg = ssnt_n(cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), WList[i], true);
-      wiwitg = ssnt_n(witg, WList[i], true);
-      temp = cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * wiwitg;
-    } else if(cList.cone[i] == "NNOC"){
-      witg = ssnt_l(cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), WList[i], true);
-      wiwitg = ssnt_l(witg, WList[i], true);
-      temp = cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * wiwitg;
-    } else if(cList.cone[i] == "SOCC"){
-      witg = ssnt_p(cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), WList[i], true);
-      wiwitg = ssnt_p(witg, WList[i], true);
-      temp = cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * wiwitg;
-    } else if(cList.cone[i] == "PSDC"){
-      witg = ssnt_s(cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), WList[i], true, true);
-      wiwitg = ssnt_s(witg, WList[i], true, false);
-      temp = cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * wiwitg;
-    }
-    gwwg = gwwg + temp;
-  }
-
-  return gwwg;
-}
-/*
-Computation of: Sum of G_i'W_i^-1W_i^-1'G_i for i = 1, ..., K
-*/
-mat DQP::gwwz(std::vector<std::map<std::string,mat> > WList, mat z){
-  int n = P.n_cols;
-  mat gwwz(n,1), temp(n,1), witz, wiwitz;
-  gwwz.zeros();
-  temp.zeros();
-
-  for(int i = 0; i < cList.K; i++){
-    if(cList.cone[i] == "NLFC"){
-      witz = ssnt_n(z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), WList[i], true);
-      wiwitz = ssnt_n(witz, WList[i], true);
-      temp = cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * wiwitz;
-    } else if(cList.cone[i] == "NNOC"){
-      witz = ssnt_l(z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), WList[i], true);
-      wiwitz = ssnt_l(witz, WList[i], true);
-      temp = cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * wiwitz;
-    } else if(cList.cone[i] == "SOCC"){
-      witz = ssnt_p(z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), WList[i], true);
-      wiwitz = ssnt_p(witz, WList[i], true);
-      temp = cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * wiwitz;
-    } else if(cList.cone[i] == "PSDC"){
-      witz = ssnt_s(z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), WList[i], true, true);
-      wiwitz = ssnt_s(witz, WList[i], true, false);
-      temp = cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all).t() * wiwitz;
-    }
-    gwwz = gwwz + temp;
-  }
-
-  return gwwz;
-}
-/*
   Solving 'KKT-System'
 */
 PDV* DQP::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList){
   int n = P.n_cols;
   mat lhs1, rhs1, ans;
 
-  lhs1 = gwwg(WList);
+  lhs1 = cList.gwwg(WList);
   LHS.submat(0, 0, n-1, n-1) = P + lhs1;
-  rhs1 = gwwz(WList, pdv->z);
+  rhs1 = cList.gwwz(WList, pdv->z);
 
   RHS.submat(0, 0, n - 1, 0) = pdv->x + rhs1;
   if(pdv->y.n_rows > 0){
@@ -241,7 +145,7 @@ PDV* DQP::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat>
 */
 CPS* DQP::cps(CTRL& ctrl){
   // Initialising object
-  PDV* pdv = initpdv();
+  PDV* pdv = cList.initpdv(A.n_rows);
   CPS* cps = new CPS();
   cps->set_pdv(*pdv);
   Rcpp::List params(ctrl.get_params());
@@ -312,7 +216,7 @@ CPS* DQP::cps(CTRL& ctrl){
   mat rx, ry, rz, Lambda, LambdaPrd, Ws3, evec, tmpmat;
   mat OneE = cList.sone();
   std::vector<std::map<std::string,mat> > WList;
-  PDV* dpdv = initpdv();
+  PDV* dpdv = cList.initpdv(A.n_rows);
   // Computing fixed values
   resx0 = std::max(1.0, norm(q));
   resy0 = std::max(1.0, norm(b));

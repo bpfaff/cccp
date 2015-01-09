@@ -36,9 +36,9 @@ class CTRL {
 class CONEC {
  public:
  CONEC() : cone(std::vector<std::string>()), G(mat()), \
-    h(mat()), sidx(umat()), dims(uvec()), K(0) {}
- CONEC(std::vector<std::string> cone_, mat G_, mat h_, umat sidx_, uvec dims_, int K_): \
-  cone(cone_), G(G_), h(h_), sidx(sidx_), dims(dims_), K(K_){}
+    h(mat()), sidx(umat()), dims(uvec()), K(0), n(0) {}
+ CONEC(std::vector<std::string> cone_, mat G_, mat h_, umat sidx_, uvec dims_, int K_, int n_): \
+  cone(cone_), G(G_), h(h_), sidx(sidx_), dims(dims_), K(K_), n(n_){}
   // members
   std::vector<std::string> get_cone() {return cone;}
   void set_cone(std::vector<std::string> cone_) {cone = cone_;}
@@ -52,6 +52,8 @@ class CONEC {
   void set_dims(uvec dims_) {dims = dims_;}
   int get_K() {return K;}
   void set_K(int K_) {K = K_;}
+  int get_n() {return n;}
+  void set_n(int n_) {n = n_;}
 
   friend class DLP;
   friend class DQP;
@@ -66,6 +68,9 @@ class CONEC {
   mat sslb(mat s, mat lambda, bool invers);
   mat ssnt(mat s, std::vector<std::map<std::string,mat> > WList, bool invers, bool transp);
   mat getLambda(std::vector<std::map<std::string,mat> > WList);
+  mat gwwg(std::vector<std::map<std::string,mat> > WList);
+  mat gwwz(std::vector<std::map<std::string,mat> > WList, mat z);
+  PDV* initpdv(int p);
   std::vector<std::map<std::string,mat> > initnts();
   std::vector<std::map<std::string,mat> > ntsc(mat s, mat z);
   std::vector<std::map<std::string,mat> > ntsu(mat s, mat z, std::vector<std::map<std::string,mat> > WList);
@@ -77,6 +82,7 @@ class CONEC {
   umat sidx;
   uvec dims;
   int K;
+  int n;
 };
 /*
  * Class for definition of Quadratic programs
@@ -107,9 +113,6 @@ class DQP {
   mat rprim(PDV& pdv);
   mat rcent(PDV& pdv);
   mat rdual(PDV& pdv);
-  PDV* initpdv();
-  mat gwwg(std::vector<std::map<std::string,mat> > WList);
-  mat gwwz(std::vector<std::map<std::string,mat> > WList, mat z);
   PDV* sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList);
   CPS* cps(CTRL& ctrl);
 
@@ -143,9 +146,12 @@ class DLP {
 
   double pobj(PDV& pdv);
   double dobj(PDV& pdv);
+  double certp(PDV& pdv);
+  double certd(PDV& pdv);
   mat rprim(PDV& pdv);
   mat rcent(PDV& pdv);
   mat rdual(PDV& pdv);
+  PDV* initpdv();
 
  private:
   vec q;
