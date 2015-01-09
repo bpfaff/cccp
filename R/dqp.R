@@ -25,7 +25,7 @@ dqp <- function(P, q, A = NULL, b = NULL, cList = list()){
         dims <- as.integer(unlist(lapply(cList, function(x) x[["dims"]])))
         cList <- new(CONEC, cone, G, h, sidx, dims, K, n)
     } else {
-        cList <- new(CONEC)
+        cList <- new(CONEC, as.integer(n))
     }
    ans <- new(DQP,
               P = P,

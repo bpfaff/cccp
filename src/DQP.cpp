@@ -28,7 +28,9 @@ double DQP::dobj(PDV& pdv){
   term2(0,0) = 0.0;
 
   // dobj term for equality constraints
-  term1 = pdv.y.t() * (A * pdv.x - b);
+  if(A.n_rows > 0){
+    term1 = pdv.y.t() * (A * pdv.x - b);
+  }
   // dobj term for inequality constraints
   if(cList.K > 0){
     term2 = dot(pdv.z, cList.G * pdv.x - cList.h);
@@ -181,7 +183,6 @@ CPS* DQP::cps(CTRL& ctrl){
     } catch(...) {
       ::Rf_error("C++ exception (unknown reason)");
     }
-
     pdv->y = Si * (A * Piq + b);
     pdv->x = Pi * (-(A.t() * pdv->y) - q);
     cps->set_pdv(*pdv);

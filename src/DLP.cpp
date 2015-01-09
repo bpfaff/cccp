@@ -131,3 +131,16 @@ PDV* DLP::initpdv(){
 
   return pdv;
 }
+/*
+  Main routine for solving a Quadratic Program
+*/
+CPS* DLP::cps(CTRL& ctrl){
+  // Initialising object
+  PDV* pdv = cList.initpdv(A.n_rows);
+  CPS* cps = new CPS();
+  cps->set_pdv(*pdv);
+  Rcpp::List params(ctrl.get_params());
+  Rcpp::NumericVector state = cps->get_state();
+
+  return cps;
+}

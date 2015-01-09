@@ -39,6 +39,7 @@ class CONEC {
     h(mat()), sidx(umat()), dims(uvec()), K(0), n(0) {}
  CONEC(std::vector<std::string> cone_, mat G_, mat h_, umat sidx_, uvec dims_, int K_, int n_): \
   cone(cone_), G(G_), h(h_), sidx(sidx_), dims(dims_), K(K_), n(n_){}
+ CONEC(int n_): n(n_){}
   // members
   std::vector<std::string> get_cone() {return cone;}
   void set_cone(std::vector<std::string> cone_) {cone = cone_;}
@@ -152,6 +153,7 @@ class DLP {
   mat rcent(PDV& pdv);
   mat rdual(PDV& pdv);
   PDV* initpdv();
+  CPS* cps(CTRL& ctrl);
 
  private:
   vec q;

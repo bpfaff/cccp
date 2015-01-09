@@ -27,6 +27,7 @@ RCPP_MODULE(CPG){
   Rcpp::class_<CONEC>( "CONEC" )
     .constructor("Default constructor")
     .constructor<std::vector<std::string>, mat, mat, umat, uvec, int, int>("cone constraints")
+    .constructor<int>("no cone constraints, setting n")
 
     .property("cone", &CONEC::get_cone, &CONEC::set_cone, "Getter and setter for cone types")
     .property("G", &CONEC::get_G, &CONEC::set_G, "Getter and setter for Gmats")
@@ -35,7 +36,10 @@ RCPP_MODULE(CPG){
     .property("dims", &CONEC::get_dims, &CONEC::set_dims, "Getter and setter for dims")
     .property("K", &CONEC::get_K, &CONEC::set_K, "Getter and setter for K")
     .property("n", &CONEC::get_n, &CONEC::set_n, "Getter and setter for K")
-    ;
+ 
+    .method("initpdv", &CONEC::initpdv)
+
+   ;
 
   Rcpp::class_<DLP>( "DLP" )
     .constructor("Default constructor")
@@ -45,6 +49,8 @@ RCPP_MODULE(CPG){
     .property("A", &DLP::get_A, &DLP::set_A, "Getter and setter for A")
     .property("b", &DLP::get_b, &DLP::set_b, "Getter and setter for b")
     .property("cList", &DLP::get_cList, &DLP::set_cList, "Getter and setter for cList")
+
+    .method("cps", &DLP::cps)
     ;
 
   Rcpp::class_<DQP>( "DQP" )
