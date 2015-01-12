@@ -30,6 +30,25 @@ setMethod("show", signature = "Rcpp_DQP", function(object){
     cat(paste("Constraints w.r.t. the semidefinite cone:", max(0, sum(cc %in% "PSDC")), "\n"))
     cat("\n")
 })
+setMethod("show", signature = "Rcpp_DLP", function(object){
+    title <- paste("* Definition of Linear Program *")
+    row <- paste(rep("*", nchar(title)), collapse = "")
+    cat("\n")
+    cat(row, "\n")
+    cat(paste(title, "\n"))
+    cat(row, "\n")
+    cat("\n")
+    cat(paste("Count of variables in objective:", length(object$q), "\n"))
+    cat(paste("Count of equality constraints:", nrow(object$A), "\n"))
+    countcc <- object$cList$K
+    cat(paste("Count of cone constraints:", countcc, "\n"))
+    cc <- object$cList$conTypes
+    cat("These consist of:\n")
+    cat(paste("Constraints w.r.t. the nonnegative orthant:", max(0, sum(cc %in% "NNOC")), "\n"))
+    cat(paste("Constraints w.r.t. the second-order cone:", max(0, sum(cc %in% "SOCC")), "\n"))
+    cat(paste("Constraints w.r.t. the semidefinite cone:", max(0, sum(cc %in% "PSDC")), "\n"))
+    cat("\n")
+})
 setMethod("show", signature = "Rcpp_CPS", function(object){
     title <- "* Solution of Convex Program *"
     row <- paste(rep("*", nchar(title)), collapse = "")

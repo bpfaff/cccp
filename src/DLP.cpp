@@ -135,15 +135,17 @@ CPS* DLP::cps(CTRL& ctrl){
   PDV* dpdv2 = cList.initpdv(A.n_rows);
   CPS* cps = new CPS();
   cps->set_pdv(*pdv);
+  cps->set_sidx(cList.sidx);
   bool checkRgap = false;
   int m = sum(cList.dims), n = cList.n, sizeLHS = A.n_rows + A.n_cols; 
   double resx, resx0, resy, resy0, resz, resz0, pres, dres, 
-    ts, nrms, tz, nrmz, pcost, dcost, gap, rgap, hresx, hresy, hresz,
-    hz, by, cx, rt, pinfres, dinfres;
+    ts, nrms, tz, nrmz, tt, tk, tm, pcost, dcost, gap, rgap = NA_REAL, 
+    hresx, hresy, hresz, hz, by, cx, rt, pinfres, dinfres, 
+    nomin, denom, dg, dgi, lg, lgprd, dkdt = 0.0, mu, sigma, step;
   Rcpp::NumericVector state = cps->get_state();
-  vec ss(3), sdv(3), eval;
-  mat rx, ry, rz, hrx, hry, hrz;
-  mat OneE = cList.sone();
+  vec ss(5), eval;
+  mat rx, ry, rz, hrx, hry, hrz, Lambda, LambdaPrd, Ws3, Wh, Whz, dsdz;
+  mat OneE = cList.sone(), tmpmat, evec;
   mat LHS(sizeLHS, sizeLHS);
   mat RHS(sizeLHS, 1);
   std::vector<std::map<std::string,mat> > WList;
@@ -195,6 +197,8 @@ CPS* DLP::cps(CTRL& ctrl){
   if(dcost > 0.0) rgap = gap / dcost;
   if(!std::isnan(rgap)){
     checkRgap = (rgap <= rtol);
+  } else {
+    checkRgap = false;
   }
   if((ts <= ftol) && (tz <= ftol) && ((gap <= atol) || checkRgap)){
     // Dual Residuals
@@ -209,7 +213,6 @@ CPS* DLP::cps(CTRL& ctrl){
     pres = std::max(resy / resy0, resz / resz0); 
     dres = resx / resx0;
     cps->set_pdv(*pdv);
-    cps->set_sidx(cList.sidx);
     state["pobj"] = pobj(*pdv);
     state["dobj"] = dobj(*pdv);
     state["dgap"] = gap;
@@ -290,11 +293,274 @@ CPS* DLP::cps(CTRL& ctrl){
       Rcpp::Rcout << std::endl;
     }
     // Checking convergence / infeasibilities
+    if(!std::isnan(rgap)){
+      checkRgap = (rgap <= rtol);
+    } else {
+      checkRgap = false;
+    } 
+    if((pres <= ftol) && (dres <= ftol) && ((gap <= atol) || checkRgap)){
+      pdv->x = pdv->x / pdv->tau;
+      pdv->y = pdv->y / pdv->tau;
+      pdv->s = pdv->s / pdv->tau;
+      pdv->z = pdv->z / pdv->tau;
+      ts = cList.smss(pdv->s).max();
+      tz = cList.smss(pdv->z).max();
+      state["pobj"] = pobj(*pdv);
+      state["dobj"] = dobj(*pdv);
+      state["dgap"] = gap;
+      state["certp"] = certp(*pdv);
+      state["certd"] = certd(*pdv);
+      state["pslack"] = -ts;
+      state["dslack"] = -tz;
+      if(!std::isnan(rgap)){
+	state["rgap"] = rgap;
+      }
 
+      cps->set_state(state);
+      cps->set_status("optimal");
+      cps->set_niter(i);
+      if(trace){
+	Rcpp::Rcout << "Optimal solution found." << std::endl;
+      }
+      return cps;
+    } else if((!std::isnan(pinfres)) && (pinfres <= ftol)){
+      denom = -hz - by;
+      pdv->x = mat(0,1);
+      pdv->y = pdv->y / denom;
+      pdv->s = mat(0,1);
+      pdv->y = pdv->y / denom;
+      tz = cList.smss(pdv->z).max();
+      state["pobj"] = NA_REAL;
+      state["dobj"] = 1.0;
+      state["dgap"] = NA_REAL;
+      state["rgap"] = NA_REAL;
+      state["certp"] = pinfres;
+      state["certd"] = NA_REAL;
+      state["pslack"] = NA_REAL;
+      state["dslack"] = -tz;
+      cps->set_state(state);
+      cps->set_status("primal infeasible");
+      cps->set_niter(i);
+      if(trace){
+	Rcpp::Rcout << "Certificate of primal infeasibility found." << std::endl;
+      }
+    } else if((!std::isnan(dinfres)) && (dinfres <= ftol)){
+      denom = -cx;
+      pdv->x = pdv->x / denom;
+      pdv->y = mat(0,1);
+      pdv->s = pdv->s / denom;
+      pdv->z = mat(0,1);
+      ts = cList.smss(pdv->s).max();
+      state["pobj"] = -1.0;
+      state["dobj"] = NA_REAL;
+      state["dgap"] = NA_REAL;
+      state["rgap"] = NA_REAL;
+      state["certp"] = NA_REAL;
+      state["certd"] = dinfres;
+      state["pslack"] = -ts;
+      state["dslack"] = NA_REAL;
+      cps->set_state(state);
+      cps->set_status("dual infeasible");
+      cps->set_niter(i);
+      if(trace){
+	Rcpp::Rcout << "Certificate of dual infeasibility found." << std::endl;
+      }
+    }
+    // Computing initial scalings
+    if(i == 0){
+      WList = cList.ntsc(pdv->s, pdv->z);
+      dg = sqrt(pdv->kappa / pdv->tau);
+      dgi = sqrt(pdv->tau / pdv->kappa);
+      lg = sqrt(pdv->tau * pdv->kappa);
+    }
+    Lambda = cList.getLambda(WList);
+    LambdaPrd = cList.sprd(Lambda, Lambda);
+    lgprd = lg * lg;
+    // Solution step 1 (same for affine and combined solution)
+    try{
+      dpdv1->x = -q;
+      dpdv1->y = b;
+      dpdv1->z = cList.h;
+      dpdv1 = sxyz(dpdv1, LHS, RHS, WList);
+    } catch(std::runtime_error &ex){
+      pdv->x = pdv->x / pdv->tau;
+      pdv->y = pdv->y / pdv->tau;
+      pdv->s = pdv->s / pdv->tau;
+      pdv->z = pdv->z / pdv->tau;
+      ts = cList.smss(pdv->s).max();
+      tz = cList.smss(pdv->z).max();
+      state["pobj"] = pobj(*pdv);
+      state["dobj"] = dobj(*pdv);
+      state["dgap"] = gap;
+      state["certp"] = pres;
+      state["certd"] = dres;
+      state["pslack"] = -ts;
+      state["dslack"] = -tz;
+      if(!std::isnan(rgap)){
+	state["rgap"] = rgap;
+      }
+      cps->set_state(state);
+      cps->set_status("unknown");
+      cps->set_niter(i);
+      if(trace){
+	Rcpp::Rcout << "Terminated (singular KKT matrix)." << std::endl;
+      }
+      return cps;
 
-  }
+    } catch(...){
+      ::Rf_error("C++ exception (unknown reason)"); 
+   }
+    dpdv1->x = dpdv1->x * dgi;
+    dpdv1->y = dpdv1->y * dgi;
+    dpdv1->z = dpdv1->z * dgi;
+    Wh = cList.ssnt(cList.h, WList, true, true);
+    mu = dot(Lambda, Lambda) / (m + 1);
+    sigma = 0;
+    // Solving for affine and combined direction in two-round for-loop
+    for(int ii = 0; ii < 2; ii++){
+      dpdv2->s = LambdaPrd;
+      dpdv2->kappa = lgprd;
+      if(ii == 1){
+	dpdv2->s = dpdv2->s + dsdz - OneE * sigma * mu;
+	dpdv2->kappa = dpdv2->kappa + dkdt - sigma * mu;
+      }
+      dpdv2->x = (1.0 - sigma) * rx;
+      dpdv2->y = (1.0 - sigma) * ry;
+      dpdv2->z = (1.0 - sigma) * rz;
+      dpdv2->tau = (1.0 - sigma) * rt;
+      // Solving KKT-system
+      dpdv2->s = cList.sinv(dpdv2->s, Lambda);
+      dpdv2->s = -dpdv2->s;
+      Ws3 = cList.ssnt(dpdv2->s, WList, false, true);
+      dpdv2->z = dpdv2->z + Ws3;
+      dpdv2->z = -dpdv2->z;
+      dpdv2->y = -dpdv2->y; 
+      dpdv2 = sxyz(dpdv2, LHS, RHS, WList);
+      // Combining solutions dpdv1 and dpdv2
+      dpdv2->kappa = -dpdv2->kappa / lg;
+      dpdv2->tau = dpdv2->tau + dpdv2->kappa / dgi;
+      cx = dot(q, pdv->x);
+      by = dot(b, pdv->y);
+      Whz = cList.sdot(Wh, dpdv2->z).at(0,0);
+      nomin = (dgi * (dpdv2->tau + cx + by + Whz)).at(0,0);
+      denom = 1.0 + cList.sdot(dpdv1->z, dpdv1->z).at(0,0);
+      dpdv2->tau = nomin / denom;
+      dpdv2->x = dpdv2->x + dpdv2->tau * dpdv1->x;
+      dpdv2->y = dpdv2->y + dpdv2->tau * dpdv1->y;
+      dpdv2->z = dpdv2->z + dpdv2->tau * dpdv1->z;
+      dpdv2->s = dpdv2->s - dpdv2->z;
+      dpdv2->kappa = dpdv2->kappa - dpdv2->tau; 
+      // ds o dz and dkappa * dtau for Mehrotra correction
+      if(ii == 0){
+	dsdz = cList.sprd(dpdv2->s, dpdv2->z);
+	dkdt = dpdv2->kappa * dpdv2->tau; 
+      }
+      dpdv2->s = cList.sslb(dpdv2->s, Lambda, false);
+      dpdv2->z = cList.sslb(dpdv2->z, Lambda, false);
+      ts = cList.smss(dpdv2->s).max();
+      tz = cList.smss(dpdv2->z).max();
+      tt = -dpdv2->tau / lg;
+      tk = -dpdv2->kappa / lg;
+      ss << 0.0 << ts << tz << tt << endr;
+      tm = ss.max();
+      if(tm == 0.0){
+	step = 1.0;
+      } else {
+	if(ii == 0) {
+	  step = std::min(1.0, 1.0 / tm);
+	} else {
+	  step = std::min(1.0, sadj / tm);
+	}
+      }
+      if(ii == 0) sigma = pow((1.0 - step), 3.0);
+    } // end ii-loop
+
+    // Updating x, y; s and z (in current scaling)
+    pdv->x = pdv->x + step * dpdv2->x;
+    pdv->y = pdv->y + step * dpdv2->y;
+
+    for(int j = 0; j < cList.K; j++){
+      if((cList.cone[j] == "NLFC") || (cList.cone[j] == "NNOC")){
+	dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sams2_nl(dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), step);
+	dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sams2_nl(dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), step);
+	dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sslb_nl(dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		  Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), true);
+	dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sslb_nl(dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		  Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), true);
+      } else if(cList.cone[j] == "SOCC"){
+        dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sams2_p(dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), step);
+	dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sams2_p(dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), step);
+        dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sslb_p(dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		 Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), true);
+	dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sslb_p(dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		 Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), true);
+      } else if(cList.cone[j] == "PSDC"){
+	tmpmat = dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all);
+	tmpmat.reshape(cList.dims[j], cList.dims[j]);
+	eig_sym(eval, evec, tmpmat);
+	evec.reshape(cList.dims[j] * cList.dims[j], 1);
+	dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sslb_s(evec, Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		 true, cList.dims[j]);
+	dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sams2_s(dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		  step, Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		  eval, cList.dims[j]);
+	tmpmat = dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all);
+	tmpmat.reshape(cList.dims[j], cList.dims[j]);
+	eig_sym(eval, evec, tmpmat);
+	evec.reshape(cList.dims[j] * cList.dims[j], 1);
+	dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sslb_s(evec, Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		 true, cList.dims[j]);
+	dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
+	  sams2_s(dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		  step, Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
+		  eval, cList.dims[j]);
+      }
+    }
+    // Updating NT-scaling and Lagrange Multipliers
+    WList = cList.ntsu(dpdv2->s, dpdv2->z, WList);
+    dg = dg * sqrt(1.0 - step * tk) / sqrt(1.0 - step * tt);
+    dgi = 1 / dg;
+    lg = lg * sqrt(1 - step * tt) * sqrt(1 - step * tk);
+    pdv->s = cList.ssnt(Lambda, WList, false, true);
+    pdv->z = cList.ssnt(Lambda, WList, true, false);
+    pdv->kappa = lg / dgi;
+    pdv->tau = lg * dgi;
+    gap = pow(norm(Lambda) / pdv->tau, 2.0);
+  } // end i-loop
 
   cps->set_pdv(*pdv);
+  state["pobj"] = pobj(*pdv);
+  state["dobj"] = dobj(*pdv);
+  state["dgap"] = gap;
+  state["certp"] = certp(*pdv);
+  state["certd"] = certd(*pdv);
+  state["pslack"] = -ts;
+  state["dslack"] = -tz;
+  if(!std::isnan(rgap)){
+    state["rgap"] = rgap;
+  }
+  cps->set_state(state);
+  cps->set_niter(maxiters);
+
+  if((state["certp"] <= ftol) && (state["certd"] <= ftol)){
+    cps->set_status("optimal");
+  } else {
+    if(trace){
+      Rcpp::Rcout << "Optimal solution not determined in " << maxiters << " iteration(s)." << std::endl;
+    }
+    cps->set_status("unknown");
+  }
 
   return cps;
 }

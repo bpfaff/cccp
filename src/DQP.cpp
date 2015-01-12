@@ -265,6 +265,7 @@ CPS* DQP::cps(CTRL& ctrl){
     // Statistics for stopping criteria
     pcost = pobj(*pdv);
     dcost = pcost + dot(pdv->y, ry) + cList.sdot(pdv->z, rz).at(0, 0) - gap;
+    rgap = NA_REAL;
     if(pcost < 0.0) rgap = gap / (-pcost);
     if(dcost > 0.0) rgap = gap / dcost;
     pres = std::max(resy / resy0, resz / resz0); 
@@ -282,7 +283,9 @@ CPS* DQP::cps(CTRL& ctrl){
     // Checking convergence
     if(!std::isnan(rgap)){
       checkRgap = (rgap <= rtol);
-    }
+    } else {
+      checkRgap = false;
+    } 
     if((pres <= ftol) && (dres <= ftol) && ((gap <= atol) || checkRgap)){
       cps->set_pdv(*pdv);
       cps->set_sidx(cList.sidx);
@@ -320,6 +323,7 @@ CPS* DQP::cps(CTRL& ctrl){
       dpdv->x = -rx;
       dpdv->y = -ry;
       dpdv->z = -rz;
+      // Solving KKT-System
       dpdv->s = -LambdaPrd + OneE * sigma * mu;
       dpdv->s = cList.sinv(dpdv->s, Lambda);
       Ws3 = cList.ssnt(dpdv->s, WList, false, true);
@@ -407,7 +411,7 @@ CPS* DQP::cps(CTRL& ctrl){
     pdv->s = cList.ssnt(Lambda, WList, false, true);
     pdv->z = cList.ssnt(Lambda, WList, true, false);
     gap = sum(cList.sdot(Lambda, Lambda));
-  } // end for-loop in maxiters
+  } // end i-loop
 
   // Preparing result for non-convergence in maxiters iterations
   cps->set_pdv(*pdv);
