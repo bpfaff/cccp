@@ -141,7 +141,7 @@ CPS* DLP::cps(CTRL& ctrl){
   double resx, resx0, resy, resy0, resz, resz0, pres, dres, 
     ts, nrms, tz, nrmz, tt, tk, tm, pcost, dcost, gap, rgap = NA_REAL, 
     hresx, hresy, hresz, hz, by, cx, rt, pinfres, dinfres, 
-    nomin, denom, dg, dgi, lg, lgprd, dkdt = 0.0, mu, sigma, step;
+    nomin, denom, dg = 1.0, dgi = 1.0, lg = 1.0, lgprd, dkdt = 0.0, mu, sigma, step;
   Rcpp::NumericVector state = cps->get_state();
   vec ss(5), eval;
   mat rx, ry, rz, hrx, hry, hrz, Lambda, LambdaPrd, Ws3, Wh, Whz, dsdz;
