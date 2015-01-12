@@ -23,7 +23,7 @@ setMethod("show", signature = "Rcpp_DQP", function(object){
     cat(paste("Count of equality constraints:", nrow(object$A), "\n"))
     countcc <- object$cList$K
     cat(paste("Count of cone constraints:", countcc, "\n"))
-    cc <- object$cList$conTypes
+    cc <- object$cList$cone
     cat("These consist of:\n")
     cat(paste("Constraints w.r.t. the nonnegative orthant:", max(0, sum(cc %in% "NNOC")), "\n"))
     cat(paste("Constraints w.r.t. the second-order cone:", max(0, sum(cc %in% "SOCC")), "\n"))
@@ -42,7 +42,7 @@ setMethod("show", signature = "Rcpp_DLP", function(object){
     cat(paste("Count of equality constraints:", nrow(object$A), "\n"))
     countcc <- object$cList$K
     cat(paste("Count of cone constraints:", countcc, "\n"))
-    cc <- object$cList$conTypes
+    cc <- object$cList$cone
     cat("These consist of:\n")
     cat(paste("Constraints w.r.t. the nonnegative orthant:", max(0, sum(cc %in% "NNOC")), "\n"))
     cat(paste("Constraints w.r.t. the second-order cone:", max(0, sum(cc %in% "SOCC")), "\n"))
