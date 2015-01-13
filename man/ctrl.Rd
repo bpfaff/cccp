@@ -13,7 +13,7 @@
 
 \usage{
 ctrl(maxiters = 100L, abstol = 1e-07, reltol = 1e-06,
-     feastol = 1e-07, stepadj = 0.98, trace = TRUE)
+     feastol = 1e-07, stepadj = 0.95, trace = TRUE)
 }
 
 \arguments{

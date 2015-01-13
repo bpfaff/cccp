@@ -130,9 +130,7 @@ PDV* DLP::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat>
 CPS* DLP::cps(CTRL& ctrl){
   // Initializing objects
   PDV* pdv = cList.initpdv(A.n_rows);
-  //  PDV* InitPrim = cList.initpdv(A.n_rows);
-  //PDV* InitDual = cList.initpdv(A.n_rows);
-  PDV InitPrim, InitDual;
+  PDV InitPrim, InitDual, KktSol;
 
   PDV* dpdv1 = cList.initpdv(A.n_rows);
   PDV* dpdv2 = cList.initpdv(A.n_rows);
@@ -171,7 +169,7 @@ CPS* DLP::cps(CTRL& ctrl){
     LHS.submat(0, n, n-1, sizeLHS-1) = A.t();
   }
   // Computing initial values of PDV / CPS and scalings
-  WList = cList.ntsc();
+  WList = cList.initnts();
   // Primal Start
   InitPrim.x = zeros(n, 1);
   InitPrim.y = b;
@@ -179,6 +177,7 @@ CPS* DLP::cps(CTRL& ctrl){
   InitPrim = *(sxyz(&InitPrim, LHS, RHS, WList));
   InitPrim.s = -InitPrim.z;
   ts = cList.smss(InitPrim.s).max();
+  InitPrim.x.print();
   // Dual Start
   InitDual.x = -q;
   InitDual.y = zeros(b.n_rows, 1);
@@ -195,7 +194,7 @@ CPS* DLP::cps(CTRL& ctrl){
   // Initial point optimal?
   gap = sum(cList.sdot(pdv->s, pdv->z));
   pcost = pobj(*pdv);
-  dcost = -dot(b, pdv->y) - cList.sdot(pdv->z, cList.h).at(0, 0);
+  dcost = -dot(b, pdv->y) - sum(cList.sdot(pdv->z, cList.h));
   if(pcost < 0.0) rgap = gap / (-pcost);
   if(dcost > 0.0) rgap = gap / dcost;
   if(!std::isnan(rgap)){
@@ -348,6 +347,7 @@ CPS* DLP::cps(CTRL& ctrl){
      if(trace){
 	Rcpp::Rcout << "Certificate of primal infeasibility found." << std::endl;
       }
+     return cps;
     } else if((!std::isnan(dinfres)) && (dinfres <= ftol)){
       denom = -cx;
       pdv->x = pdv->x / denom;
@@ -366,10 +366,11 @@ CPS* DLP::cps(CTRL& ctrl){
       cps->set_state(state);
       cps->set_status("dual infeasible");
       cps->set_pdv(*pdv); 
-     cps->set_niter(i);
+      cps->set_niter(i);
       if(trace){
 	Rcpp::Rcout << "Certificate of dual infeasibility found." << std::endl;
       }
+     return cps;
     }
     // Computing initial scalings
     if(i == 0){
@@ -440,19 +441,19 @@ CPS* DLP::cps(CTRL& ctrl){
       dpdv2->z = dpdv2->z + Ws3;
       dpdv2->z = -1.0 * dpdv2->z;
       dpdv2->y = -1.0 * dpdv2->y; 
-      dpdv2 = sxyz(dpdv2, LHS, RHS, WList);
+      KktSol = *(sxyz(dpdv2, LHS, RHS, WList));
       // Combining solutions dpdv1 and dpdv2
       dpdv2->kappa = -1.0 * dpdv2->kappa / lg;
       dpdv2->tau = dpdv2->tau + dpdv2->kappa / dgi;
-      cx = dot(q, dpdv2->x);
-      by = dot(b, dpdv2->y);
-      Whz = cList.sdot(Wh, dpdv2->z).at(0,0);
+      cx = dot(q, KktSol.x);
+      by = dot(b, KktSol.y);
+      Whz = sum(cList.sdot(Wh, KktSol.z));
       nomin = (dgi * (dpdv2->tau + cx + by + Whz)).at(0,0);
-      denom = 1.0 + cList.sdot(dpdv1->z, dpdv1->z).at(0,0);
+      denom = 1.0 + sum(cList.sdot(dpdv1->z, dpdv1->z));
       dpdv2->tau = nomin / denom;
-      dpdv2->x = dpdv2->x + dpdv2->tau * dpdv1->x;
-      dpdv2->y = dpdv2->y + dpdv2->tau * dpdv1->y;
-      dpdv2->z = dpdv2->z + dpdv2->tau * dpdv1->z;
+      dpdv2->x = KktSol.x + dpdv2->tau * dpdv1->x;
+      dpdv2->y = KktSol.y + dpdv2->tau * dpdv1->y;
+      dpdv2->z = KktSol.z + dpdv2->tau * dpdv1->z;
       dpdv2->s = dpdv2->s - dpdv2->z;
       dpdv2->kappa = dpdv2->kappa - dpdv2->tau; 
       // ds o dz and dkappa * dtau for Mehrotra correction
@@ -532,7 +533,6 @@ CPS* DLP::cps(CTRL& ctrl){
 		  eval, cList.dims[j]);
       }
     }
-
     // Updating NT-scaling and Lagrange Multipliers
     WList = cList.ntsu(dpdv2->s, dpdv2->z, WList);
     Lambda = cList.getLambda(WList);

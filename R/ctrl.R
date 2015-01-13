@@ -1,7 +1,7 @@
 ##
 ## Function for creating 'CTRL' objects 
 ctrl <- function(maxiters = 100L, abstol = 1e-7, reltol = 1e-6, feastol = 1e-7,
-                 stepadj = 0.98, trace = TRUE){
+                 stepadj = 0.95, trace = TRUE){
 
     if(!is.integer(maxiters)){
         stop("\nThe count of maximal iterations must be an integer.\n")
