@@ -74,6 +74,7 @@ class CONEC {
   mat gwwz(std::vector<std::map<std::string,mat> > WList, mat z);
   PDV* initpdv(int p);
   std::vector<std::map<std::string,mat> > initnts();
+  std::vector<std::map<std::string,mat> > ntsc();
   std::vector<std::map<std::string,mat> > ntsc(mat s, mat z);
   std::vector<std::map<std::string,mat> > ntsu(mat s, mat z, std::vector<std::map<std::string,mat> > WList);
 

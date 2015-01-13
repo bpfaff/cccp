@@ -16,10 +16,11 @@ double DLP::pobj(PDV& pdv){
 Dual objective
 */
 double DLP::dobj(PDV& pdv){
-  double term1 = 0.0, term2 = 0.0;
+  double term1 = 0.0, term2 = 0.0, ans;
   term1 = dot(b, pdv.y);
   term2 = sum(cList.sdot(pdv.z, cList.h));
-  return -term1 - term2;
+  ans = -term1 - term2;
+  return ans;
 }
 /*
 Primal Residuals
@@ -129,8 +130,10 @@ PDV* DLP::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat>
 CPS* DLP::cps(CTRL& ctrl){
   // Initializing objects
   PDV* pdv = cList.initpdv(A.n_rows);
-  PDV* InitPrim = cList.initpdv(A.n_rows);
-  PDV* InitDual = cList.initpdv(A.n_rows);
+  //  PDV* InitPrim = cList.initpdv(A.n_rows);
+  //PDV* InitDual = cList.initpdv(A.n_rows);
+  PDV InitPrim, InitDual;
+
   PDV* dpdv1 = cList.initpdv(A.n_rows);
   PDV* dpdv2 = cList.initpdv(A.n_rows);
   CPS* cps = new CPS();
@@ -168,25 +171,25 @@ CPS* DLP::cps(CTRL& ctrl){
     LHS.submat(0, n, n-1, sizeLHS-1) = A.t();
   }
   // Computing initial values of PDV / CPS and scalings
-  WList = cList.initnts();
+  WList = cList.ntsc();
   // Primal Start
-  pdv->x = pdv->x.zeros();
-  pdv->y = b;
-  pdv->z = cList.h;
-  InitPrim = sxyz(pdv, LHS, RHS, WList);
-  InitPrim->s = -InitPrim->z;
-  ts = cList.smss(InitPrim->s).max();
+  InitPrim.x = zeros(n, 1);
+  InitPrim.y = b;
+  InitPrim.z = cList.h;
+  InitPrim = *(sxyz(&InitPrim, LHS, RHS, WList));
+  InitPrim.s = -InitPrim.z;
+  ts = cList.smss(InitPrim.s).max();
   // Dual Start
-  pdv->x = -q;
-  pdv->y = b.zeros();
-  pdv->z = cList.h.zeros();
-  InitDual = sxyz(pdv, LHS, RHS, WList);
-  tz = cList.smss(InitDual->z).max();
+  InitDual.x = -q;
+  InitDual.y = zeros(b.n_rows, 1);
+  InitDual.z = zeros(cList.h.n_rows, 1);
+  InitDual = *(sxyz(&InitDual, LHS, RHS, WList));
+  tz = cList.smss(InitDual.z).max();
   // Initial Point
-  pdv->x = InitPrim->x;
-  pdv->y = InitDual->y;
-  pdv->s = InitPrim->s;
-  pdv->z = InitDual->z;
+  pdv->x = InitPrim.x;
+  pdv->y = InitDual.y;
+  pdv->s = InitPrim.s;
+  pdv->z = InitDual.z;
   nrms = sum(cList.snrm2(pdv->s));
   nrmz = sum(cList.snrm2(pdv->z));
   // Initial point optimal?
@@ -246,14 +249,14 @@ CPS* DLP::cps(CTRL& ctrl){
     // Evaluate residuals, gap and stopping criteria
     // Dual residuals
     hrx = -(A.t() * pdv->y) - cList.G.t() * pdv->z;
-    hresx = norm(hrx);
+    hresx = sqrt(dot(hrx, hrx));
     rx = hrx - q * pdv->tau;
-    resx = norm(rx) / pdv->tau;
+    resx = sqrt(dot(rx, rx)) / pdv->tau;
     // Primal residuals
     hry = A * pdv->x;
-    hresy = norm(hry);
+    hresy = sqrt(dot(hry, hry));
     ry = hry - b * pdv->tau;
-    resy = norm(ry) / pdv->tau;
+    resy = sqrt(dot(ry, ry)) / pdv->tau;
     // Centrality residuals
     hrz = pdv->s + cList.G * pdv->x;
     hresz = cList.snrm2(hrz);
@@ -315,7 +318,6 @@ CPS* DLP::cps(CTRL& ctrl){
       if(!std::isnan(rgap)){
 	state["rgap"] = rgap;
       }
-
       cps->set_state(state);
       cps->set_status("optimal");
       cps->set_niter(i);
@@ -369,11 +371,11 @@ CPS* DLP::cps(CTRL& ctrl){
     // Computing initial scalings
     if(i == 0){
       WList = cList.ntsc(pdv->s, pdv->z);
+      Lambda = cList.getLambda(WList);
       dg = sqrt(pdv->kappa / pdv->tau);
       dgi = sqrt(pdv->tau / pdv->kappa);
       lg = sqrt(pdv->tau * pdv->kappa);
     }
-    Lambda = cList.getLambda(WList);
     LambdaPrd = cList.sprd(Lambda, Lambda);
     lgprd = lg * lg;
     // Solution step 1 (same for affine and combined solution)
@@ -406,7 +408,6 @@ CPS* DLP::cps(CTRL& ctrl){
 	Rcpp::Rcout << "Terminated (singular KKT matrix)." << std::endl;
       }
       return cps;
-
     } catch(...){
       ::Rf_error("C++ exception (unknown reason)"); 
    }
@@ -430,17 +431,17 @@ CPS* DLP::cps(CTRL& ctrl){
       dpdv2->tau = (1.0 - sigma) * rt;
       // Solving KKT-system
       dpdv2->s = cList.sinv(dpdv2->s, Lambda);
-      dpdv2->s = -dpdv2->s;
+      dpdv2->s = -1.0 * dpdv2->s;
       Ws3 = cList.ssnt(dpdv2->s, WList, false, true);
       dpdv2->z = dpdv2->z + Ws3;
-      dpdv2->z = -dpdv2->z;
-      dpdv2->y = -dpdv2->y; 
+      dpdv2->z = -1.0 * dpdv2->z;
+      dpdv2->y = -1.0 * dpdv2->y; 
       dpdv2 = sxyz(dpdv2, LHS, RHS, WList);
       // Combining solutions dpdv1 and dpdv2
-      dpdv2->kappa = -dpdv2->kappa / lg;
+      dpdv2->kappa = -1.0 * dpdv2->kappa / lg;
       dpdv2->tau = dpdv2->tau + dpdv2->kappa / dgi;
-      cx = dot(q, pdv->x);
-      by = dot(b, pdv->y);
+      cx = dot(q, dpdv2->x);
+      by = dot(b, dpdv2->y);
       Whz = cList.sdot(Wh, dpdv2->z).at(0,0);
       nomin = (dgi * (dpdv2->tau + cx + by + Whz)).at(0,0);
       denom = 1.0 + cList.sdot(dpdv1->z, dpdv1->z).at(0,0);
@@ -527,8 +528,10 @@ CPS* DLP::cps(CTRL& ctrl){
 		  eval, cList.dims[j]);
       }
     }
+
     // Updating NT-scaling and Lagrange Multipliers
     WList = cList.ntsu(dpdv2->s, dpdv2->z, WList);
+    Lambda = cList.getLambda(WList);
     dg = dg * sqrt(1.0 - step * tk) / sqrt(1.0 - step * tt);
     dgi = 1 / dg;
     lg = lg * sqrt(1 - step * tt) * sqrt(1 - step * tk);
@@ -536,7 +539,7 @@ CPS* DLP::cps(CTRL& ctrl){
     pdv->z = cList.ssnt(Lambda, WList, true, false);
     pdv->kappa = lg / dgi;
     pdv->tau = lg * dgi;
-    gap = pow(norm(Lambda) / pdv->tau, 2.0);
+    gap = pow(sqrt(dot(Lambda, Lambda)) / pdv->tau, 2.0);
   } // end i-loop
 
   cps->set_pdv(*pdv);

@@ -149,6 +149,45 @@ mat CONEC::sams1(mat u, double alpha){
 /*
 Computation of Nesterov-Todd Scaling
 */
+std::vector<std::map<std::string,mat> > CONEC::ntsc(){
+  std::vector<std::map<std::string,mat> > WList;
+  std::map<std::string,mat> W;
+  mat tmp;
+
+  for(int i = 0; i < K; i++){
+    if(cone[i] == "NLFC"){
+      tmp = mat(dims[i], 1);
+      W.insert(std::pair<std::string,mat>("dnl", tmp.ones()));
+      W.insert(std::pair<std::string,mat>("dnli", tmp.ones()));
+      W.insert(std::pair<std::string,mat>("lambda", tmp.zeros()));
+    } else if(cone[i] == "NNOC"){
+      tmp = mat(dims[i], 1);
+      W.insert(std::pair<std::string,mat>("d", tmp.ones()));
+      W.insert(std::pair<std::string,mat>("di", tmp.ones()));
+      W.insert(std::pair<std::string,mat>("lambda", tmp.zeros()));
+    } else if(cone[i] == "SOCC"){
+      tmp = mat(1,1);
+      tmp(0,0) = 1.0;
+      W.insert(std::pair<std::string,mat>("beta", tmp));
+      tmp = mat(dims[i], 1);
+      tmp.zeros();
+      tmp(0,0) = 1.0; 
+      W.insert(std::pair<std::string,mat>("v", tmp));
+      W.insert(std::pair<std::string,mat>("lambda", tmp.zeros()));
+    } else if(cone[i] == "PSDC"){
+      tmp = mat(dims[i], dims[i]).diag();
+      W.insert(std::pair<std::string,mat>("r", tmp));
+      W.insert(std::pair<std::string,mat>("rti", tmp));
+      tmp.zeros();
+      tmp.reshape(dims[i] * dims[i], 1);
+      W.insert(std::pair<std::string,mat>("lambda", tmp.zeros()));
+    }
+    WList.push_back(W);
+    W.erase(W.begin(), W.end());
+  }
+
+  return WList;
+}
 std::vector<std::map<std::string,mat> > CONEC::ntsc(mat s, mat z){
   std::vector<std::map<std::string,mat> > WList;
   std::map<std::string,mat> W;
@@ -168,6 +207,7 @@ std::vector<std::map<std::string,mat> > CONEC::ntsc(mat s, mat z){
 		 z(span(sidx.at(i, 0), sidx.at(i, 1)), span::all), dims[i]);
     }
     WList.push_back(W);
+    W.erase(W.begin(), W.end());
   }
 
   return WList;
