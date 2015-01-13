@@ -321,6 +321,7 @@ CPS* DLP::cps(CTRL& ctrl){
       cps->set_state(state);
       cps->set_status("optimal");
       cps->set_niter(i);
+      cps->set_pdv(*pdv);
       if(trace){
 	Rcpp::Rcout << "Optimal solution found." << std::endl;
       }
@@ -343,7 +344,8 @@ CPS* DLP::cps(CTRL& ctrl){
       cps->set_state(state);
       cps->set_status("primal infeasible");
       cps->set_niter(i);
-      if(trace){
+      cps->set_pdv(*pdv); 
+     if(trace){
 	Rcpp::Rcout << "Certificate of primal infeasibility found." << std::endl;
       }
     } else if((!std::isnan(dinfres)) && (dinfres <= ftol)){
@@ -363,7 +365,8 @@ CPS* DLP::cps(CTRL& ctrl){
       state["dslack"] = NA_REAL;
       cps->set_state(state);
       cps->set_status("dual infeasible");
-      cps->set_niter(i);
+      cps->set_pdv(*pdv); 
+     cps->set_niter(i);
       if(trace){
 	Rcpp::Rcout << "Certificate of dual infeasibility found." << std::endl;
       }
@@ -404,6 +407,7 @@ CPS* DLP::cps(CTRL& ctrl){
       cps->set_state(state);
       cps->set_status("unknown");
       cps->set_niter(i);
+      cps->set_pdv(*pdv);
       if(trace){
 	Rcpp::Rcout << "Terminated (singular KKT matrix)." << std::endl;
       }
@@ -542,6 +546,12 @@ CPS* DLP::cps(CTRL& ctrl){
     gap = pow(sqrt(dot(Lambda, Lambda)) / pdv->tau, 2.0);
   } // end i-loop
 
+  pdv->x = pdv->x / pdv->tau;
+  pdv->y = pdv->y / pdv->tau;
+  pdv->s = pdv->s / pdv->tau;
+  pdv->z = pdv->z / pdv->tau;
+  ts = cList.smss(pdv->s).max();
+  tz = cList.smss(pdv->z).max();
   cps->set_pdv(*pdv);
   state["pobj"] = pobj(*pdv);
   state["dobj"] = dobj(*pdv);

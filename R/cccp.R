@@ -7,8 +7,9 @@ cccp <- function(P = NULL, q = NULL, A = NULL, b = NULL, cList = list(),
         stop("At least, 'P' or 'q' must be provided for quadratic or linear objective.\n")
     }
     if(is.null(P)){
-        stop("Only Quadratic problems implemented so far.\n")
+        cpd <- dlp(q, A, b, cList)
+    } else {
+        cpd <- dqp(P, q, A, b, cList)
     }
-    cpd <- dqp(P, q, A, b, cList)
     cpd$cps(optctrl)
 }
