@@ -17,6 +17,8 @@
 \alias{getstatus,Rcpp_CPS-method}
 \alias{getniter}
 \alias{getniter,Rcpp_CPS-method}
+\alias{getparams}
+\alias{getparams,Rcpp_CTRL-method}
 
 \title{
   Extractor methods for reference class objects
@@ -38,15 +40,16 @@
 \S4method{getstate}{Rcpp_CPS}(object)  
 \S4method{getstatus}{Rcpp_CPS}(object)  
 \S4method{getniter}{Rcpp_CPS}(object)  
+\S4method{getparams}{Rcpp_CTRL}(object)  
 }
 
 \arguments{
   \item{object}{An object of either reference-class \code{Rcpp_PDV} or
-  \code{Rcpp_CPS}.} 
+  \code{Rcpp_CPS}, or \code{Rcpp_CTRL}.} 
 }
 
 \value{
-  The values of either the primal-, dual-, primal-slack or dual-slack variables.
+  The relevant member object of the class.
 }
 
 \keyword{optimize}

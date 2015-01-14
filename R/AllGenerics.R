@@ -19,3 +19,6 @@ setGeneric("getstatus", function(object) standardGeneric("getstatus"))
 ##
 ## Generic for extractor of number of iterations
 setGeneric("getniter", function(object) standardGeneric("getniter"))
+##
+## Generic for extractor of control parameters
+setGeneric("getparams", function(object) standardGeneric("getparams"))

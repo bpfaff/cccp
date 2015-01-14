@@ -149,4 +149,8 @@ setMethod("getstate", signature = "Rcpp_CPS", function(object){
 setMethod("getniter", signature = "Rcpp_CPS", function(object){
     object$niter
 })
+setMethod("getparams", signature = "Rcpp_CTRL", function(object){
+    object$params
+})
+
 })
