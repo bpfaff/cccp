@@ -1,5 +1,5 @@
 ##
-## Unit testing of Linear Program with inequality constraints
+## Unit testing of Linear Program with cone constraints
 test.LPCC <- function(){
     ## Creating LP
     q <- c(-6, -4, -5)

@@ -4,6 +4,7 @@ QPUC	Solving an unconstrained Quadratic Program
 QPEC	Solving an equality constrained Quadratic Program
 QPIC	Solving a Quadratic Program with equality and inequality constraints
 QPQC	Solving a Quadratic Program with quadratic (SOC) constraints
+SDP	SDP with two positive semidefinite cone constraints
 
 
 
