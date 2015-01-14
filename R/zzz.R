@@ -5,11 +5,11 @@ evalqOnLoad({
 ## show-methods for reference objects
 setMethod("show", "Rcpp_CTRL", function(object){
     cat("Control parameters used in optimization:\n\n")
-    cat(paste("Maximum iterations:\t", object$maxiters,"\n"))
-    cat(paste("Absolute tolerance:\t", object$abstol,"\n"))
-    cat(paste("Relative tolerance:\t", object$reltol,"\n"))
-    cat(paste("Feasible tolerance:\t", object$feastol,"\n"))
-    cat(paste("Tracing progress:\t", object$trace,"\n"))
+    cat(paste("Maximum iterations:\t", object$params$maxiters,"\n"))
+    cat(paste("Absolute tolerance:\t", object$params$abstol,"\n"))
+    cat(paste("Relative tolerance:\t", object$params$reltol,"\n"))
+    cat(paste("Feasible tolerance:\t", object$params$feastol,"\n"))
+    cat(paste("Tracing progress:\t", object$params$trace,"\n"))
 })
 setMethod("show", signature = "Rcpp_DQP", function(object){
     title <- paste("* Definition of Quadratic Program *")
