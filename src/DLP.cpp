@@ -177,7 +177,6 @@ CPS* DLP::cps(CTRL& ctrl){
   InitPrim = *(sxyz(&InitPrim, LHS, RHS, WList));
   InitPrim.s = -InitPrim.z;
   ts = cList.smss(InitPrim.s).max();
-  InitPrim.x.print();
   // Dual Start
   InitDual.x = -q;
   InitDual.y = zeros(b.n_rows, 1);
@@ -421,7 +420,7 @@ CPS* DLP::cps(CTRL& ctrl){
     dpdv1->z = dpdv1->z * dgi;
     Wh = cList.ssnt(cList.h, WList, true, true);
     mu = dot(Lambda, Lambda) / (m + 1);
-    sigma = 0;
+    sigma = 0.0;
     // Solving for affine and combined direction in two-round for-loop
     for(int ii = 0; ii < 2; ii++){
       dpdv2->s = LambdaPrd;
@@ -442,6 +441,7 @@ CPS* DLP::cps(CTRL& ctrl){
       dpdv2->z = -1.0 * dpdv2->z;
       dpdv2->y = -1.0 * dpdv2->y; 
       KktSol = *(sxyz(dpdv2, LHS, RHS, WList));
+
       // Combining solutions dpdv1 and dpdv2
       dpdv2->kappa = -1.0 * dpdv2->kappa / lg;
       dpdv2->tau = dpdv2->tau + dpdv2->kappa / dgi;
@@ -455,19 +455,19 @@ CPS* DLP::cps(CTRL& ctrl){
       dpdv2->y = KktSol.y + dpdv2->tau * dpdv1->y;
       dpdv2->z = KktSol.z + dpdv2->tau * dpdv1->z;
       dpdv2->s = dpdv2->s - dpdv2->z;
-      dpdv2->kappa = dpdv2->kappa - dpdv2->tau; 
+      dpdv2->kappa = dpdv2->kappa - dpdv2->tau;
       // ds o dz and dkappa * dtau for Mehrotra correction
       if(ii == 0){
 	dsdz = cList.sprd(dpdv2->s, dpdv2->z);
 	dkdt = dpdv2->kappa * dpdv2->tau; 
       }
       dpdv2->s = cList.sslb(dpdv2->s, Lambda, false);
-      dpdv2->z = cList.sslb(dpdv2->z, Lambda, false);
+      dpdv2->z = cList.sslb(dpdv2->z, Lambda, false); 
       ts = cList.smss(dpdv2->s).max();
       tz = cList.smss(dpdv2->z).max();
       tt = -dpdv2->tau / lg;
       tk = -dpdv2->kappa / lg;
-      ss << 0.0 << ts << tz << tt << endr;
+      ss << 0.0 << ts << tz << tt << tk << endr;
       tm = ss.max();
       if(tm == 0.0){
 	step = 1.0;
@@ -478,7 +478,9 @@ CPS* DLP::cps(CTRL& ctrl){
 	  step = std::min(1.0, sadj / tm);
 	}
       }
-      if(ii == 0) sigma = pow((1.0 - step), 3.0);
+      if(ii == 0){
+	sigma = pow((1.0 - step), 3.0);
+      }
     } // end ii-loop
 
     // Updating x, y; s and z (in current scaling)

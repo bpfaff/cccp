@@ -95,7 +95,7 @@ mat sprd_s(mat s, mat z, int m){
   s.reshape(m,m);
   z.reshape(m,m);
 
-  ans = s * z;
+  ans = 0.5 * (s * z + z * s);
   ans.reshape(m * m, 1);
 
   return ans;
@@ -159,7 +159,11 @@ mat sinv_s(mat s, mat z, int m){
 
   s.reshape(m,m);
   z.reshape(m,m);
-  ans = inv(z) * s;
+  for(int i = 0; i < m; i++){
+    for(int j = 0; j < m; j++){
+      ans.at(i,j) = s.at(i,j) * 2.0 / (z.at(i,i) + z.at(j,j));
+	}
+  }
   ans.reshape(m * m, 1);
 
   return ans;
@@ -192,7 +196,7 @@ double smss_s(mat s, int m){
   s.reshape(m,m);
   eig_sym(eval, evec, s);
 
-  return -eval[0];
+  return -eval.min();
 }
 /*
  * Applying maximum step-size to a vector in S (initial).
