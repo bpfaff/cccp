@@ -1,4 +1,5 @@
 LPIC	Solving Linear Program with linear inequality constraints
+LPCC	Solving Linear Program with NNO, SOC and PSD constraints
 QPUC	Solving an unconstrained Quadratic Program
 QPEC	Solving an equality constrained Quadratic Program
 QPIC	Solving a Quadratic Program with equality and inequality constraints
