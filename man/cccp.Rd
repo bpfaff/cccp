@@ -25,7 +25,7 @@ cccp(P = NULL, q = NULL, A = NULL, b = NULL, cList = list(), optctrl = ctrl())
   \item{cList}{A \code{list} object containing the cone constraints.
     Elements must be of either S4-class \code{NNOC}, or \code{SOCC}, or
     \code{PSDC}.}
-  \item{optctrl}{An object of S4-class \code{CTRL}.}
+  \item{optctrl}{An object of S4-class \code{Rcpp_CTRL}.}
 }
 
 \value{
