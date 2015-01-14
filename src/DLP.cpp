@@ -144,9 +144,9 @@ CPS* DLP::cps(CTRL& ctrl){
     hresx, hresy, hresz, hz, by, cx, rt, pinfres, dinfres, 
     nomin, denom, dg = 1.0, dgi = 1.0, lg = 1.0, lgprd, dkdt = 0.0, mu, sigma, step;
   Rcpp::NumericVector state = cps->get_state();
-  vec ss(5), eval;
+  vec ss(5);
   mat rx, ry, rz, hrx, hry, hrz, Lambda, LambdaPrd, Ws3, Wh, Whz, dsdz;
-  mat OneE = cList.sone(), tmpmat, evec;
+  mat OneE = cList.sone();
   mat LHS(sizeLHS, sizeLHS);
   mat RHS(sizeLHS, 1);
   std::vector<std::map<std::string,mat> > WList;
@@ -487,54 +487,9 @@ CPS* DLP::cps(CTRL& ctrl){
     pdv->x = pdv->x + step * dpdv2->x;
     pdv->y = pdv->y + step * dpdv2->y;
 
-    for(int j = 0; j < cList.K; j++){
-      if((cList.cone[j] == "NLFC") || (cList.cone[j] == "NNOC")){
-	dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
-	  sams2_nl(dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), step);
-	dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
-	  sams2_nl(dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), step);
-	dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
-	  sslb_nl(dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
-		  Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), true);
-	dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
-	  sslb_nl(dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
-		  Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), true);
-      } else if(cList.cone[j] == "SOCC"){
-        dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
-	  sams2_p(dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), step);
-	dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
-	  sams2_p(dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), step);
-        dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
-	  sslb_p(dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
-		 Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), true);
-	dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
-	  sslb_p(dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
-		 Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), true);
-      } else if(cList.cone[j] == "PSDC"){
-	tmpmat = dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all);
-	tmpmat.reshape(cList.dims[j], cList.dims[j]);
-	eig_sym(eval, evec, tmpmat);
-	evec.reshape(cList.dims[j] * cList.dims[j], 1);
-	dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
-	  sslb_s(evec, Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
-		 true, cList.dims[j]);
-	dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
-	  sams2_s(dpdv2->s(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
-		  step, Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
-		  eval, cList.dims[j]);
-	tmpmat = dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all);
-	tmpmat.reshape(cList.dims[j], cList.dims[j]);
-	eig_sym(eval, evec, tmpmat);
-	evec.reshape(cList.dims[j] * cList.dims[j], 1);
-	dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
-	  sslb_s(evec, Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
-		 true, cList.dims[j]);
-	dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all) = \
-	  sams2_s(dpdv2->z(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
-		  step, Lambda(span(cList.sidx.at(j, 0), cList.sidx.at(j, 1)), span::all), \
-		  eval, cList.dims[j]);
-      }
-    }
+    dpdv2->s = cList.SorZupdate(dpdv2->s, Lambda, step);
+    dpdv2->z = cList.SorZupdate(dpdv2->z, Lambda, step);
+
     // Updating NT-scaling and Lagrange Multipliers
     WList = cList.ntsu(dpdv2->s, dpdv2->z, WList);
     Lambda = cList.getLambda(WList);

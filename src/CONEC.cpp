@@ -397,3 +397,40 @@ PDV* CONEC::initpdv(int p){
 
   return pdv;
 }
+/*
+Updating Slack-variables
+*/
+mat CONEC::SorZupdate(mat SorZ, mat Lambda, double step){
+  vec eval;
+  mat tmpmat, evec;
+
+  for(int j = 0; j < K; j++){
+    if((cone[j] == "NLFC") || (cone[j] == "NNOC")){
+      SorZ(span(sidx.at(j, 0), sidx.at(j, 1)), span::all) = \
+	sams2_nl(SorZ(span(sidx.at(j, 0), sidx.at(j, 1)), span::all), step);
+      SorZ(span(sidx.at(j, 0), sidx.at(j, 1)), span::all) = \
+	sslb_nl(SorZ(span(sidx.at(j, 0), sidx.at(j, 1)), span::all), \
+		Lambda(span(sidx.at(j, 0), sidx.at(j, 1)), span::all), true);
+    } else if(cone[j] == "SOCC"){
+      SorZ(span(sidx.at(j, 0), sidx.at(j, 1)), span::all) = \
+	sams2_p(SorZ(span(sidx.at(j, 0), sidx.at(j, 1)), span::all), step);
+      SorZ(span(sidx.at(j, 0), sidx.at(j, 1)), span::all) = \
+	sslb_p(SorZ(span(sidx.at(j, 0), sidx.at(j, 1)), span::all), \
+	       Lambda(span(sidx.at(j, 0), sidx.at(j, 1)), span::all), true);
+    } else if(cone[j] == "PSDC"){
+      tmpmat = SorZ(span(sidx.at(j, 0), sidx.at(j, 1)), span::all);
+      tmpmat.reshape(dims[j], dims[j]);
+      eig_sym(eval, evec, tmpmat);
+      evec.reshape(dims[j] * dims[j], 1);
+      SorZ(span(sidx.at(j, 0), sidx.at(j, 1)), span::all) = \
+	sslb_s(evec, Lambda(span(sidx.at(j, 0), sidx.at(j, 1)), span::all), \
+	       true, dims[j]);
+      SorZ(span(sidx.at(j, 0), sidx.at(j, 1)), span::all) = \
+	sams2_s(SorZ(span(sidx.at(j, 0), sidx.at(j, 1)), span::all), \
+		step, Lambda(span(sidx.at(j, 0), sidx.at(j, 1)), span::all), \
+		eval, dims[j]);
+    }
+  }
+
+  return SorZ;
+} 

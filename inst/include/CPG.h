@@ -72,6 +72,7 @@ class CONEC {
   mat getLambda(std::vector<std::map<std::string,mat> > WList);
   mat gwwg(std::vector<std::map<std::string,mat> > WList);
   mat gwwz(std::vector<std::map<std::string,mat> > WList, mat z);
+  mat SorZupdate(mat SorZ, mat Lambda, double step);
   PDV* initpdv(int p);
   std::vector<std::map<std::string,mat> > initnts();
   std::vector<std::map<std::string,mat> > ntsc(mat s, mat z);
