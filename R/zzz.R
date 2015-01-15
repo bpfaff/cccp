@@ -63,7 +63,7 @@ setMethod("show", signature = "Rcpp_DNL", function(object){
     cat(paste("Count of constraints:", countcc, "\n"))
     cc <- object$cList$cone
     cat("These consist of:\n")
-    cat(paste("Constraints w.r.t. non-linearities:", max(0, sum(cc %in% "NLFC")), "\n"))
+    cat(paste("Constraints w.r.t. non-linearities:", object$cList$dims[1, 1], "\n"))
     cat(paste("Constraints w.r.t. the nonnegative orthant:", max(0, sum(cc %in% "NNOC")), "\n"))
     cat(paste("Constraints w.r.t. the second-order cone:", max(0, sum(cc %in% "SOCC")), "\n"))
     cat(paste("Constraints w.r.t. the semidefinite cone:", max(0, sum(cc %in% "PSDC")), "\n"))

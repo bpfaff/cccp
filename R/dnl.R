@@ -53,7 +53,7 @@ dnl <- function(q, A = NULL, b = NULL, cList = list(),
         stop("Length of lists for nonlinear functions and Hessian functions do differ.\n")
     }
     ## Creating list-object of non-linear constraints, their Gradient and Hessian functions
-    nList <- list(c(nlf = nlfList, nlg = nlgList, nlh = nlhList))
+    nList <- list(nlfList, nlgList, nlhList)
     ## Creating obkects related to NLFC
     Gnl <- matrix(0, nrow = mnl, ncol = n)
     hnl <- matrix(0, nrow = mnl, ncol = 1)
@@ -65,20 +65,20 @@ dnl <- function(q, A = NULL, b = NULL, cList = list(),
         }
         cone <- c("NLFC", cone)
         GList <- lapply(cList, function(x) x[["G"]])
-        GList <- c(Gnl, GList)
+        GList <- c(list(Gnl), GList)
         G <- do.call("rbind", GList)
         hList <- lapply(cList, function(x) x[["h"]])
-        hList <- c(hnl, hList)
+        hList <- c(list(hnl), hList)
         h <- do.call("rbind", hList)
         ridx <- cumsum(unlist(lapply(GList, nrow)))
         sidx <- cbind(c(0, ridx[-length(ridx)]), ridx - 1)
-        dims <- as.integer(mnl, unlist(lapply(cList, function(x) x[["dims"]])))
+        dims <- c(mnl, as.integer(unlist(lapply(cList, function(x) x[["dims"]]))))
         K <- K + 1L
         cList <- new(CONEC, cone, G, h, sidx, dims, K, n)
     } else {
         cList <- new(CONEC, "NLFC", Gnl, hnl, mnl, 1L, n)
     }
-    ans <- new(DLP,
+    ans <- new(DNL,
                q = q,
                A = A,
                b = b,
