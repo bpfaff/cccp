@@ -1,7 +1,8 @@
 ##
 ## Function for creating 'CTRL' objects 
 ctrl <- function(maxiters = 100L, abstol = 1e-7, reltol = 1e-6, feastol = 1e-7,
-                 stepadj = 0.95, trace = TRUE){
+                 stepadj = 0.95, alpha = 0.01, beta = 0.5, maxreliter = 8L,
+                 trace = TRUE){
 
     if(!is.integer(maxiters)){
         stop("\nThe count of maximal iterations must be an integer.\n")
@@ -27,6 +28,12 @@ ctrl <- function(maxiters = 100L, abstol = 1e-7, reltol = 1e-6, feastol = 1e-7,
     if(stepadj <= 0 || stepadj > 1.0){
         stop("\nThe step-size adjustment must be in the interval: (0, 1].\n")
     }
+    if(!is.integer(maxreliter)){
+        stop("\nThe count of maximum relaxed iterations must be an integer.\n")
+    }
+    if(maxreliter < 0){
+        return("\nThe count of maximum relative iterations must be greater or equal than zero.\n")
+    }
     
     new(CTRL, list(
         maxiters = maxiters,
@@ -34,6 +41,9 @@ ctrl <- function(maxiters = 100L, abstol = 1e-7, reltol = 1e-6, feastol = 1e-7,
         reltol = reltol,
         feastol = feastol,
         stepadj = stepadj,
+        alpha = alpha,
+        beta = beta,
+        maxreliter = maxreliter,
         trace = as.logical(trace)[1])
         )
 }
