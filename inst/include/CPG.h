@@ -59,6 +59,7 @@ class CONEC {
   void set_n(int n_) {n = n_;}
 
   friend class DLP;
+  friend class DNL;
   friend class DQP;
 
   double snrm2(mat s);
@@ -189,6 +190,15 @@ class DNL {
   Rcpp::List get_nList() {return nList;}
   void set_nList(Rcpp::List nList_) {nList = nList_;}
 
+  double pobj(PDV& pdv);
+  double dobj(PDV& pdv);
+  double certp(PDV& pdv);
+  double certd(PDV& pdv);
+  mat rprim(PDV& pdv);
+  mat rcent(PDV& pdv);
+  mat rdual(PDV& pdv);
+  PDV* sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList);
+
  private:
   vec q;
   mat A;
@@ -224,6 +234,7 @@ class PDV {
   void set_tau(double tau_) {tau = tau_;}
 
   friend class DLP;
+  friend class DNL;
   friend class DQP;
   friend class CONEC;
 
