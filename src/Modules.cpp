@@ -63,6 +63,8 @@ RCPP_MODULE(CPG){
     .property("cList", &DNL::get_cList, &DNL::set_cList, "Getter and setter for cList")
     .property("x0", &DNL::get_x0, &DNL::set_x0, "Getter and setter for x0")
     .property("nList", &DNL::get_nList, &DNL::set_nList, "Getter and setter for nList")
+
+    .method("cps", &DNL::cps)
     ;
 
   Rcpp::class_<DQP>( "DQP" )

@@ -198,6 +198,7 @@ class DNL {
   mat rcent(PDV& pdv);
   mat rdual(PDV& pdv);
   PDV* sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList);
+  CPS* cps(CTRL& ctrl);
 
  private:
   vec q;

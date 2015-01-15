@@ -124,3 +124,21 @@ PDV* DNL::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat>
 
   return pdv;
 }
+/*
+  Main routine for solving a Linear Program with non-linear constraints
+*/
+CPS* DNL::cps(CTRL& ctrl){
+  // Initializing objects
+  PDV* pdv = cList.initpdv(A.n_rows);
+  PDV* dpdv = cList.initpdv(A.n_rows);
+  PDV* npdv = cList.initpdv(A.n_rows);
+
+  CPS* cps = new CPS();
+  cps->set_pdv(*pdv);
+  cps->set_sidx(cList.sidx);
+
+
+  return(cps);
+
+
+}
