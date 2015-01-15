@@ -51,6 +51,9 @@ mat ssnt_n(mat s, std::map<std::string,mat> W, bool invers);
 mat ssnt_l(mat s, std::map<std::string,mat> W, bool invers);
 mat ssnt_p(mat s, std::map<std::string,mat> W, bool invers);
 mat ssnt_s(mat s, std::map<std::string,mat> W, bool invers, bool transp);
+double feval(mat x, SEXP Rf);
+vec geval(mat x, SEXP Rf);
+mat heval(mat x, SEXP Rf);
 
 #include "CPG.h"
 

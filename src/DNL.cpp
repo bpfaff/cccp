@@ -132,13 +132,43 @@ CPS* DNL::cps(CTRL& ctrl){
   PDV* pdv = cList.initpdv(A.n_rows);
   PDV* dpdv = cList.initpdv(A.n_rows);
   PDV* npdv = cList.initpdv(A.n_rows);
+  pdv->x = x0;
+  Rcpp::List nF(nList[0]);
+  Rcpp::List gF(nList[1]);
+  Rcpp::List hF(nList[2]);
 
   CPS* cps = new CPS();
   cps->set_pdv(*pdv);
   cps->set_sidx(cList.sidx);
+  Rcpp::NumericVector state = cps->get_state();
+  int mnl = cList.dims(0);
+  mat H;
+  // Setting control parameters
+  Rcpp::List params(ctrl.get_params());
+  bool trace = Rcpp::as<bool>(params["trace"]);
+  int maxiters = Rcpp::as<int>(params["maxiters"]);
+  int MaxRelaxedIters = Rcpp::as<int>(params["maxreliter"]);
+  double atol = Rcpp::as<double>(params["abstol"]);
+  double ftol = Rcpp::as<double>(params["feastol"]);
+  double rtol = Rcpp::as<double>(params["reltol"]);
+  double sadj = Rcpp::as<double>(params["stepadj"]);
+  double alpha = Rcpp::as<double>(params["alpha"]);
+  double beta = Rcpp::as<double>(params["beta"]);
+  //
+  // Starting iterations
+  //
+  for(int i = 0; i < maxiters; i++){
+    for(int j = 0; j < mnl; j++){
+      // Setting f to first mnl-rows of h-matrix
+      cList.h(j, 0) = feval(pdv->x, nF[j]);
+      // Setting Df to first mnl-rows of G-matrix
+      cList.G.row(j) = geval(pdv->x, gF[j]).t();
+    }
+
+  }
 
 
-  return(cps);
+  return cps;
 
 
 }
