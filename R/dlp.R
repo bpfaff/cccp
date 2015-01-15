@@ -1,9 +1,13 @@
 ##
 ## Function for creating an object of reference-class 'DLP'
 dlp <- function(q, A = NULL, b = NULL, cList = list()){
-   n <- length(q)
-   if(is.null(A)){
-       A <- matrix(0, nrow = 0, ncol = n)
+    if(is.matrix(q)){
+        warning("Matrix provided for q, extracting first column for argument 'q'.\n")
+        q <- q[, 1]
+    }
+    n <- length(q)
+    if(is.null(A)){
+        A <- matrix(0, nrow = 0, ncol = n)
     } 
     if(is.null(dim(A))){
         A <- matrix(A, nrow = 1)
@@ -11,8 +15,8 @@ dlp <- function(q, A = NULL, b = NULL, cList = list()){
     if(is.null(b)){
         b <- numeric()
     }
-   K <- length(cList)
-   if(K < 1){
+    K <- length(cList)
+    if(K < 1){
        warning("LP in standard form: Adding non-negativity constraint(s).\n")
        G <- -diag(n)
        h <- rep(0, n)
@@ -34,10 +38,10 @@ dlp <- function(q, A = NULL, b = NULL, cList = list()){
     } else {
         stop("LP only with equality constraints; undefined or exact solution.\n")
     }
-   ans <- new(DLP,
-              q = q,
-              A = A,
-              b = b,
-              cList = cList)
-   return(ans)
+    ans <- new(DLP,
+               q = q,
+               A = A,
+               b = b,
+               cList = cList)
+    return(ans)
 }
