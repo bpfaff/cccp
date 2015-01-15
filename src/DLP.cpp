@@ -125,7 +125,7 @@ PDV* DLP::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat>
   return pdv;
 }
 /*
-  Main routine for solving a Quadratic Program
+  Main routine for solving a Linear Program
 */
 CPS* DLP::cps(CTRL& ctrl){
   // Initializing objects
