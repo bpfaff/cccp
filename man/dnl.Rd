@@ -13,8 +13,8 @@
 }
 
 \usage{
-dnl <- function(q, A = NULL, b = NULL, cList = list(),
-                x0, nlfList = list(), nlgList = list(), nlhList = list())
+dnl(q, A = NULL, b = NULL, cList = list(),
+    x0, nlfList = list(), nlgList = list(), nlhList = list())
 }
 
 \arguments{
