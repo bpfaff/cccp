@@ -23,6 +23,7 @@ d2 <- c(-3, 6, -10)
 f2 <- 27
 soc2 <- socc(F = F2, g = g2, d = d2, f = f2)
 ## Using main function of package
-ans <- cccp(q = q, cList = list(soc1, soc2))
+ctl <- ctrl(feastol = 1e-5)
+ans <- cccp(q = q, cList = list(soc1, soc2), optctrl = ctl)
 ans
 getx(ans)

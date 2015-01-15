@@ -8,6 +8,7 @@ RCPP_EXPOSED_CLASS(CONEC)
 RCPP_EXPOSED_CLASS(PDV)
 RCPP_EXPOSED_CLASS(DQP)
 RCPP_EXPOSED_CLASS(DLP)
+RCPP_EXPOSED_CLASS(DNL)
 RCPP_EXPOSED_CLASS(CPS)
 
 #ifndef ARMA_H
@@ -162,6 +163,39 @@ class DLP {
   mat A;
   vec b;
   CONEC cList;
+};
+
+/*
+ * Class for definition of Linear programs with non-linear constraints
+*/
+class DNL {
+ public:
+
+  // constructors
+ DNL() : q(vec()), A(mat()), b(vec()), cList(CONEC()), x0(mat()), nList(Rcpp::List::create()) {}
+ DNL(vec q_, mat A_, vec b_, CONEC cList_, mat x0_, Rcpp::List nList_): \
+  q(q_), A(A_), b(b_), cList(cList_), x0(x0_), nList(nList_) {}
+  // members
+  vec get_q() {return q;}
+  void set_q(vec q_) {q = q_;}
+  mat get_A() {return A;}
+  void set_A(mat A_) {A = A_;}
+  vec get_b() {return b;}
+  void set_b(vec b_) {b = b_;}
+  CONEC get_cList() {return cList;}
+  void set_cList(CONEC cList_) {cList = cList_;}
+  mat get_x0() {return x0;}
+  void set_x0(mat x0_) {x0 = x0_;}
+  Rcpp::List get_nList() {return nList;}
+  void set_nList(Rcpp::List nList_) {nList = nList_;}
+
+ private:
+  vec q;
+  mat A;
+  vec b;
+  CONEC cList;
+  mat x0;
+  Rcpp::List nList;
 };
 
 /*

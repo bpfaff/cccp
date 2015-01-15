@@ -4,6 +4,7 @@
 \alias{CONEC}
 \alias{PDV}
 \alias{DLP}
+\alias{DNL}
 \alias{DQP}
 \alias{CPS}
 
@@ -22,6 +23,7 @@
     \item{CONEC}{Class for inequality (cone) constraints.}
     \item{PDV}{Class for primal/dual variables.}
     \item{DLP}{Class for definition of linear programs.}
+    \item{DNL}{Class for definition of linear programs with non-linear constraints.}
     \item{DQP}{Class for definition of quadratic programs.}
     \item{CPS}{Class for solution of convex programs.}
   }

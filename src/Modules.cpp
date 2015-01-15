@@ -53,6 +53,18 @@ RCPP_MODULE(CPG){
     .method("cps", &DLP::cps)
     ;
 
+  Rcpp::class_<DNL>( "DNL" )
+    .constructor("Default constructor")
+    .constructor<vec, mat, vec, CONEC, mat, Rcpp::List>("sets the DNL-values")
+
+    .property("q", &DNL::get_q, &DNL::set_q, "Getter and setter for q")
+    .property("A", &DNL::get_A, &DNL::set_A, "Getter and setter for A")
+    .property("b", &DNL::get_b, &DNL::set_b, "Getter and setter for b")
+    .property("cList", &DNL::get_cList, &DNL::set_cList, "Getter and setter for cList")
+    .property("x0", &DNL::get_x0, &DNL::set_x0, "Getter and setter for x0")
+    .property("nList", &DNL::get_nList, &DNL::set_nList, "Getter and setter for nList")
+    ;
+
   Rcpp::class_<DQP>( "DQP" )
     .constructor("Default constructor")
     .constructor<mat, vec, mat, vec, CONEC>("sets the DQP-values")
