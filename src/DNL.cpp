@@ -201,7 +201,7 @@ CPS* DNL::cps(CTRL& ctrl){
     resznl = snrm2_nlp(rz(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all));
     // Statistics for stopping criteria
     pcost = pobj(*pdv);
-    dcost = pcost + dot(b, pdv->y) + sum(cList.sdot(pdv->z, rz));
+    dcost = pcost + dot(b, pdv->y) + sum(cList.sdot(pdv->z, rz)) - gap;
     rgap = NA_REAL;
     if(pcost < 0.0) rgap = gap / (-pcost);
     if(dcost > 0.0) rgap = gap / dcost;
