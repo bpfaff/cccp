@@ -162,7 +162,7 @@ CPS* DLP::cps(CTRL& ctrl){
   resx0 = std::max(1.0, norm(q));
   resy0 = std::max(1.0, norm(b));
   resz0 = std::max(1.0, cList.snrm2(cList.h));
-  // Initialising LHS and RHS matrices
+  // Initialising LHS matrices
   LHS.zeros();
   if(A.n_rows > 0){ // equality constraints
     LHS.submat(n, 0, sizeLHS-1, n-1) = A;
