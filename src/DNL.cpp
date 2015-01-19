@@ -119,7 +119,7 @@ PDV* DNL::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat>
   mat lhs1, rhs1, ans;
 
   lhs1 = cList.gwwg(WList);
-  LHS.submat(0, 0, n-1, n-1) = lhs1;
+  LHS.submat(0, 0, n-1, n-1) = LHS.submat(0, 0, n-1, n-1) + lhs1;
   rhs1 = cList.gwwz(WList, pdv->z);
   RHS.submat(0, 0, n - 1, 0) = pdv->x + rhs1;
   if(pdv->y.n_rows > 0){
@@ -155,13 +155,13 @@ CPS* DNL::cps(CTRL& ctrl){
   Rcpp::NumericVector state = cps->get_state();
   bool checkRgap = false, backTrack, check1, check2, check3;
   int m = sum(cList.dims), mnl = cList.dims(0), n = cList.n, 
-    sizeLHS = A.n_rows + A.n_cols, RelaxedIters;
-  double gap = NA_REAL, gap0, resx, nresx, resy, resz, resznl, nresznl, pcost, dcost, rgap = NA_REAL, 
-    pres, dres, resx0, resznl0, pres0, dres0, theta1 = NA_REAL, theta2 = NA_REAL, theta3 = NA_REAL, 
-    phi = NA_REAL, phi0 = NA_REAL, dphi = NA_REAL, dphi0 = NA_REAL, sigma, sigma0, eta, eta0, mu, 
-    ts = NA_REAL, tz = NA_REAL, tm, dsdz = NA_REAL, dsdz0, step, step0 = NA_REAL, ngap, nphi;
+    sizeLHS = A.n_rows + A.n_cols, RelaxedIters = 0;
+  double gap, gap0, resx, nresx, resy, resz, resznl, nresznl, pcost, dcost, rgap = NA_REAL, 
+    pres, dres, resx0, resznl0, pres0, dres0, theta1, theta2, theta3, phi, phi0, dphi, 
+    dphi0, sigma, sigma0, eta, eta0, mu, ts, tz, tm, dsdz, dsdz0, step, step0, ngap, nphi;
   vec ss(3), Fval(mnl);
-  mat H = zeros(n, n), rx, nrx, ry, rz, nrznl, Lambda, LambdaPrd, LambdaPrd0, Ws3, dsu, dzu, x, h0, G0;
+  mat H = zeros(n, n), rx, nrx, ry, rz, nrznl, Lambda, LambdaPrd, LambdaPrd0, Ws3, 
+    dsu, dzu, x, h0, G0;
   mat OneE = cList.sone();
   mat LHS(sizeLHS, sizeLHS);
   // Initialising LHS matrices
@@ -187,7 +187,6 @@ CPS* DNL::cps(CTRL& ctrl){
   // Starting iterations
   //
   for(int i = 0; i < maxiters; i++){
-    H.zeros();
     for(int j = 0; j < mnl; j++){
       // Setting f to first mnl-rows of h-matrix
       cList.h(j, 0) = feval(pdv->x, nF[j]);
@@ -229,8 +228,8 @@ CPS* DNL::cps(CTRL& ctrl){
       theta3 = 1.0 / resznl0;
     }
     phi = theta1 * gap + theta2 * resx + theta3 * resznl;
-    pres /= pres0;
-    dres /= dres0;
+    pres = pres / pres0;
+    dres = dres / dres0;
     // Tracing status quo of IPM
     if(trace){
       Rcpp::Rcout << "Iteration: " << i << std::endl;
@@ -281,7 +280,7 @@ CPS* DNL::cps(CTRL& ctrl){
     // (same for affine and combined solution)
     for(int ii = 0; ii < 2; ii++){
       mu = gap / m;
-      dpdv->s = LambdaPrd + OneE * sigma * mu;
+      dpdv->s = -1.0 * LambdaPrd + OneE * sigma * mu;
       dpdv->x = -1.0 * (1 - eta) * rx;
       dpdv->y = -1.0 * (1 - eta) * ry;
       dpdv->z = -1.0 * (1 - eta) * rz;
@@ -292,6 +291,7 @@ CPS* DNL::cps(CTRL& ctrl){
 	dpdv->z = dpdv->z - Ws3;
 	dpdv = sxyz(dpdv, LHS, RHS, WList); 
 	dpdv->s = dpdv->s - dpdv->z;
+	dpdv->s.print();
       } catch(std::runtime_error &ex) {
 	ts = cList.smss(pdv->s).max();
 	tz = cList.smss(pdv->z).max();
@@ -346,7 +346,6 @@ CPS* DNL::cps(CTRL& ctrl){
 	  step = step * beta;
 	}
       } // end while-loop domain of f
-      Rcpp::Rcout << "Fine until here" << std::endl;
       // Merit function
       phi = theta1 * gap + theta2 * resx + theta3 * resznl;
       if(ii == 0) {
@@ -355,6 +354,8 @@ CPS* DNL::cps(CTRL& ctrl){
 	dphi = -1.0 * theta1 * (1 - sigma) * gap - theta2 * (1.0 - eta) * resx - 
 	  theta3 * (1.0 - eta) * resznl; 
       }
+      Rcpp::Rcout << "Fine until here" << std::endl;
+      Rcpp::Rcout << "step = " << step << std::endl;
       // Line search
       backTrack = true;
       while(backTrack){
@@ -373,15 +374,15 @@ CPS* DNL::cps(CTRL& ctrl){
 	// Centrality residuals of non-linear constraints
 	nrznl = npdv->s(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all) + 
 	  cList.h(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all);
-	nresznl = snrm2_nlp(nrznl);
+	nresznl = norm(nrznl);
 
 	ngap = (1.0 - (1.0 - sigma) * step) * gap + step * step * dsdz;
 	nphi = theta1 * ngap + theta2 * nresx + theta3 * nresznl;
 
 	if(ii == 0){
-	  check1 = ngap <= (1.0 - alpha * step) * gap;
+	  check1 = ngap <= ((1.0 - alpha * step) * gap);
 	  check2 = (RelaxedIters >= 0) && (RelaxedIters < MaxRelaxedIters);
-	  check3 = nphi <= phi + alpha * step * dphi;
+	  check3 = nphi <= (phi + alpha * step * dphi);
 	  if(check1 && (check2 || check3)){
 	    backTrack = false;
 	    sigma = std::min(ngap / gap, pow(ngap / gap, 3.0));
@@ -392,7 +393,7 @@ CPS* DNL::cps(CTRL& ctrl){
 	} else {
 	  if(RelaxedIters == -1 || ((RelaxedIters == 0) && (MaxRelaxedIters == 0))){
 	    // Do a standard line search
-	    check3 = nphi <= phi + alpha * step * dphi;
+	    check3 = nphi <= (phi + alpha * step * dphi);
 	    if(check3){
 	      RelaxedIters = 0;
 	      backTrack = false;
@@ -400,7 +401,7 @@ CPS* DNL::cps(CTRL& ctrl){
 	      step *= beta;
 	    }
 	  } else if(RelaxedIters == 0 && (RelaxedIters < MaxRelaxedIters)){
-	    check3 = nphi <= phi + alpha * step * dphi;
+	    check3 = nphi <= (phi + alpha * step * dphi);
 	    if(check3){
 	      // Relaxed line search gives sufficient decrease
 	      RelaxedIters = 0; 
@@ -421,13 +422,14 @@ CPS* DNL::cps(CTRL& ctrl){
 	      RelaxedIters = 1;
 	    }
 	    backTrack = false;
-	  } else if((RelaxedIters >= 0) && (RelaxedIters < MaxRelaxedIters) && (MaxRelaxedIters > 0)){
+	  } else if((RelaxedIters >= 0) && (RelaxedIters < MaxRelaxedIters) && 
+		    (MaxRelaxedIters > 0)){
 	    if(nphi <= (phi0 + alpha * step0 * dphi0)){
 	      // Relaxed line search gives sufficient decrease
 	      RelaxedIters = 0;
 	    } else {
 	      // Relaxed line search
-	      RelaxedIters++;
+	      RelaxedIters = RelaxedIters + 1;
 	    }
 	    backTrack = false;
 	  } else if((RelaxedIters == MaxRelaxedIters) && (MaxRelaxedIters > 0)){
@@ -486,6 +488,8 @@ CPS* DNL::cps(CTRL& ctrl){
   state["dgap"] = gap;
   state["certp"] = certp(*pdv);
   state["certd"] = certd(*pdv);
+  ts = cList.smss(pdv->s).max();
+  tz = cList.smss(pdv->z).max();
   state["pslack"] = -ts;
   state["dslack"] = -tz;
   if(!std::isnan(rgap)){
