@@ -16,10 +16,21 @@ double DNL::pobj(PDV& pdv){
 Dual objective
 */
 double DNL::dobj(PDV& pdv){
-  double term1 = 0.0, term2 = 0.0, ans;
-  term1 = dot(b, pdv.y);
-  term2 = sum(cList.sdot(pdv.z, cList.h));
-  ans = -term1 - term2;
+  double term1 = 0.0, term2 = 0.0, term3 = 0.0, ans;
+  term1 = dot(pdv.x, q);
+  if(cList.K > 1){
+    for(int i = 1; i < cList.K; i++){
+      term2 += dot(pdv.z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), 
+		   cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) * 
+		   pdv.x - 
+		   cList.h(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all));
+    }
+  }
+  term2 += dot(pdv.z(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all), 
+	       cList.h(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all));
+  term3 = dot(pdv.y, (A * pdv.x - b));
+  ans = term1 + term2 + term3;
+
   return ans;
 }
 /*
@@ -119,7 +130,7 @@ PDV* DNL::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat>
   mat lhs1, rhs1, ans;
 
   lhs1 = cList.gwwg(WList);
-  LHS.submat(0, 0, n-1, n-1) = LHS.submat(0, 0, n-1, n-1) + lhs1;
+  LHS.submat(0, 0, n-1, n-1) += lhs1;
   rhs1 = cList.gwwz(WList, pdv->z);
   RHS.submat(0, 0, n - 1, 0) = pdv->x + rhs1;
   if(pdv->y.n_rows > 0){
@@ -291,7 +302,6 @@ CPS* DNL::cps(CTRL& ctrl){
 	dpdv->z = dpdv->z - Ws3;
 	dpdv = sxyz(dpdv, LHS, RHS, WList); 
 	dpdv->s = dpdv->s - dpdv->z;
-	dpdv->s.print();
       } catch(std::runtime_error &ex) {
 	ts = cList.smss(pdv->s).max();
 	tz = cList.smss(pdv->z).max();
@@ -333,6 +343,7 @@ CPS* DNL::cps(CTRL& ctrl){
       } else {
 	step = std::min(1.0, sadj / tm);
       }
+
       // Backtracking until x is in the domain of f
       backTrack = true;
       while(backTrack){
@@ -342,9 +353,8 @@ CPS* DNL::cps(CTRL& ctrl){
 	}
 	if(is_finite(Fval)){
 	  backTrack = false;
-	} else {
-	  step = step * beta;
-	}
+	} 
+	step *= beta;
       } // end while-loop domain of f
       // Merit function
       phi = theta1 * gap + theta2 * resx + theta3 * resznl;
@@ -354,8 +364,6 @@ CPS* DNL::cps(CTRL& ctrl){
 	dphi = -1.0 * theta1 * (1 - sigma) * gap - theta2 * (1.0 - eta) * resx - 
 	  theta3 * (1.0 - eta) * resznl; 
       }
-      Rcpp::Rcout << "Fine until here" << std::endl;
-      Rcpp::Rcout << "step = " << step << std::endl;
       // Line search
       backTrack = true;
       while(backTrack){
@@ -462,7 +470,6 @@ CPS* DNL::cps(CTRL& ctrl){
 	  }
 	}
       } // end while-loop line search
-
     } // end ii-loop
 
     // Updating x, y; s and z (in current scaling)
