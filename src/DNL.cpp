@@ -40,7 +40,18 @@ Centrality Residuals
 mat DNL::rcent(PDV& pdv){
   mat ans(cList.G.n_rows, 1);
 
-  ans = pdv.s + cList.G * pdv.x - cList.h;
+  ans(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all) = 
+    pdv.s(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all) + 
+    cList.h(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all);
+ 
+ if(cList.K > 1){
+    for(int i = 1; i < cList.K; i++){
+      ans(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) = 
+	pdv.s(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) +
+	cList.G(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all) * pdv.x -
+	cList.h(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all);
+    }
+  }
 
   return ans;
 }
@@ -335,6 +346,7 @@ CPS* DNL::cps(CTRL& ctrl){
 	  step = step * beta;
 	}
       } // end while-loop domain of f
+      Rcpp::Rcout << "Fine until here" << std::endl;
       // Merit function
       phi = theta1 * gap + theta2 * resx + theta3 * resznl;
       if(ii == 0) {
