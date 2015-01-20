@@ -127,10 +127,8 @@ double DNL::certd(PDV& pdv){
 */
 PDV* DNL::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList){
   int n = q.n_rows;
-  mat lhs1, rhs1, ans;
+  mat rhs1, ans;
 
-  lhs1 = cList.gwwg(WList);
-  LHS.submat(0, 0, n-1, n-1) += lhs1;
   rhs1 = cList.gwwz(WList, pdv->z);
   RHS.submat(0, 0, n - 1, 0) = pdv->x + rhs1;
   if(pdv->y.n_rows > 0){
@@ -165,13 +163,14 @@ CPS* DNL::cps(CTRL& ctrl){
   cps->set_sidx(cList.sidx);
   Rcpp::NumericVector state = cps->get_state();
   bool checkRgap = false, backTrack, check1, check2, check3;
-  int m = sum(cList.dims), mnl = cList.dims(0), n = cList.n, 
+  int m = sum(cList.dims), mnl = cList.dims(0), n = cList.n, \ 
     sizeLHS = A.n_rows + A.n_cols, RelaxedIters = 0;
-  double gap, gap0, resx, nresx, resy, resz, resznl, nresznl, pcost, dcost, rgap = NA_REAL, 
-    pres, dres, resx0, resznl0, pres0, dres0, theta1, theta2, theta3, phi, phi0, dphi, 
-    dphi0, sigma, sigma0, eta, eta0, mu, ts, tz, tm, dsdz, dsdz0, step, step0, ngap, nphi;
+  double gap, gap0, resx, nresx, resy, resz, resznl, nresznl, pcost, dcost, rgap = NA_REAL, \
+    pres, dres, resx0, resznl0, pres0, dres0, theta1 = 1.0, theta2 = 1.0, theta3 = 1.0, \
+    phi, phi0, dphi, dphi0, sigma, sigma0, eta, eta0, mu, ts, tz, tm, dsdz, dsdz0, \
+    step, step0, ngap, nphi;
   vec ss(3), Fval(mnl);
-  mat H = zeros(n, n), rx, nrx, ry, rz, nrznl, Lambda, LambdaPrd, LambdaPrd0, Ws3, 
+  mat H = zeros(n, n), rx, nrx, ry, rz, nrznl, Lambda, LambdaPrd, LambdaPrd0, Ws3, \ 
     dsu, dzu, x, h0, G0;
   mat OneE = cList.sone();
   mat LHS(sizeLHS, sizeLHS);
@@ -198,6 +197,7 @@ CPS* DNL::cps(CTRL& ctrl){
   // Starting iterations
   //
   for(int i = 0; i < maxiters; i++){
+    H.zeros();
     for(int j = 0; j < mnl; j++){
       // Setting f to first mnl-rows of h-matrix
       cList.h(j, 0) = feval(pdv->x, nF[j]);
@@ -206,7 +206,8 @@ CPS* DNL::cps(CTRL& ctrl){
       // Computing Hessian
       H += pdv->z.at(j, 0) * heval(pdv->x, hF[j]);
     }
-    LHS.submat(0, 0, n-1, n-1) = H;
+    Rcpp::Rcout << "Hessian:" << std::endl;
+    H.print();
     // Computing gap
     gap = sum(cList.sdot(pdv->s, pdv->z));
     // Computing residuals
@@ -219,10 +220,11 @@ CPS* DNL::cps(CTRL& ctrl){
     // Central Residuals 
     rz = rcent(*pdv);
     resz = cList.snrm2(rz);
-    resznl = snrm2_nlp(rz(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all));
+    resznl = norm(rz(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all));
+    resz = resz - resznl;
     // Statistics for stopping criteria
     pcost = pobj(*pdv);
-    dcost = pcost + dot(ry, pdv->y) + sum(cList.sdot(pdv->z, rz)) - gap;
+    dcost = pcost + dot(ry, pdv->y) + sum(cList.sdot(rz, pdv->z)) - gap;
     rgap = NA_REAL;
     if(pcost < 0.0) rgap = gap / (-pcost);
     if(dcost > 0.0) rgap = gap / dcost;
@@ -260,8 +262,8 @@ CPS* DNL::cps(CTRL& ctrl){
     if((pres <= ftol) && (dres <= ftol) && ((gap <= atol) || checkRgap)){
       ts = cList.smss(pdv->s).max();
       tz = cList.smss(pdv->z).max();
-      state["pobj"] = pobj(*pdv);
-      state["dobj"] = dobj(*pdv);
+      state["pobj"] = pcost;
+      state["dobj"] = dcost;
       state["dgap"] = gap;
       state["certp"] = pres;
       state["certd"] = dres;
@@ -285,16 +287,40 @@ CPS* DNL::cps(CTRL& ctrl){
       Lambda = cList.getLambda(WList);
     }
     LambdaPrd = cList.sprd(Lambda, Lambda);
+    LHS.submat(0, 0, n-1, n-1) = H + cList.gwwg(WList);
     sigma = 0.0;
     eta = 0.0;
     // Solution step 1 in two-round loop 
     // (same for affine and combined solution)
     for(int ii = 0; ii < 2; ii++){
       mu = gap / m;
+      Rcpp::Rcout << "At begin of ii-loop" << std::endl;
+      Rcpp::Rcout << "ii = " << ii << std::endl;
+      Rcpp::Rcout << "gap = " << gap << std::endl;
+      Rcpp::Rcout << "mu = " << mu << std::endl;
+
       dpdv->s = -1.0 * LambdaPrd + OneE * sigma * mu;
-      dpdv->x = -1.0 * (1 - eta) * rx;
-      dpdv->y = -1.0 * (1 - eta) * ry;
-      dpdv->z = -1.0 * (1 - eta) * rz;
+      dpdv->x = -1.0 * (1.0 - eta) * rx;
+      dpdv->y = -1.0 * (1.0 - eta) * ry;
+      dpdv->z = -1.0 * (1.0 - eta) * rz;
+
+      Rcpp::Rcout << "Before KKT-solve" << std::endl;
+      Rcpp::Rcout << "x:" << std::endl;
+      dpdv->x.print();
+
+      Rcpp::Rcout << "z:" << std::endl;
+      dpdv->z.print();
+
+      Rcpp::Rcout << "s:" << std::endl;
+      dpdv->s.print();
+
+      Rcpp::Rcout << "G:" << std::endl;
+      cList.G.print();
+
+      Rcpp::Rcout << "K:" << std::endl;
+      LHS.print();
+
+
       // Solving KKT-system
       try{
 	dpdv->s = cList.sinv(dpdv->s, Lambda);
@@ -302,6 +328,16 @@ CPS* DNL::cps(CTRL& ctrl){
 	dpdv->z = dpdv->z - Ws3;
 	dpdv = sxyz(dpdv, LHS, RHS, WList); 
 	dpdv->s = dpdv->s - dpdv->z;
+
+	Rcpp::Rcout << "After KKT-solve" << std::endl;
+	Rcpp::Rcout << "x:" << std::endl;
+	dpdv->x.print();
+	Rcpp::Rcout << "z:" << std::endl;
+	dpdv->z.print();
+	Rcpp::Rcout << "s:" << std::endl;
+	dpdv->s.print();
+
+
       } catch(std::runtime_error &ex) {
 	ts = cList.smss(pdv->s).max();
 	tz = cList.smss(pdv->z).max();
@@ -338,12 +374,16 @@ CPS* DNL::cps(CTRL& ctrl){
       tz = cList.smss(dpdv->z).max();
       ss << 0.0 << ts << tz << endr;
       tm = ss.max();
+      Rcpp::Rcout << "Before Backtracking domain: ts = " << ts << std::endl;
+      Rcpp::Rcout << "Before Backtracking domain: tz = " << tz << std::endl;
+      Rcpp::Rcout << "Before Backtracking domain: tm = " << tm << std::endl;
+
+
       if(tm == 0.0){
 	step = 1.0;
       } else {
 	step = std::min(1.0, sadj / tm);
       }
-
       // Backtracking until x is in the domain of f
       backTrack = true;
       while(backTrack){
@@ -353,20 +393,26 @@ CPS* DNL::cps(CTRL& ctrl){
 	}
 	if(is_finite(Fval)){
 	  backTrack = false;
-	} 
-	step *= beta;
+	} else {
+	  step *= beta;
+	}
       } // end while-loop domain of f
-      // Merit function
+      Rcpp::Rcout << "Backtracking domain: step = " << step << std::endl;
+ 
+     // Merit function
       phi = theta1 * gap + theta2 * resx + theta3 * resznl;
+      phi0 = phi;
       if(ii == 0) {
 	dphi = -phi;
       } else {
 	dphi = -1.0 * theta1 * (1 - sigma) * gap - theta2 * (1.0 - eta) * resx - 
 	  theta3 * (1.0 - eta) * resznl; 
       }
+      dphi0 = dphi;
       // Line search
       backTrack = true;
       while(backTrack){
+	Rcpp::Rcout << "Line search start: step = " << step << std::endl;
 	npdv->x = pdv->x + step * dpdv->x;
 	npdv->y = pdv->y + step * dpdv->y;
 	npdv->s = pdv->s + step * dsu;
@@ -398,8 +444,10 @@ CPS* DNL::cps(CTRL& ctrl){
 	  } else {
 	    step *= beta;
 	  }
+	Rcpp::Rcout << "in ii == 0: step = " << step << std::endl;
+
 	} else {
-	  if(RelaxedIters == -1 || ((RelaxedIters == 0) && (MaxRelaxedIters == 0))){
+	  if((RelaxedIters == -1) || ((RelaxedIters == 0) && (MaxRelaxedIters == 0))){
 	    // Do a standard line search
 	    check3 = nphi <= (phi + alpha * step * dphi);
 	    if(check3){
@@ -408,7 +456,9 @@ CPS* DNL::cps(CTRL& ctrl){
 	    } else {
 	      step *= beta;
 	    }
-	  } else if(RelaxedIters == 0 && (RelaxedIters < MaxRelaxedIters)){
+	Rcpp::Rcout << "in 1. if-clause: step = " << step << std::endl;
+
+	  } else if((RelaxedIters == 0) && (RelaxedIters < MaxRelaxedIters)){
 	    check3 = nphi <= (phi + alpha * step * dphi);
 	    if(check3){
 	      // Relaxed line search gives sufficient decrease
@@ -432,7 +482,8 @@ CPS* DNL::cps(CTRL& ctrl){
 	    backTrack = false;
 	  } else if((RelaxedIters >= 0) && (RelaxedIters < MaxRelaxedIters) && 
 		    (MaxRelaxedIters > 0)){
-	    if(nphi <= (phi0 + alpha * step0 * dphi0)){
+	    check3 = nphi <= (phi0 + alpha * step0 * dphi0);
+	    if(check3){
 	      // Relaxed line search gives sufficient decrease
 	      RelaxedIters = 0;
 	    } else {
@@ -441,7 +492,8 @@ CPS* DNL::cps(CTRL& ctrl){
 	    }
 	    backTrack = false;
 	  } else if((RelaxedIters == MaxRelaxedIters) && (MaxRelaxedIters > 0)){
-	    if(nphi <= (phi0 + alpha * step0 * dphi0)){
+	    check3 = nphi <= (phi0 + alpha * step0 * dphi0);
+	    if(check3){
 	      // Series of relaxed line searches ends with
 	      // sufficient decrease w.r.t. phi0
 	      backTrack = false;
@@ -461,15 +513,31 @@ CPS* DNL::cps(CTRL& ctrl){
 	      sigma = sigma0;
 	      eta = eta0;
 	      RelaxedIters = -1;
-	    } else if(nphi <= (phi + alpha * step * dphi)){
+	    } else if(nphi <= (phi + alpha * step * dphi)) {
 	      // Series of relaxed line searches ends with
 	      // sufficient decrease w.r.t. phi0
 	      backTrack = false;
-	      RelaxedIters = -1; 
+	      RelaxedIters = -1;
 	    }
 	  }
 	}
       } // end while-loop line search
+      Rcpp::Rcout << "At end of ii-loop" << std::endl;
+      Rcpp::Rcout << "ii = " << ii << std::endl;
+      Rcpp::Rcout << "m = " << m << std::endl;
+      Rcpp::Rcout << "mu = " << mu << std::endl;
+      Rcpp::Rcout << "step = " << step << std::endl;
+      Rcpp::Rcout << "sigma = " << sigma << std::endl;
+      Rcpp::Rcout << "phi = " << phi << std::endl;
+      Rcpp::Rcout << "nphi = " << nphi << std::endl;
+      Rcpp::Rcout << "dphi = " << dphi << std::endl;
+      Rcpp::Rcout << "gap = " << gap << std::endl;
+      Rcpp::Rcout << "ngap = " << ngap << std::endl;
+      Rcpp::Rcout << "ts = " << ts << std::endl;
+      Rcpp::Rcout << "tz = " << tz << std::endl;
+      Rcpp::Rcout << "tm = " << tm << std::endl;
+      Rcpp::Rcout << "dsdz = " << dsdz << std::endl;
+
     } // end ii-loop
 
     // Updating x, y; s and z (in current scaling)
