@@ -1,7 +1,7 @@
 #include "cccp3.h"
 /*
  *
- * Methods for Linear Programs
+ * Methods for Linear Programs with nonlinear constraints
  *
 */
 using namespace arma;
@@ -145,7 +145,7 @@ PDV* DNL::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat>
   return pdv;
 }
 /*
-  Main routine for solving a Linear Program with non-linear constraints
+  Main routine for solving a Linear Program with nonlinear constraints
 */
 CPS* DNL::cps(CTRL& ctrl){
   // Initializing objects
