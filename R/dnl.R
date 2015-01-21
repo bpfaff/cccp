@@ -54,7 +54,7 @@ dnl <- function(q, A = NULL, b = NULL, cList = list(),
     }
     ## Creating list-object of non-linear constraints, their Gradient and Hessian functions
     nList <- list(nlfList, nlgList, nlhList)
-    ## Creating obkects related to NLFC
+    ## Creating objects related to NLFC
     Gnl <- matrix(0, nrow = mnl, ncol = n)
     hnl <- matrix(0, nrow = mnl, ncol = 1)
     K <- length(cList)

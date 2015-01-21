@@ -80,7 +80,7 @@ setMethod("show", signature = "Rcpp_DCP", function(object){
     cat(paste(title, "\n"))
     cat(row, "\n")
     cat("\n")
-    cat(paste("Count of variables in objective:", length(object$q), "\n"))
+    cat(paste("Count of variables in objective:", nrow(object$x0), "\n"))
     cat(paste("Count of equality constraints:", nrow(object$A), "\n"))
     countcc <- object$cList$K
     cat(paste("Count of constraints:", countcc, "\n"))
