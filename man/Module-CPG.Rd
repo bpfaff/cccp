@@ -1,8 +1,9 @@
 \name{CPG}
+\alias{CONEC}
 \alias{CTRL}
 \alias{CPG}
-\alias{CONEC}
 \alias{PDV}
+\alias{DCP}
 \alias{DLP}
 \alias{DNL}
 \alias{DQP}
@@ -19,9 +20,10 @@
 \details{
   The module contains the following items:
   classes: \describe{
-    \item{CTRL}{Class for control parameters used in optimizations.}
     \item{CONEC}{Class for inequality (cone) constraints.}
+    \item{CTRL}{Class for control parameters used in optimizations.}
     \item{PDV}{Class for primal/dual variables.}
+    \item{DCP}{Class for definition of convex programs.}
     \item{DLP}{Class for definition of linear programs.}
     \item{DNL}{Class for definition of linear programs with non-linear constraints.}
     \item{DQP}{Class for definition of quadratic programs.}

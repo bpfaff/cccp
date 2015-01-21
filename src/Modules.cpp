@@ -41,6 +41,19 @@ RCPP_MODULE(CPG){
 
    ;
 
+  Rcpp::class_<DCP>( "DCP" )
+    .constructor("Default constructor")
+    .constructor<mat, CONEC, Rcpp::List, Rcpp::List, mat, mat>("sets the DCP-values")
+
+    .property("x0", &DCP::get_x0, &DCP::set_x0, "Getter and setter for x0")
+    .property("cList", &DCP::get_cList, &DCP::set_cList, "Getter and setter for cList") 
+    .property("oList", &DCP::get_oList, &DCP::set_oList, "Getter and setter for oList")
+    .property("nList", &DCP::get_nList, &DCP::set_nList, "Getter and setter for nList")
+    .property("A", &DCP::get_A, &DCP::set_A, "Getter and setter for A")
+    .property("b", &DCP::get_b, &DCP::set_b, "Getter and setter for b")
+
+    ;
+
   Rcpp::class_<DLP>( "DLP" )
     .constructor("Default constructor")
     .constructor<vec, mat, vec, CONEC>("sets the DLP-values")

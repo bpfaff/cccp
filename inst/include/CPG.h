@@ -9,6 +9,7 @@ RCPP_EXPOSED_CLASS(PDV)
 RCPP_EXPOSED_CLASS(DQP)
 RCPP_EXPOSED_CLASS(DLP)
 RCPP_EXPOSED_CLASS(DNL)
+RCPP_EXPOSED_CLASS(DCP)
 RCPP_EXPOSED_CLASS(CPS)
 
 #ifndef ARMA_H
@@ -58,6 +59,7 @@ class CONEC {
   int get_n() {return n;}
   void set_n(int n_) {n = n_;}
 
+  friend class DCP;
   friend class DLP;
   friend class DNL;
   friend class DQP;
@@ -209,6 +211,41 @@ class DNL {
   Rcpp::List nList;
 };
 
+
+/*
+ * Class for definition of convex programs with non-linear constraints
+*/
+class DCP {
+ public:
+
+  // constructors
+ DCP() : x0(mat()), cList(CONEC()), oList(Rcpp::List::create()), nList(Rcpp::List::create()), A(mat()), b(vec()) {}
+ DCP(mat x0_, CONEC cList_, Rcpp::List oList_, Rcpp::List nList_, mat A_, vec b_): \
+  x0(x0_), cList(cList_), oList(oList_), nList(nList_), A(A_), b(b_) {}
+  // members
+  mat get_x0() {return x0;}
+  void set_x0(mat x0_) {x0 = x0_;}
+  CONEC get_cList() {return cList;}
+  void set_cList(CONEC cList_) {cList = cList_;}
+  Rcpp::List get_oList() {return oList;}
+  void set_oList(Rcpp::List oList_) {oList = oList_;}
+  Rcpp::List get_nList() {return nList;}
+  void set_nList(Rcpp::List nList_) {nList = nList_;}
+  mat get_A() {return A;}
+  void set_A(mat A_) {A = A_;}
+  vec get_b() {return b;}
+  void set_b(vec b_) {b = b_;}
+
+ private:
+  mat x0;
+  CONEC cList;
+  Rcpp::List oList;
+  Rcpp::List nList;
+  mat A;
+  vec b;
+};
+
+
 /*
  * Class definition for primal/dual variables
 */
@@ -234,6 +271,7 @@ class PDV {
   double get_tau() {return tau;}
   void set_tau(double tau_) {tau = tau_;}
 
+  friend class DCP;
   friend class DLP;
   friend class DNL;
   friend class DQP;
