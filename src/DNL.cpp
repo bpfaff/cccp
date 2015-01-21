@@ -162,7 +162,7 @@ CPS* DNL::cps(CTRL& ctrl){
   cps->set_pdv(*pdv);
   cps->set_sidx(cList.sidx);
   Rcpp::NumericVector state = cps->get_state();
-  bool checkRgap = false, backTrack, check1, check2, check3;
+  bool checkRgap = false, backTrack, check1, check2, check3, debug = false;
   int m = sum(cList.dims), mnl = cList.dims(0), n = cList.n, \ 
     sizeLHS = A.n_rows + A.n_cols, RelaxedIters = 0;
   double gap, gap0, resx, nresx, resy, resz, resznl, nresznl, pcost, dcost, rgap = NA_REAL, \
@@ -206,8 +206,10 @@ CPS* DNL::cps(CTRL& ctrl){
       // Computing Hessian
       H += pdv->z.at(j, 0) * heval(pdv->x, hF[j]);
     }
-    Rcpp::Rcout << "Hessian:" << std::endl;
-    H.print();
+    if(debug){
+      Rcpp::Rcout << "Hessian:" << std::endl;
+      H.print();
+    }
     // Computing gap
     gap = sum(cList.sdot(pdv->s, pdv->z));
     // Computing residuals
@@ -221,7 +223,6 @@ CPS* DNL::cps(CTRL& ctrl){
     rz = rcent(*pdv);
     resz = cList.snrm2(rz);
     resznl = norm(rz(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all));
-    resz = resz - resznl;
     // Statistics for stopping criteria
     pcost = pobj(*pdv);
     dcost = pcost + dot(ry, pdv->y) + sum(cList.sdot(rz, pdv->z)) - gap;
@@ -294,33 +295,29 @@ CPS* DNL::cps(CTRL& ctrl){
     // (same for affine and combined solution)
     for(int ii = 0; ii < 2; ii++){
       mu = gap / m;
-      Rcpp::Rcout << "At begin of ii-loop" << std::endl;
-      Rcpp::Rcout << "ii = " << ii << std::endl;
-      Rcpp::Rcout << "gap = " << gap << std::endl;
-      Rcpp::Rcout << "mu = " << mu << std::endl;
-
+      if(debug){
+	Rcpp::Rcout << "At begin of ii-loop" << std::endl;
+	Rcpp::Rcout << "ii = " << ii << std::endl;
+	Rcpp::Rcout << "gap = " << gap << std::endl;
+	Rcpp::Rcout << "mu = " << mu << std::endl;
+      }
       dpdv->s = -1.0 * LambdaPrd + OneE * sigma * mu;
       dpdv->x = -1.0 * (1.0 - eta) * rx;
       dpdv->y = -1.0 * (1.0 - eta) * ry;
       dpdv->z = -1.0 * (1.0 - eta) * rz;
-
-      Rcpp::Rcout << "Before KKT-solve" << std::endl;
-      Rcpp::Rcout << "x:" << std::endl;
-      dpdv->x.print();
-
-      Rcpp::Rcout << "z:" << std::endl;
-      dpdv->z.print();
-
-      Rcpp::Rcout << "s:" << std::endl;
-      dpdv->s.print();
-
-      Rcpp::Rcout << "G:" << std::endl;
-      cList.G.print();
-
-      Rcpp::Rcout << "K:" << std::endl;
-      LHS.print();
-
-
+      if(debug){
+	Rcpp::Rcout << "Before KKT-solve" << std::endl;
+	Rcpp::Rcout << "x:" << std::endl;
+	dpdv->x.print();
+	Rcpp::Rcout << "z:" << std::endl;
+	dpdv->z.print();
+	Rcpp::Rcout << "s:" << std::endl;
+	dpdv->s.print();
+	Rcpp::Rcout << "G:" << std::endl;
+	cList.G.print();
+	Rcpp::Rcout << "K:" << std::endl;
+	LHS.print();
+      }
       // Solving KKT-system
       try{
 	dpdv->s = cList.sinv(dpdv->s, Lambda);
@@ -328,16 +325,15 @@ CPS* DNL::cps(CTRL& ctrl){
 	dpdv->z = dpdv->z - Ws3;
 	dpdv = sxyz(dpdv, LHS, RHS, WList); 
 	dpdv->s = dpdv->s - dpdv->z;
-
-	Rcpp::Rcout << "After KKT-solve" << std::endl;
-	Rcpp::Rcout << "x:" << std::endl;
-	dpdv->x.print();
-	Rcpp::Rcout << "z:" << std::endl;
-	dpdv->z.print();
-	Rcpp::Rcout << "s:" << std::endl;
-	dpdv->s.print();
-
-
+	if(debug){
+	  Rcpp::Rcout << "After KKT-solve" << std::endl;
+	  Rcpp::Rcout << "x:" << std::endl;
+	  dpdv->x.print();
+	  Rcpp::Rcout << "z:" << std::endl;
+	  dpdv->z.print();
+	  Rcpp::Rcout << "s:" << std::endl;
+	  dpdv->s.print();
+	}
       } catch(std::runtime_error &ex) {
 	ts = cList.smss(pdv->s).max();
 	tz = cList.smss(pdv->z).max();
@@ -374,11 +370,11 @@ CPS* DNL::cps(CTRL& ctrl){
       tz = cList.smss(dpdv->z).max();
       ss << 0.0 << ts << tz << endr;
       tm = ss.max();
-      Rcpp::Rcout << "Before Backtracking domain: ts = " << ts << std::endl;
-      Rcpp::Rcout << "Before Backtracking domain: tz = " << tz << std::endl;
-      Rcpp::Rcout << "Before Backtracking domain: tm = " << tm << std::endl;
-
-
+      if(debug){
+	Rcpp::Rcout << "Before Backtracking domain: ts = " << ts << std::endl;
+	Rcpp::Rcout << "Before Backtracking domain: tz = " << tz << std::endl;
+	Rcpp::Rcout << "Before Backtracking domain: tm = " << tm << std::endl;
+      }
       if(tm == 0.0){
 	step = 1.0;
       } else {
@@ -397,9 +393,14 @@ CPS* DNL::cps(CTRL& ctrl){
 	  step *= beta;
 	}
       } // end while-loop domain of f
-      Rcpp::Rcout << "Backtracking domain: step = " << step << std::endl;
- 
-     // Merit function
+      if(debug){
+	Rcpp::Rcout << "Backtracking domain: step = " << step << std::endl;
+      }
+      if(ii == 0){
+	sigma = pow((1.0 - step), 3.0);
+      }
+      /*
+      // Merit function
       phi = theta1 * gap + theta2 * resx + theta3 * resznl;
       phi0 = phi;
       if(ii == 0) {
@@ -412,7 +413,9 @@ CPS* DNL::cps(CTRL& ctrl){
       // Line search
       backTrack = true;
       while(backTrack){
-	Rcpp::Rcout << "Line search start: step = " << step << std::endl;
+	if(debug){
+	  Rcpp::Rcout << "Line search start: step = " << step << std::endl;
+	}
 	npdv->x = pdv->x + step * dpdv->x;
 	npdv->y = pdv->y + step * dpdv->y;
 	npdv->s = pdv->s + step * dsu;
@@ -444,8 +447,9 @@ CPS* DNL::cps(CTRL& ctrl){
 	  } else {
 	    step *= beta;
 	  }
-	Rcpp::Rcout << "in ii == 0: step = " << step << std::endl;
-
+	  if(debug){
+	    Rcpp::Rcout << "in ii == 0: step = " << step << std::endl;
+	  }
 	} else {
 	  if((RelaxedIters == -1) || ((RelaxedIters == 0) && (MaxRelaxedIters == 0))){
 	    // Do a standard line search
@@ -456,8 +460,9 @@ CPS* DNL::cps(CTRL& ctrl){
 	    } else {
 	      step *= beta;
 	    }
-	Rcpp::Rcout << "in 1. if-clause: step = " << step << std::endl;
-
+	    if(debug){
+	      Rcpp::Rcout << "in 1. if-clause: step = " << step << std::endl;
+	    }
 	  } else if((RelaxedIters == 0) && (RelaxedIters < MaxRelaxedIters)){
 	    check3 = nphi <= (phi + alpha * step * dphi);
 	    if(check3){
@@ -521,22 +526,28 @@ CPS* DNL::cps(CTRL& ctrl){
 	    }
 	  }
 	}
+	//if(step <= 1e-8){
+	//  backTrack = false;
+	//}
       } // end while-loop line search
-      Rcpp::Rcout << "At end of ii-loop" << std::endl;
-      Rcpp::Rcout << "ii = " << ii << std::endl;
-      Rcpp::Rcout << "m = " << m << std::endl;
-      Rcpp::Rcout << "mu = " << mu << std::endl;
-      Rcpp::Rcout << "step = " << step << std::endl;
-      Rcpp::Rcout << "sigma = " << sigma << std::endl;
-      Rcpp::Rcout << "phi = " << phi << std::endl;
-      Rcpp::Rcout << "nphi = " << nphi << std::endl;
-      Rcpp::Rcout << "dphi = " << dphi << std::endl;
-      Rcpp::Rcout << "gap = " << gap << std::endl;
-      Rcpp::Rcout << "ngap = " << ngap << std::endl;
-      Rcpp::Rcout << "ts = " << ts << std::endl;
-      Rcpp::Rcout << "tz = " << tz << std::endl;
-      Rcpp::Rcout << "tm = " << tm << std::endl;
-      Rcpp::Rcout << "dsdz = " << dsdz << std::endl;
+      if(debug){
+	Rcpp::Rcout << "At end of ii-loop" << std::endl;
+	Rcpp::Rcout << "ii = " << ii << std::endl;
+	Rcpp::Rcout << "m = " << m << std::endl;
+	Rcpp::Rcout << "mu = " << mu << std::endl;
+	Rcpp::Rcout << "step = " << step << std::endl;
+	Rcpp::Rcout << "sigma = " << sigma << std::endl;
+	Rcpp::Rcout << "phi = " << phi << std::endl;
+	Rcpp::Rcout << "nphi = " << nphi << std::endl;
+	Rcpp::Rcout << "dphi = " << dphi << std::endl;
+	Rcpp::Rcout << "gap = " << gap << std::endl;
+	Rcpp::Rcout << "ngap = " << ngap << std::endl;
+	Rcpp::Rcout << "ts = " << ts << std::endl;
+	Rcpp::Rcout << "tz = " << tz << std::endl;
+	Rcpp::Rcout << "tm = " << tm << std::endl;
+	Rcpp::Rcout << "dsdz = " << dsdz << std::endl;
+      }
+      */
 
     } // end ii-loop
 
