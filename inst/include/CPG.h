@@ -234,6 +234,8 @@ class DCP {
   vec get_b() {return b;}
   void set_b(vec b_) {b = b_;}
 
+  double pobj(PDV& pdv);
+
  private:
   mat x0;
   CONEC cList;
