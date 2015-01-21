@@ -1,5 +1,8 @@
 ##
 ## Generic for extractor of x-variables
+setGeneric("cps", function(cpd, ctrl) standardGeneric("cps"))
+##
+## Generic for extractor of x-variables
 setGeneric("getx", function(object) standardGeneric("getx"))
 ##
 ## Generic for extractor of y-variables
