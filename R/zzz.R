@@ -80,15 +80,13 @@ setMethod("show", signature = "Rcpp_DCP", function(object){
     cat(paste(title, "\n"))
     cat(row, "\n")
     cat("\n")
-    cat(paste("Count of variables in objective:", nrow(object$x0), "\n"))
+    cat(paste("Count of variables in objective:", nrow(object$x0) - 1L, "\n"))
     cat(paste("Count of equality constraints:", nrow(object$A), "\n"))
     countcc <- object$cList$K
     cat(paste("Count of constraints:", countcc, "\n"))
     cc <- object$cList$cone
     cat("These consist of:\n")
-    if(any(cc %in% "NLFC")){
-        cat(paste("Constraints w.r.t. non-linearities:", object$cList$dims[1, 1], "\n"))
-    }
+    cat(paste("Constraints w.r.t. non-linearities:", object$cList$dims[1, 1] - 1L, "\n"))
     cat(paste("Constraints w.r.t. the nonnegative orthant:", max(0, sum(cc %in% "NNOC")), "\n"))
     cat(paste("Constraints w.r.t. the second-order cone:", max(0, sum(cc %in% "SOCC")), "\n"))
     cat(paste("Constraints w.r.t. the semidefinite cone:", max(0, sum(cc %in% "PSDC")), "\n"))

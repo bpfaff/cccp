@@ -20,9 +20,6 @@ All reference classes extend and inherit methods from \code{"\linkS4class{envRef
       Initial values.}
     \item{\code{cList}:}{Object of class \code{activeBindingFunction}:
       Inequality constraints, class \code{CONEC}.}
-    \item{\code{oList}:}{Object of class \code{activeBindingFunction}:
-      List with elements of functions for evaluating convex, non-linear
-      objective with the associated gradient and Hessian.}
     \item{\code{nList}:}{Object of class \code{activeBindingFunction}:
       List with elements of functions for evaluating non-linear
       constraints, their associated gradients and their associated

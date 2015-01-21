@@ -10,8 +10,6 @@ dcp <- function(x0, f0, g0, h0, cList = list(), nlfList = list(), nlgList = list
     if(f0Dom){
         stop("Initial point 'x0' is not in the domain of nonlinear objective 'f0'.\n")
     }
-    ## Creating list-object of non-linear objective, its Gradient and Hessian functions
-    oList <- list(f0, g0, h0)
     ##
     ## Checking provided non-linear constraints (if applicable)
     ##
@@ -37,41 +35,45 @@ dcp <- function(x0, f0, g0, h0, cList = list(), nlfList = list(), nlgList = list
             stop("Length of lists for nonlinear functions and Hessian functions do differ.\n")
         }
         ## Creating list-object of non-linear constraints, their Gradient and Hessian functions
-        nList <- list(nlfList, nlgList, nlhList)
+        nList <- list(c(list(f0), nlfList), c(list(g0), nlgList), c(list(h0), nlhList))
         ## Creating objects related to NLFC
+        mnl <- mnl + 1L
         Gnl <- matrix(0, nrow = mnl, ncol = n)
         hnl <- matrix(0, nrow = mnl, ncol = 1)
     } else {
-        nList <- list()
+        mnl <- 1L
+        Gnl <- matrix(0, nrow = 1, ncol = n)
+        hnl <- matrix(0, nrow = 1, ncol = 1)
+        nList <- list(list(f0), list(g0), list(h0))
     }
     ##
-    ## Checking cone constraints
+    ## Checking/defining inequality constraints (epigraph form, right-adding 't')
     ##
     if(K > 0){
         cone <- unlist(lapply(cList, function(x) x[["conType"]]))
         if(!all(cone %in% c("NNOC", "SOCC", "PSDC"))){
             stop("List elements of cone constraints must be either created by calls to:\n'nnoc()', or 'socc()', or 'psdc()'.\n")
         }
-        GList <- lapply(cList, function(x) x[["G"]])
-        hList <- lapply(cList, function(x) x[["h"]])
-        if(mnl > 0){
-            cone <- c("NLFC", cone)
-            GList <- c(list(Gnl), GList)
-            hList <- c(list(hnl), hList)
-            dims <- c(mnl, as.integer(unlist(lapply(cList, function(x) x[["dims"]]))))
-            K <- K + 1L
-        }
+        cone <- c("NLFC", cone)
+        GList <- c(list(Gnl), lapply(cList, function(x) x[["G"]]))
+        hList <- c(list(hnl), lapply(cList, function(x) x[["h"]]))
+        GList <- c(list(Gnl), GList)
+        hList <- c(list(hnl), hList)
+        dims <- c(mnl, as.integer(unlist(lapply(cList, function(x) x[["dims"]]))))
+        K <- K + 1L
         G <- do.call("rbind", GList)
+        G <- cbind(G, 0)
         h <- do.call("rbind", hList)
         ridx <- cumsum(unlist(lapply(GList, nrow)))
         sidx <- cbind(c(0, ridx[-length(ridx)]), ridx - 1)
         dims <- as.integer(unlist(lapply(cList, function(x) x[["dims"]])))
-        cList <- new(CONEC, cone, G, h, sidx, dims, K, n)
-    } else if(mnl > 0){ ## case: no cone constraints, but nonlinear constraints
-        cList <- new(CONEC, "NLFC", Gnl, hnl, mnl, 1L, n)
-    } else { ## case: neither cone nor nonlinear constraints
-        cList <- new(CONEC, as.integer(n))
-    }
+        cList <- new(CONEC, cone, G, h, sidx, dims, K, n + 1L)
+    } else { ## case: no cone constraints, but nonlinear constraints, at least f0
+        Gepi <- cbind(Gnl, 0)
+        sidx <- matrix(c(0, nrow(Gepi) - 1L), nrow = 1, ncol = 2) 
+        nepi <- n + 1L
+        cList <- new(CONEC, "NLFC", Gepi, hnl, sidx, mnl, 1L, nepi)
+    } 
     ##
     ## Checking equality constraints
     ##
@@ -80,7 +82,7 @@ dcp <- function(x0, f0, g0, h0, cList = list(), nlfList = list(), nlgList = list
     } 
     if(is.null(dim(A))){
         A <- matrix(A, nrow = 1)
-    } 
+    }
     if(is.null(b)){
         b <- matrix(0, nrow = 0, ncol = 1)
     }
@@ -94,11 +96,11 @@ dcp <- function(x0, f0, g0, h0, cList = list(), nlfList = list(), nlgList = list
             stop("Initial point 'x0' does not satisfy equality constraints.\n")
         }
     }
+    A <- cbind(A, 0)
     
     ans <- new(DCP,
-               x0 = as.matrix(x0),
+               x0 = rbind(x0, 0.0), ## set initial value of 't = 0.0'
                cList = cList,
-               oList = oList,
                nList = nList,
                A = A,
                b = b

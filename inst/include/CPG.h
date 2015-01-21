@@ -219,16 +219,14 @@ class DCP {
  public:
 
   // constructors
- DCP() : x0(mat()), cList(CONEC()), oList(Rcpp::List::create()), nList(Rcpp::List::create()), A(mat()), b(vec()) {}
- DCP(mat x0_, CONEC cList_, Rcpp::List oList_, Rcpp::List nList_, mat A_, vec b_): \
-  x0(x0_), cList(cList_), oList(oList_), nList(nList_), A(A_), b(b_) {}
+ DCP() : x0(mat()), cList(CONEC()), nList(Rcpp::List::create()), A(mat()), b(vec()) {}
+ DCP(mat x0_, CONEC cList_, Rcpp::List nList_, mat A_, vec b_): \
+  x0(x0_), cList(cList_), nList(nList_), A(A_), b(b_) {}
   // members
   mat get_x0() {return x0;}
   void set_x0(mat x0_) {x0 = x0_;}
   CONEC get_cList() {return cList;}
   void set_cList(CONEC cList_) {cList = cList_;}
-  Rcpp::List get_oList() {return oList;}
-  void set_oList(Rcpp::List oList_) {oList = oList_;}
   Rcpp::List get_nList() {return nList;}
   void set_nList(Rcpp::List nList_) {nList = nList_;}
   mat get_A() {return A;}
@@ -239,7 +237,6 @@ class DCP {
  private:
   mat x0;
   CONEC cList;
-  Rcpp::List oList;
   Rcpp::List nList;
   mat A;
   vec b;
