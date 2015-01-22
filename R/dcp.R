@@ -63,6 +63,7 @@ dcp <- function(x0, f0, g0, h0, cList = list(), nlfList = list(), nlgList = list
         K <- K + 1L
         G <- do.call("rbind", GList)
         G <- cbind(G, 0)
+        G[1, ncol(G)] <- -1.0
         h <- do.call("rbind", hList)
         ridx <- cumsum(unlist(lapply(GList, nrow)))
         sidx <- cbind(c(0, ridx[-length(ridx)]), ridx - 1)
@@ -70,6 +71,7 @@ dcp <- function(x0, f0, g0, h0, cList = list(), nlfList = list(), nlgList = list
         cList <- new(CONEC, cone, G, h, sidx, dims, K, n + 1L)
     } else { ## case: no cone constraints, but nonlinear constraints, at least f0
         Gepi <- cbind(Gnl, 0)
+        Gepi[1, ncol(Gepi)] <- -1.0
         sidx <- matrix(c(0, nrow(Gepi) - 1L), nrow = 1, ncol = 2) 
         nepi <- n + 1L
         cList <- new(CONEC, "NLFC", Gepi, hnl, sidx, mnl, 1L, nepi)

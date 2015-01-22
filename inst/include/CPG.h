@@ -251,6 +251,7 @@ class DCP {
   mat rdual(PDV& pdv);
   PDV* sxyz(PDV* pdv, mat LHS, 
 	    std::vector<std::map<std::string,mat> > WList);
+  CPS* cps(CTRL& ctrl);
 
  private:
   mat x0;

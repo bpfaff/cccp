@@ -124,7 +124,6 @@ PDV* DCP::sxyz(PDV* pdv, mat LHS, std::vector<std::map<std::string,mat> > WList)
 
   int n = x0.n_rows;
   int ne = n - 1;
-  int m = cList.G.n_rows;
   int mnl = cList.dims(0);
   int K = cList.K;
   double a = pdv->z(0, 0); // Slack with respect to f0
@@ -199,4 +198,241 @@ PDV* DCP::sxyz(PDV* pdv, mat LHS, std::vector<std::map<std::string,mat> > WList)
   pdv->x(pdv->x.n_rows, 0) = x1;
 
   return pdv;
+}
+/*
+  Main routine for solving a Convex Program with nonlinear constraints
+*/
+CPS* DCP::cps(CTRL& ctrl){
+  // Initializing objects
+  PDV* pdv = cList.initpdv(A.n_rows);
+  PDV* dpdv = cList.initpdv(A.n_rows);
+  pdv->x = x0;
+  Rcpp::List nF(nList[0]);
+  Rcpp::List gF(nList[1]);
+  Rcpp::List hF(nList[2]);
+
+  CPS* cps = new CPS();
+  cps->set_pdv(*pdv);
+  cps->set_sidx(cList.sidx);
+  Rcpp::NumericVector state = cps->get_state();
+  bool checkRgap = false, backTrack;
+  int m = sum(cList.dims), mnl = cList.dims(0), n = cList.n, 
+    ne = n - 1, sizeLHS = A.n_rows + A.n_cols - 1;
+  double gap = m, resx, resy, resz, pcost, dcost, rgap = NA_REAL, 
+    pres, dres, pres0 = 1.0, dres0 = 1.0, sigma, mu, ts, tz, tm, step;
+  vec ss(3), Fval(mnl);
+  mat H = zeros(ne, ne), rx, ry, rz, Lambda, LambdaPrd, Ws3, x;
+  mat OneE = cList.sone();
+  mat LHS(sizeLHS, sizeLHS);
+  // Initialising LHS matrices
+  LHS.zeros();
+  if(A.n_rows > 0){ // equality constraints
+    LHS.submat(ne, 0, sizeLHS - 1, ne - 1) = A(span::all, span(0, ne - 1));
+    LHS.submat(0, ne, ne - 1, sizeLHS - 1) = A(span::all, span(0, ne - 1)).t();
+  }
+  std::vector<std::map<std::string,mat> > WList;
+  // Setting control parameters
+  Rcpp::List params(ctrl.get_params());
+  bool trace = Rcpp::as<bool>(params["trace"]);
+  int maxiters = Rcpp::as<int>(params["maxiters"]);
+  double atol = Rcpp::as<double>(params["abstol"]);
+  double ftol = Rcpp::as<double>(params["feastol"]);
+  double rtol = Rcpp::as<double>(params["reltol"]);
+  double sadj = Rcpp::as<double>(params["stepadj"]);
+  double beta = Rcpp::as<double>(params["beta"]);
+  //
+  // Starting iterations
+  //
+  for(int i = 0; i < maxiters; i++){
+    H.zeros();
+    for(int j = 0; j < mnl; j++){
+      // Setting f to first mnl-rows of h-matrix
+      cList.h(j, 0) = feval(pdv->x(span(0, ne - 1), span::all), nF[j]);
+      // Setting Df to first mnl-rows of G-matrix
+      cList.G(j, span(0, ne - 1)) = geval(pdv->x(span(0, ne - 1), span::all), gF[j]).t();
+      // Computing Hessian
+      H += pdv->z.at(j, 0) * heval(pdv->x(span(0, ne - 1), span::all), hF[j]);
+    }
+    cList.h(0, 1) = cList.h(0, 1) - pdv->x(pdv->x.n_rows, 1);
+    Rcpp::Rcout << "Fine until here" << std::endl;
+
+    // Computing gap
+    gap = sum(cList.sdot(pdv->s, pdv->z));
+    // Computing residuals
+    // Dual Residuals
+    rx = rdual(*pdv);
+    resx = norm(rx);
+    // Primal Residuals
+    ry = rprim(*pdv);
+    resy = norm(ry);
+    // Central Residuals 
+    rz = rcent(*pdv);
+    resz = cList.snrm2(rz);
+    // Statistics for stopping criteria
+    pcost = pobj(*pdv);
+    dcost = pcost + dot(ry, pdv->y) + sum(cList.sdot(rz, pdv->z)) - gap;
+    rgap = NA_REAL;
+    if(pcost < 0.0) rgap = gap / (-pcost);
+    if(dcost > 0.0) rgap = gap / dcost;
+    pres = sqrt(resy * resy + resz * resz);
+    dres = resx;
+    if(i == 0){
+      pres0 = std::max(1.0, pres);
+      dres0 = std::max(1.0, dres);
+    }
+    pres = pres / pres0;
+    dres = dres / dres0;
+    // Tracing status quo of IPM
+    if(trace){
+      Rcpp::Rcout << "Iteration: " << i << std::endl;
+      Rcpp::Rcout << "pobj: " << pcost << std::endl;
+      Rcpp::Rcout << "dobj: " << dcost << std::endl;
+      Rcpp::Rcout << "pinf: " << pres << std::endl;
+      Rcpp::Rcout << "dinf: " << dres << std::endl;
+      Rcpp::Rcout << "dgap: " << gap << std::endl;
+      Rcpp::Rcout << std::endl;
+    }
+    // Checking convergence
+    if(!std::isnan(rgap)){
+      checkRgap = (rgap <= rtol);
+    } else {
+      checkRgap = false;
+    }
+    if((pres <= ftol) && (dres <= ftol) && ((gap <= atol) || checkRgap)){
+      ts = cList.smss(pdv->s).max();
+      tz = cList.smss(pdv->z).max();
+      state["pobj"] = pcost;
+      state["dobj"] = dcost;
+      state["dgap"] = gap;
+      state["certp"] = pres;
+      state["certd"] = dres;
+      state["pslack"] = -ts;
+      state["dslack"] = -tz;
+      if(!std::isnan(rgap)){
+	state["rgap"] = rgap;
+      }
+      cps->set_state(state);
+      cps->set_status("optimal");
+      cps->set_niter(i);
+      cps->set_pdv(*pdv);
+      if(trace){
+	Rcpp::Rcout << "Optimal solution found." << std::endl;
+      }
+      return cps;
+    }
+    // Compute initial scalings
+    if(i == 0){
+      WList = cList.ntsc(pdv->s, pdv->z);
+      Lambda = cList.getLambda(WList);
+    }
+    LambdaPrd = cList.sprd(Lambda, Lambda);
+    LHS.submat(0, 0, ne - 1, ne - 1) = H;
+    sigma = 0.0;
+    // Solution step 1 in two-round loop 
+    // (same for affine and combined solution)
+    for(int ii = 0; ii < 2; ii++){
+      mu = gap / m;
+      dpdv->s = -1.0 * LambdaPrd + OneE * sigma * mu;
+      dpdv->x = -1.0 * rx;
+      dpdv->y = -1.0 * ry;
+      dpdv->z = -1.0 * rz;
+      // Solving KKT-system
+      try{
+	dpdv->s = cList.sinv(dpdv->s, Lambda);
+	Ws3 = cList.ssnt(dpdv->s, WList, false, true);
+	dpdv->z = dpdv->z - Ws3;
+	dpdv = sxyz(dpdv, LHS, WList); 
+	dpdv->s = dpdv->s - dpdv->z;
+      } catch(std::runtime_error &ex) {
+	ts = cList.smss(pdv->s).max();
+	tz = cList.smss(pdv->z).max();
+	state["pobj"] = pcost;
+	state["dobj"] = dcost;
+	state["dgap"] = gap;
+	state["certp"] = pres;
+	state["certd"] = dres;
+	state["pslack"] = -ts;
+	state["dslack"] = -tz;
+	if(!std::isnan(rgap)){
+	  state["rgap"] = rgap;
+	}
+	cps->set_state(state);
+	cps->set_status("unknown");
+	cps->set_niter(i);
+	cps->set_pdv(*pdv);
+	if(trace){
+	  Rcpp::Rcout << "Terminated (singular KKT matrix)." << std::endl;
+	}
+	return cps;
+      } catch(...) {
+	::Rf_error("C++ exception (unknown reason)"); 
+      }
+      // Maximum step to boundary
+      dpdv->s = cList.sslb(dpdv->s, Lambda, false);
+      dpdv->z = cList.sslb(dpdv->z, Lambda, false); 
+      ts = cList.smss(dpdv->s).max();
+      tz = cList.smss(dpdv->z).max();
+      ss << 0.0 << ts << tz << endr;
+      tm = ss.max();
+      if(tm == 0.0){
+	step = 1.0;
+      } else {
+	step = std::min(1.0, sadj / tm);
+      }
+      // Backtracking until x is in the domain of f
+      backTrack = true;
+      while(backTrack){
+	x = pdv->x + step * dpdv->x;
+	for(int j = 0; j < mnl; j++){
+	  Fval(j) = feval(x, nF[j]);
+	}
+	if(is_finite(Fval)){
+	  backTrack = false;
+	} else {
+	  step *= beta;
+	}
+      } // end while-loop domain of f
+      if(ii == 0){
+	sigma = pow((1.0 - step), 3.0);
+      }
+    } // end ii-loop
+
+    // Updating x, y; s and z (in current scaling)
+    pdv->x = pdv->x + step * dpdv->x;
+    pdv->y = pdv->y + step * dpdv->y;
+
+    dpdv->s = cList.SorZupdate(dpdv->s, Lambda, step);
+    dpdv->z = cList.SorZupdate(dpdv->z, Lambda, step);
+
+    // Updating NT-scaling and Lagrange Multipliers
+    WList = cList.ntsu(dpdv->s, dpdv->z, WList);
+    Lambda = cList.getLambda(WList);
+    pdv->s = cList.ssnt(Lambda, WList, false, true);
+    pdv->z = cList.ssnt(Lambda, WList, true, false);
+    gap = sum(cList.sdot(Lambda, Lambda));
+  }  // end i-loop
+
+  // Preparing result for non-convergence in maxiters iterations
+  cps->set_pdv(*pdv);
+  cps->set_sidx(cList.sidx);
+  state["pobj"] = pobj(*pdv);
+  state["dobj"] = dobj(*pdv);
+  state["dgap"] = gap;
+  state["certp"] = certp(*pdv);
+  state["certd"] = certd(*pdv);
+  ts = cList.smss(pdv->s).max();
+  tz = cList.smss(pdv->z).max();
+  state["pslack"] = -ts;
+  state["dslack"] = -tz;
+  if(!std::isnan(rgap)){
+    state["rgap"] = rgap;
+  }
+  cps->set_state(state);
+  cps->set_niter(maxiters);
+  cps->set_status("unknown");
+  if(trace){
+    Rcpp::Rcout << "Optimal solution not determined in " << maxiters << " iteration(s)." << std::endl;
+  }
+
+  return cps;
 }

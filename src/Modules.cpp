@@ -51,6 +51,7 @@ RCPP_MODULE(CPG){
     .property("A", &DCP::get_A, &DCP::set_A, "Getter and setter for A")
     .property("b", &DCP::get_b, &DCP::set_b, "Getter and setter for b")
 
+    .method("cps", &DCP::cps)
     ;
 
   Rcpp::class_<DLP>( "DLP" )
