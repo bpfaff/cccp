@@ -37,11 +37,11 @@ class CTRL {
 */
 class CONEC {
  public:
- CONEC() : cone(std::vector<std::string>()), G(mat()), \
+ CONEC() : cone(std::vector<std::string>()), G(mat()), 
     h(mat()), sidx(umat()), dims(uvec()), K(0), n(0) {}
- CONEC(std::vector<std::string> cone_, mat G_, mat h_, umat sidx_, uvec dims_, int K_, int n_): \
+ CONEC(std::vector<std::string> cone_, mat G_, mat h_, umat sidx_, uvec dims_, int K_, int n_): 
   cone(cone_), G(G_), h(h_), sidx(sidx_), dims(dims_), K(K_), n(n_){}
- CONEC(int n_): cone(std::vector<std::string>()), G(mat()), \
+ CONEC(int n_): cone(std::vector<std::string>()), G(mat()), 
     h(mat()), sidx(umat()), dims(uvec()), K(0), n(n_){}
   // members
   std::vector<std::string> get_cone() {return cone;}
@@ -72,7 +72,8 @@ class CONEC {
   mat sinv(mat s, mat z);
   mat sams1(mat u, double alpha);
   mat sslb(mat s, mat lambda, bool invers);
-  mat ssnt(mat s, std::vector<std::map<std::string,mat> > WList, bool invers, bool transp);
+  mat ssnt(mat s, std::vector<std::map<std::string,mat> > WList, 
+	   bool invers, bool transp);
   mat getLambda(std::vector<std::map<std::string,mat> > WList);
   mat gwwg(std::vector<std::map<std::string,mat> > WList);
   mat gwwz(std::vector<std::map<std::string,mat> > WList, mat z);
@@ -80,7 +81,9 @@ class CONEC {
   PDV* initpdv(int p);
   std::vector<std::map<std::string,mat> > initnts();
   std::vector<std::map<std::string,mat> > ntsc(mat s, mat z);
-  std::vector<std::map<std::string,mat> > ntsu(mat s, mat z, std::vector<std::map<std::string,mat> > WList);
+  std::vector<std::map<std::string,mat> > 
+    ntsu(mat s, mat z, 
+	 std::vector<std::map<std::string,mat> > WList);
 
  private:
   std::vector<std::string> cone;
@@ -99,7 +102,7 @@ class DQP {
 
   // constructors
  DQP() : P(mat()), q(vec()), A(mat()), b(vec()), cList(CONEC()) {}
-  DQP(mat P_, vec q_, mat A_, vec b_, CONEC cList_): \
+  DQP(mat P_, vec q_, mat A_, vec b_, CONEC cList_): 
   P(P_), q(q_), A(A_), b(b_), cList(cList_) {}
   // members
   mat get_P() {return P;}
@@ -120,7 +123,8 @@ class DQP {
   mat rprim(PDV& pdv);
   mat rcent(PDV& pdv);
   mat rdual(PDV& pdv);
-  PDV* sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList);
+  PDV* sxyz(PDV* pdv, mat LHS, mat RHS, 
+	    std::vector<std::map<std::string,mat> > WList);
   CPS* cps(CTRL& ctrl);
 
  private:
@@ -139,7 +143,7 @@ class DLP {
 
   // constructors
  DLP() : q(vec()), A(mat()), b(vec()), cList(CONEC()) {}
-  DLP(vec q_, mat A_, vec b_, CONEC cList_): \
+  DLP(vec q_, mat A_, vec b_, CONEC cList_): 
   q(q_), A(A_), b(b_), cList(cList_) {}
   // members
   vec get_q() {return q;}
@@ -158,7 +162,8 @@ class DLP {
   mat rprim(PDV& pdv);
   mat rcent(PDV& pdv);
   mat rdual(PDV& pdv);
-  PDV* sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList);
+  PDV* sxyz(PDV* pdv, mat LHS, mat RHS, 
+	    std::vector<std::map<std::string,mat> > WList);
   CPS* cps(CTRL& ctrl);
 
  private:
@@ -175,8 +180,9 @@ class DNL {
  public:
 
   // constructors
- DNL() : q(vec()), A(mat()), b(vec()), cList(CONEC()), x0(mat()), nList(Rcpp::List::create()) {}
- DNL(vec q_, mat A_, vec b_, CONEC cList_, mat x0_, Rcpp::List nList_): \
+ DNL() : q(vec()), A(mat()), b(vec()), cList(CONEC()), x0(mat()), 
+    nList(Rcpp::List::create()) {}
+ DNL(vec q_, mat A_, vec b_, CONEC cList_, mat x0_, Rcpp::List nList_): 
   q(q_), A(A_), b(b_), cList(cList_), x0(x0_), nList(nList_) {}
   // members
   vec get_q() {return q;}
@@ -199,7 +205,8 @@ class DNL {
   mat rprim(PDV& pdv);
   mat rcent(PDV& pdv);
   mat rdual(PDV& pdv);
-  PDV* sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat> > WList);
+  PDV* sxyz(PDV* pdv, mat LHS, mat RHS, 
+	    std::vector<std::map<std::string,mat> > WList);
   CPS* cps(CTRL& ctrl);
 
  private:
@@ -219,8 +226,9 @@ class DCP {
  public:
 
   // constructors
- DCP() : x0(mat()), cList(CONEC()), nList(Rcpp::List::create()), A(mat()), b(vec()) {}
- DCP(mat x0_, CONEC cList_, Rcpp::List nList_, mat A_, vec b_): \
+ DCP() : x0(mat()), cList(CONEC()), nList(Rcpp::List::create()), 
+    A(mat()), b(vec()) {}
+ DCP(mat x0_, CONEC cList_, Rcpp::List nList_, mat A_, vec b_): 
   x0(x0_), cList(cList_), nList(nList_), A(A_), b(b_) {}
   // members
   mat get_x0() {return x0;}
@@ -235,6 +243,14 @@ class DCP {
   void set_b(vec b_) {b = b_;}
 
   double pobj(PDV& pdv);
+  double dobj(PDV& pdv);
+  double certp(PDV& pdv);
+  double certd(PDV& pdv);
+  mat rprim(PDV& pdv);
+  mat rcent(PDV& pdv);
+  mat rdual(PDV& pdv);
+  PDV* sxyz(PDV* pdv, mat LHS, 
+	    std::vector<std::map<std::string,mat> > WList);
 
  private:
   mat x0;
@@ -253,7 +269,7 @@ class PDV {
 
   // constructors
  PDV() : x(mat()), y(mat()), s(mat()), z(mat()), kappa(1.0), tau(1.0) {}
- PDV(mat x_, mat y_, mat s_, mat z_, double kappa_, double tau_):  \
+ PDV(mat x_, mat y_, mat s_, mat z_, double kappa_, double tau_):  
   x(x_), y(y_), s(s_), z(z_), kappa(kappa_), tau(tau_) {}
 
   // members
@@ -292,7 +308,8 @@ class CPS {
  public:
 
   // constructors
- CPS() : pdv(PDV()), state(Rcpp::NumericVector::create()), status("unknown"), niter(0), sidx(umat()) 
+ CPS() : pdv(PDV()), state(Rcpp::NumericVector::create()), 
+    status("unknown"), niter(0), sidx(umat()) 
     {
       state["pobj"] = NA_REAL;
       state["dobj"] = NA_REAL;
@@ -304,7 +321,8 @@ class CPS {
       state["dslack"] = NA_REAL;
       status = "unknown";
     }
- CPS(PDV pdv_, Rcpp::NumericVector state_, Rcpp::String status_, int niter_, umat sidx_): \
+ CPS(PDV pdv_, Rcpp::NumericVector state_, Rcpp::String status_, 
+     int niter_, umat sidx_): 
   pdv(pdv_), state(state_), status(status_), niter(niter_) , sidx(sidx_){}
   // members
   PDV get_pdv() {return pdv;}
