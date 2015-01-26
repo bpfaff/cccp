@@ -337,9 +337,9 @@ class CPS {
   umat get_sidx() {return sidx;}
   void set_sidx(umat sidx_) {sidx = sidx_;}
 
+  PDV pdv;
 
  private:
-  PDV pdv;
   Rcpp::NumericVector state;
   Rcpp::String status;
   int niter;

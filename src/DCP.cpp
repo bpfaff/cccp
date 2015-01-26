@@ -9,7 +9,7 @@ using namespace arma;
 Primal objective
 */
 double DCP::pobj(PDV& pdv){
-  double ans = pdv.x(pdv.x.n_rows, 0);
+  double ans = pdv.x.at(pdv.x.n_rows - 1, 0);
   return ans;
 }
 /*
@@ -17,7 +17,7 @@ Dual objective
 */
 double DCP::dobj(PDV& pdv){
   double term1 = 0.0, term2 = 0.0, term3 = 0.0, ans;
-  term1 = pdv.x(pdv.x.n_rows, 0);
+  term1 = pdv.x(pdv.x.n_rows - 1, 0);
   if(cList.K > 1){
     for(int i = 1; i < cList.K; i++){
       term2 += dot(pdv.z(span(cList.sidx.at(i, 0), cList.sidx.at(i, 1)), span::all), 
@@ -38,7 +38,7 @@ Primal Residuals
 */
 mat DCP::rprim(PDV& pdv){
   int p = A.n_rows;
-  mat ans(p,1);
+  mat ans(p, 1);
   ans.zeros();
 
   ans = b - A * pdv.x;
@@ -78,14 +78,13 @@ mat DCP::rdual(PDV& pdv){
   Ay.zeros();
   ans.zeros();
 
-  if(cList.K > 0){
-    Gz = cList.G.t() * pdv.z;
-  }
+  Gz = cList.G.t() * pdv.z;
+  
   if(A.n_rows > 0){
     Ay = A.t() * pdv.y;
   }
   ans = Gz + Ay;
-  ans(ans.n_rows, 0) += 1.0;
+  ans.at(ans.n_rows - 1, 0) += 1.0;
 
   return ans;
 }
@@ -126,12 +125,18 @@ PDV* DCP::sxyz(PDV* pdv, mat LHS, std::vector<std::map<std::string,mat> > WList)
   int ne = n - 1;
   int mnl = cList.dims(0);
   int K = cList.K;
-  double a = pdv->z(0, 0); // Slack with respect to f0
-  double x1 = pdv->x(pdv->x.n_rows, 0); // Epigraph-variable 't'
-  mat ux = pdv->x, uz = pdv->z, RHS(ne + A.n_rows, 1), ans(ne + A.n_rows, 1);
+  double a = pdv->z.at(0, 0); // Slack with respect to f0
+  double x1 = pdv->x.at(pdv->x.n_rows, 0); // Epigraph-variable 't'
+  mat ux = mat(ne, 1), uz = pdv->z, RHS(ne + A.n_rows, 1), ans(ne + A.n_rows, 1);
   CONEC cEpi = cList;
   std::vector<std::map<std::string,mat> > WEpi = WList;
   
+  cEpi.n -= 1;
+  cEpi.G.set_size(cList.G.n_rows, ne);
+  cEpi.G = cList.G(span::all, span(0, ne - 1)); // removing last column
+  ux = pdv->x(span(0, ne - 1), span::all);
+  ux = ux + pdv->x.at(n - 1, 0) * cEpi.G.row(0).t();
+
   // Distinguishing four cases:
   // mnl == 1 and K == 1: only f0 and no cone constraints
   // mnl == 1 and K > 1 : only f0 and cone constraints
@@ -139,13 +144,9 @@ PDV* DCP::sxyz(PDV* pdv, mat LHS, std::vector<std::map<std::string,mat> > WList)
   // mnl > 1 and K > 1 : f0 and other nonlinear constraints and cone constraints
   // Problem to be solved is reduced to x0
 
-  cEpi.n -= 1;
-  cEpi.G = cEpi.G(span::all, span(0, cEpi.G.n_cols - 1)); // removing last column
   // mnl == 1 and K == 1
   if((mnl == 1) && (K == 1)){
     // upper LHS is only Hessian
-    ux = ux(span(0, ux.n_rows - 1), span::all);
-    ux += pdv->x(pdv->x.n_rows, 0) * cEpi.G.row(0).t();
     RHS.submat(0, 0, ne - 1, 0) = ux;
   }
   // mnl == 1 and K > 1
@@ -181,7 +182,7 @@ PDV* DCP::sxyz(PDV* pdv, mat LHS, std::vector<std::map<std::string,mat> > WList)
     RHS.submat(0, 0, ne - 1, 0) = ux + cEpi.gwwz(WEpi, uz);
   }
   if(pdv->y.n_rows > 0){
-    RHS.submat(n, 0, RHS.n_rows - 1, 0) = pdv->y;
+    RHS.submat(ne, 0, RHS.n_rows - 1, 0) = pdv->y;
   }
   // Solving KKT-system
   ans = solve(LHS, RHS);
@@ -191,12 +192,13 @@ PDV* DCP::sxyz(PDV* pdv, mat LHS, std::vector<std::map<std::string,mat> > WList)
     pdv->y = ans.submat(ne, 0, RHS.n_rows - 1, 0);
   }
   uz = cEpi.G * pdv->x.submat(0, 0, ne - 1, 0) - uz;
-  pdv->z(span(1, pdv->z.n_rows), span::all) = cEpi.ssnt(uz, WEpi, true, true);
-  pdv->z(0, 0) = -pdv->x(pdv->x.n_rows, 0) * WList[0]["dnl"](0, 0);
-  x1 = dot(cList.G(0, span(0, ne - 1)), pdv->x.submat(0, 0, ne - 1, 0)) + 
-    pow(WList[0]["dnl"](0, 0), 2) + x1 - a; 
-  pdv->x(pdv->x.n_rows, 0) = x1;
-
+  if(mnl > 1 || K > 1){
+    pdv->z(span(1, pdv->z.n_rows - 1), span::all) = cEpi.ssnt(uz, WEpi, true, true);
+  }
+  pdv->z.at(0, 0) = -pdv->x.at(pdv->x.n_rows - 1, 0) * WList[0]["dnl"].at(0, 0);
+  x1 = dot(cEpi.G(0, span::all), pdv->x.submat(0, 0, ne - 1, 0)) + 
+    pow(WList[0]["dnl"].at(0, 0), 2) * pdv->x.at(n - 1, 0) - a;
+  pdv->x.at(n - 1, 0) = x1;
   return pdv;
 }
 /*
@@ -253,9 +255,7 @@ CPS* DCP::cps(CTRL& ctrl){
       // Computing Hessian
       H += pdv->z.at(j, 0) * heval(pdv->x(span(0, ne - 1), span::all), hF[j]);
     }
-    cList.h(0, 1) = cList.h(0, 1) - pdv->x(pdv->x.n_rows, 1);
-    Rcpp::Rcout << "Fine until here" << std::endl;
-
+    cList.h(0, 0) = cList.h(0, 0) - pdv->x.at(n - 1, 0);
     // Computing gap
     gap = sum(cList.sdot(pdv->s, pdv->z));
     // Computing residuals
@@ -315,6 +315,30 @@ CPS* DCP::cps(CTRL& ctrl){
       cps->set_status("optimal");
       cps->set_niter(i);
       cps->set_pdv(*pdv);
+      cps->pdv.x.reshape(ne, 1); // removing variable 't'
+      if((mnl == 1) && (cList.K == 1)){ // removing slack variables pertinent to 't'
+	cps->pdv.s.set_size(0, 0);
+	cps->pdv.z.set_size(0, 0);
+	cps->set_sidx(umat());
+      }
+      if((mnl > 1) && (cList.K == 1)){ // removing slack variables pertinent to 't'
+	cps->pdv.s.set_size(cList.dims[0] - 1, 1);
+	cps->pdv.z.set_size(cList.dims[0] - 1, 1);
+	cps->pdv.s = pdv->s.submat(1, 0, cList.dims[0] - 1, 0);
+	cps->pdv.z = pdv->z.submat(1, 0, cList.dims[0] - 1, 0);
+	umat sidxEpi = cList.sidx;
+	sidxEpi.at(0, 1) -= 1;
+	cps->set_sidx(sidxEpi);
+      }
+      if((mnl == 1) && (cList.K > 1)){ // removing slack variables pertinent to 't'
+	cps->pdv.s.set_size(cList.G.n_rows - 1, 1);
+	cps->pdv.z.set_size(cList.G.n_rows - 1, 1);
+	cps->pdv.s = pdv->s.submat(1, 0, cList.G.n_rows - 1, 0);
+	cps->pdv.z = pdv->z.submat(1, 0, cList.G.n_rows - 1, 0);
+	umat sidxEpi = cList.sidx;
+	sidxEpi -= 1;
+	sidxEpi.at(0, 0) = 0;
+      }
       if(trace){
 	Rcpp::Rcout << "Optimal solution found." << std::endl;
       }
@@ -384,8 +408,9 @@ CPS* DCP::cps(CTRL& ctrl){
       while(backTrack){
 	x = pdv->x + step * dpdv->x;
 	for(int j = 0; j < mnl; j++){
-	  Fval(j) = feval(x, nF[j]);
+	  Fval(j) = feval(x(span(0, ne - 1), span::all), nF[j]);
 	}
+	Fval[0] -= x.at(n - 1, 0); 
 	if(is_finite(Fval)){
 	  backTrack = false;
 	} else {
@@ -414,6 +439,7 @@ CPS* DCP::cps(CTRL& ctrl){
 
   // Preparing result for non-convergence in maxiters iterations
   cps->set_pdv(*pdv);
+  cps->pdv.x.reshape(ne, 1);    
   cps->set_sidx(cList.sidx);
   state["pobj"] = pobj(*pdv);
   state["dobj"] = dobj(*pdv);
@@ -432,6 +458,29 @@ CPS* DCP::cps(CTRL& ctrl){
   cps->set_status("unknown");
   if(trace){
     Rcpp::Rcout << "Optimal solution not determined in " << maxiters << " iteration(s)." << std::endl;
+  }
+  if((mnl == 1) && (cList.K == 1)){ // removing slack variables pertinent to 't'
+    cps->pdv.s.set_size(0, 0);
+    cps->pdv.z.set_size(0, 0);
+    cps->set_sidx(umat());
+  }
+  if((mnl > 1) && (cList.K == 1)){ // removing slack variables pertinent to 't'
+    cps->pdv.s.set_size(cList.dims[0] - 1, 1);
+    cps->pdv.z.set_size(cList.dims[0] - 1, 1);
+    cps->pdv.s = pdv->s.submat(1, 0, cList.dims[0] - 1, 0);
+    cps->pdv.z = pdv->z.submat(1, 0, cList.dims[0] - 1, 0);
+    umat sidxEpi = cList.sidx;
+    sidxEpi.at(0, 1) -= 1;
+    cps->set_sidx(sidxEpi);
+  }
+  if((mnl == 1) && (cList.K > 1)){ // removing slack variables pertinent to 't'
+    cps->pdv.s.set_size(cList.G.n_rows - 1, 1);
+    cps->pdv.z.set_size(cList.G.n_rows - 1, 1);
+    cps->pdv.s = pdv->s.submat(1, 0, cList.G.n_rows - 1, 0);
+    cps->pdv.z = pdv->z.submat(1, 0, cList.G.n_rows - 1, 0);
+    umat sidxEpi = cList.sidx;
+    sidxEpi -= 1;
+    sidxEpi.at(0, 0) = 0;
   }
 
   return cps;
