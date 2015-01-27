@@ -6,7 +6,8 @@
 \title{Class \code{"CPD"}}
 
 \description{
-  Class union of \code{Rcpp_DLP}, \code{Rcpp_DQP} and \code{Rcpp_DNL}.
+  Class union of \code{Rcpp_DLP}, \code{Rcpp_DQP}, \code{Rcpp_DCP}
+  and \code{Rcpp_DNL}.
 }
 
 \section{Objects from the Class}{A virtual Class: No objects may be created from it.}

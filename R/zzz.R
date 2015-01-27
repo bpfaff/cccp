@@ -3,7 +3,7 @@ loadModule("CPG", TRUE)
 evalqOnLoad({
 ##
 ## Class union of convex program definitions
-setClassUnion("CPD", members = c("Rcpp_DLP", "Rcpp_DQP", "Rcpp_DNL"))
+setClassUnion("CPD", members = c("Rcpp_DLP", "Rcpp_DQP", "Rcpp_DNL", "Rcpp_DCP"))
 ##
 ## show-methods for reference objects
 setMethod("show", "Rcpp_CTRL", function(object){
@@ -142,6 +142,10 @@ setMethod("cps", signature = c("Rcpp_DNL", "Rcpp_CTRL"), function(cpd, ctrl){
 })
 ## cps-methods
 setMethod("cps", signature = c("Rcpp_DQP", "Rcpp_CTRL"), function(cpd, ctrl){
+    cpd$cps(ctrl)
+})
+## cps-methods
+setMethod("cps", signature = c("Rcpp_DCP", "Rcpp_CTRL"), function(cpd, ctrl){
     cpd$cps(ctrl)
 })
 ## gets-methods

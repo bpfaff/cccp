@@ -13,7 +13,8 @@
 
 \usage{
 cccp(P = NULL, q = NULL, A = NULL, b = NULL, cList = list(),
-     x0 = NULL, nlfList = list(), nlgList = list(), nlhList = list(),
+     x0 = NULL, f0 = NULL, g0 = NULL, h0 = NULL,
+     nlfList = list(), nlgList = list(), nlhList = list(),
      optctrl = ctrl())
 }
 
@@ -30,6 +31,13 @@ cccp(P = NULL, q = NULL, A = NULL, b = NULL, cList = list(),
   \item{x0}{An object of class \code{vector} with dimension \eqn{n
       \times 1} for the initial values. The point \code{x0} must be in
     the domain of the nonlinear constraints.}
+  \item{f0}{\code{function}: the scalar-valued convex and
+    twice-differentiable objective function (its first argument must be
+    \sQuote{\code{x}}).}
+  \item{g0}{\code{function}: the gradient function of the objective (its
+    first argument must be \sQuote{\code{x}}).}
+  \item{h0}{\code{function}: the Hessian function of the objective (its
+    first argument must be \sQuote{\code{x}}).}
   \item{nlfList}{A \code{list} object containing the nonlinear
     constraints as its elements. The functions have to be specified with
     \code{x} as their first argument and must be casted in implicit
