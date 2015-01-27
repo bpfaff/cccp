@@ -153,12 +153,14 @@ PDV* DCP::sxyz(PDV* pdv, mat LHS, std::vector<std::map<std::string,mat> > WList)
   if((mnl == 1) && (K > 1)){
     WEpi.erase(WEpi.begin());
     cEpi.K -= 1;
-    cEpi.G = cEpi.G(span(1, cEpi.G.n_rows), span::all); // removing first row pertinent to f0
-    cEpi.sidx = cEpi.sidx(span(1, cEpi.sidx.n_rows), span::all);
+    cEpi.G = cEpi.G(span(1, cEpi.G.n_rows - 1), span::all); // removing first row pertinent to f0
+    cEpi.sidx = cEpi.sidx(span(1, cEpi.sidx.n_rows - 1), span::all);
+    cEpi.sidx -= 1;
+    cEpi.sidx.at(0, 0) = 0;
     cEpi.cone.erase(cEpi.cone.begin());
-    cEpi.dims = cEpi.dims(1, cEpi.dims.size());
+    cEpi.dims.shed_row(0);
     LHS.submat(0, 0, ne - 1, ne - 1) += cEpi.gwwg(WEpi);
-    uz = uz(span(1, uz.n_rows), span::all);
+    uz = uz(span(1, uz.n_rows - 1), span::all);
     RHS.submat(0, 0, ne - 1, 0) = ux + cEpi.gwwz(WEpi, uz);
   }
   // mnl > 1 and K == 1
@@ -245,7 +247,6 @@ CPS* DCP::cps(CTRL& ctrl){
   //
   // Starting iterations
   //
-  Rcpp::Rcout << "Fine until here" << std::endl;
   for(int i = 0; i < maxiters; i++){
     H.zeros();
     for(int j = 0; j < mnl; j++){
