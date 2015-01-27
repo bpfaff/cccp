@@ -79,11 +79,18 @@ dcp <- function(x0, f0, g0, h0, cList = list(), nlfList = list(), nlgList = list
     ##
     ## Checking equality constraints
     ##
+    ## checking whether x0 satisfies equality constraints
+    if(!is.null(A)){
+        A <- as.matrix(A)
+        eq <- identical(as.vector(A %*% x0 - b), rep(0, nrow(A)))
+        if(!eq){
+            stop("Initial point 'x0' does not satisfy equality constraints.\n")
+        }
+    }
     if(is.null(A)){
-        A <- matrix(0, nrow = 0, ncol = n)
-    } 
-    if(is.null(dim(A))){
-        A <- matrix(A, nrow = 1)
+        A <- matrix(0, nrow = 0, ncol = n + 1)
+    } else {
+        A <- cbind(A, rep(0, nrow(A)))
     }
     if(is.null(b)){
         b <- matrix(0, nrow = 0, ncol = 1)
@@ -91,14 +98,6 @@ dcp <- function(x0, f0, g0, h0, cList = list(), nlfList = list(), nlgList = list
     if(is.null(dim(b))){
         b <- matrix(b, ncol = 1)
     } 
-    ## checking whether x0 satisfies equality constraints
-    if(!is.null(A)){
-        eq <- identical(as.vector(A %*% x0 - b), rep(0, nrow(A)))
-        if(!eq){
-            stop("Initial point 'x0' does not satisfy equality constraints.\n")
-        }
-    }
-    A <- cbind(A, 0)
     
     ans <- new(DCP,
                x0 = rbind(x0, 0.0), ## set initial value of 't = 0.0'
