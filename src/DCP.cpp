@@ -245,6 +245,7 @@ CPS* DCP::cps(CTRL& ctrl){
   //
   // Starting iterations
   //
+  Rcpp::Rcout << "Fine until here" << std::endl;
   for(int i = 0; i < maxiters; i++){
     H.zeros();
     for(int j = 0; j < mnl; j++){
