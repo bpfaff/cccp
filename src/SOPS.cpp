@@ -611,27 +611,21 @@ mat ssnt_s(mat s, std::map<std::string,mat> W, bool invers, bool transp){
 /*
  * Evaluating a R functions
 */
-double feval(mat x, SEXP Rf){
-  Rcpp::Function f(Rf);
-  Rcpp::NumericVector xs = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(x));
+double feval(mat x, Rcpp::Function Rf){
   double ans;
-  ans = Rcpp::as<double>(f(xs));
+  ans = Rcpp::as<double>(Rf(Rcpp::wrap(x)));
 
   return ans;
 }
-vec geval(mat x, SEXP Rf){
-  Rcpp::Function f(Rf);
-  Rcpp::NumericVector xs = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(x));
+vec geval(mat x, Rcpp::Function Rf){
   vec ans;
-  ans = Rcpp::as<vec>(f(xs));
+  ans = Rcpp::as<vec>(Rf(Rcpp::wrap(x)));
 
   return ans;
 }
-mat heval(mat x, SEXP Rf){
-  Rcpp::Function f(Rf);
-  Rcpp::NumericVector xs = Rcpp::as<Rcpp::NumericVector>(Rcpp::wrap(x));
+mat heval(mat x, Rcpp::Function Rf){
   mat ans;
-  ans = Rcpp::as<mat>(f(xs));
+  ans = Rcpp::as<mat>(Rf(Rcpp::wrap(x)));
 
   return ans;
 }
