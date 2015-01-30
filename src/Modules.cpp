@@ -103,6 +103,8 @@ RCPP_MODULE(CPG){
     .property("niter", &CPS::get_niter, &CPS::set_niter, "Getter and setter for niter")
     .property("sidx", &CPS::get_sidx, &CPS::set_sidx, "Getter and setter for sidx")
     ;
+
+  Rcpp::function("rpp", &rpp);
 }
 
 

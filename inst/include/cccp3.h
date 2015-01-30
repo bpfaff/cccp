@@ -55,6 +55,11 @@ double feval(mat x, Rcpp::Function Rf);
 vec geval(mat x, Rcpp::Function Rf);
 mat heval(mat x, Rcpp::Function Rf);
 
+// Objective, Gradient and Hessian functions for risk parity
+double rpp_f0(mat x, mat P, mat mrc);
+mat rpp_g0(mat x, mat P, mat mrc);
+mat rpp_h0(mat x, mat P, mat mrc);
+
 #include "CPG.h"
 
 #endif

@@ -63,6 +63,7 @@ class CONEC {
   friend class DLP;
   friend class DNL;
   friend class DQP;
+  friend CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl);
 
   double snrm2(mat s);
   vec sdot(mat s, mat z);
@@ -292,6 +293,7 @@ class PDV {
   friend class DNL;
   friend class DQP;
   friend class CONEC;
+  friend CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl);
 
  private:
   mat x;
@@ -346,3 +348,5 @@ class CPS {
   umat sidx;
 };
 
+// Function for solving risk parity portfolios
+CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl);

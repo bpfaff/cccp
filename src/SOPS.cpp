@@ -629,3 +629,20 @@ mat heval(mat x, Rcpp::Function Rf){
 
   return ans;
 }
+/*
+ * Objective, Gradient and Hessian functions for Risk Parity
+*/
+double rpp_f0(mat x, mat P, mat mrc){
+  double ans = (0.5 * dot(x, 2.0 * P) * x - dot(mrc, log(x))).at(0, 0);
+  return ans;
+}
+mat rpp_g0(mat x, mat P, mat mrc){
+  mat ans = dot(P, x) - mrc / x;
+  return ans;
+}
+mat rpp_h0(mat x, mat P, mat mrc){
+  mat ans(P.n_cols, P.n_cols);
+  ans.diag() =  mrc / (x % x); 
+  ans += P;  
+  return ans;
+}

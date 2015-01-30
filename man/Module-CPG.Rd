@@ -8,6 +8,7 @@
 \alias{DNL}
 \alias{DQP}
 \alias{CPS}
+\alias{rpp}
 
 \title{
 	Rcpp module: CPG
@@ -28,6 +29,9 @@
     \item{DNL}{Class for definition of linear programs with non-linear constraints.}
     \item{DQP}{Class for definition of quadratic programs.}
     \item{CPS}{Class for solution of convex programs.}
+  }
+  functions: \describe{
+    \item{rpp}{Function for solving risk parity portfolios.}
   }
 }
     
