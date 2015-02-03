@@ -1,7 +1,7 @@
 ##
 ## Function for minimizing a L1-norm ||Pu - q||_1
 ## This is a wrapper function for the LP-cps method
-l1norm <- function(P, q = NULL, optctrl = ctrl()){
+l1 <- function(P, q = NULL, optctrl = ctrl()){
     m <- nrow(P)
     n <- ncol(P)
     if(is.null(q)){

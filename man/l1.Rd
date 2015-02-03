@@ -1,5 +1,5 @@
-\name{l1norm}
-\alias{l1norm}
+\name{l1}
+\alias{l1}
 
 \title{
   Minimizing L1-norm
@@ -13,7 +13,7 @@
 }
 
 \usage{
-l1norm(P, q = NULL, optctrl = ctrl())
+l1(P, q = NULL, optctrl = ctrl())
 }
 
 \arguments{
