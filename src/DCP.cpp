@@ -154,6 +154,7 @@ PDV* DCP::sxyz(PDV* pdv, mat LHS, std::vector<std::map<std::string,mat> > WList)
     WEpi.erase(WEpi.begin());
     cEpi.K -= 1;
     cEpi.G = cEpi.G(span(1, cEpi.G.n_rows - 1), span::all); // removing first row pertinent to f0
+    cEpi.h = cEpi.h(span(1, cEpi.G.n_rows - 1), span::all); // removing first row pertinent to f0
     cEpi.sidx = cEpi.sidx(span(1, cEpi.sidx.n_rows - 1), span::all);
     cEpi.sidx -= 1;
     cEpi.sidx.at(0, 0) = 0;
@@ -169,18 +170,23 @@ PDV* DCP::sxyz(PDV* pdv, mat LHS, std::vector<std::map<std::string,mat> > WList)
     WEpi[0]["dnli"] = WEpi[0]["dnli"](span(1, mnl - 1), span::all);
     cEpi.dims(0) -= 1;
     cEpi.sidx(0, 1) -= 1;
+    cEpi.G = cEpi.G(span(1, cEpi.G.n_rows - 1), span::all); // removing first row pertinent to f0
+    cEpi.h = cEpi.h(span(1, cEpi.G.n_rows - 1), span::all); // removing first row pertinent to f0
     LHS.submat(0, 0, ne - 1, ne - 1) += cEpi.gwwg(WEpi);
-    uz = uz(span(1, uz.n_rows), span::all);
+    uz = uz(span(1, uz.n_rows - 1), span::all);
     RHS.submat(0, 0, ne - 1, 0) = ux + cEpi.gwwz(WEpi, uz);
   }
   // mnl > 1 and K > 1
-  if((mnl > 1) && (K >1)){
+  if((mnl > 1) && (K > 1)){
     WEpi[0]["dnl"] = WEpi[0]["dnl"](span(1, mnl - 1), span::all);
     WEpi[0]["dnli"] = WEpi[0]["dnli"](span(1, mnl - 1), span::all);
     cEpi.dims(0) -= 1;
     cEpi.sidx = cEpi.sidx - 1;
     cEpi.sidx(0, 0) = 0;
-    uz = uz(span(1, uz.n_rows), span::all);
+    cEpi.G = cEpi.G(span(1, cEpi.G.n_rows - 1), span::all); // removing first row pertinent to f0
+    cEpi.h = cEpi.h(span(1, cEpi.G.n_rows - 1), span::all); // removing first row pertinent to f0
+    LHS.submat(0, 0, ne - 1, ne - 1) += cEpi.gwwg(WEpi);
+    uz = uz(span(1, uz.n_rows - 1), span::all);
     RHS.submat(0, 0, ne - 1, 0) = ux + cEpi.gwwz(WEpi, uz);
   }
   if(pdv->y.n_rows > 0){
@@ -194,7 +200,7 @@ PDV* DCP::sxyz(PDV* pdv, mat LHS, std::vector<std::map<std::string,mat> > WList)
     pdv->y = ans.submat(ne, 0, RHS.n_rows - 1, 0);
   }
   uz = cEpi.G * pdv->x.submat(0, 0, ne - 1, 0) - uz;
-  if(mnl > 1 || K > 1){
+  if((mnl > 1) || (K > 1)){
     pdv->z(span(1, pdv->z.n_rows - 1), span::all) = cEpi.ssnt(uz, WEpi, true, true);
   }
   pdv->z.at(0, 0) = -pdv->x.at(pdv->x.n_rows - 1, 0) * WList[0]["dnl"].at(0, 0);
