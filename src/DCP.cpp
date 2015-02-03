@@ -338,8 +338,10 @@ CPS* DCP::cps(CTRL& ctrl){
 	cps->pdv.s = pdv->s.submat(1, 0, cList.G.n_rows - 1, 0);
 	cps->pdv.z = pdv->z.submat(1, 0, cList.G.n_rows - 1, 0);
 	umat sidxEpi = cList.sidx;
+	sidxEpi.shed_row(0);
 	sidxEpi -= 1;
 	sidxEpi.at(0, 0) = 0;
+	cps->set_sidx(sidxEpi);
       }
       if(trace){
 	Rcpp::Rcout << "Optimal solution found." << std::endl;
@@ -481,8 +483,10 @@ CPS* DCP::cps(CTRL& ctrl){
     cps->pdv.s = pdv->s.submat(1, 0, cList.G.n_rows - 1, 0);
     cps->pdv.z = pdv->z.submat(1, 0, cList.G.n_rows - 1, 0);
     umat sidxEpi = cList.sidx;
+    sidxEpi.shed_row(0);
     sidxEpi -= 1;
     sidxEpi.at(0, 0) = 0;
+    cps->set_sidx(sidxEpi);
   }
 
   return cps;
