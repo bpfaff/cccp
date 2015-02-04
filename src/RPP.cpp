@@ -147,7 +147,7 @@ CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl){
     }
     LambdaPrd = cList.sprd(Lambda, Lambda);
     sigma = 0.0;
-    // Solution step 1 in two-round loop 
+    // Finding solution of increments in two-round loop 
     // (same for affine and combined solution)
     for(int ii = 0; ii < 2; ii++){
       mu = gap / m;

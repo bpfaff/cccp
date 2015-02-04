@@ -362,7 +362,7 @@ CPS* DCP::cps(CTRL& ctrl){
     LambdaPrd = cList.sprd(Lambda, Lambda);
     LHS.submat(0, 0, ne - 1, ne - 1) = H;
     sigma = 0.0;
-    // Solution step 1 in two-round loop 
+    // Finding solution of increments in two-round loop 
     // (same for affine and combined solution)
     for(int ii = 0; ii < 2; ii++){
       mu = gap / m;

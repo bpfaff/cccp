@@ -20,10 +20,10 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
   // Objects used in iterations
   Rcpp::NumericVector state = cps->get_state();
   bool checkRgap = false, backTrack;
-  double gap = m, resx, resz, pcost = 1.0, dcost = 1.0, rgap = NA_REAL, 
+  double gap = m, resx, resy, resz, pcost = 1.0, dcost = 1.0, rgap = NA_REAL, 
     pres = 1.0, dres = 1.0, pres0 = 1.0, dres0 = 1.0, sigma, mu, ts, tz, tm, step, a, x1;
   vec ss(3);
-  mat H(ne, ne), rx, rz(cList.G.n_rows, 1), Lambda, LambdaPrd, Ws3, x, 
+  mat H(ne, ne), rx, ry, rz(cList.G.n_rows, 1), Lambda, LambdaPrd, Ws3, x, 
     ux(ne, 1), uz, RHS(ne, 1);
   mat OneE = cList.sone();
   // Initialising LHS matrices
@@ -70,16 +70,112 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
     gap = sum(cList.sdot(pdv->s, pdv->z));
     // Computing residuals
     // Dual Residuals
-    /*
-    rx = rdual(*pdv);
+    rx = cList.G.t() * pdv->z + A.t() * pdv->y;
+    rx.at(rx.n_rows - 1, 0) += 1.0;
     resx = norm(rx);
     // Primal Residuals
-    ry = rprim(*pdv);
+    ry = b - A * pdv->x;
     resy = norm(ry);
     // Central Residuals 
-    rz = rcent(*pdv);
+    rz(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all) =
+      pdv->s(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all) + 
+      cList.h(span(cList.sidx.at(0, 0), cList.sidx.at(0, 1)), span::all);
+    if(cList.K > 1){
+      rz(span(cList.sidx.at(1, 0), cList.sidx.at(1, 1)), span::all) =
+	pdv->s(span(cList.sidx.at(1, 0), cList.sidx.at(1, 1)), span::all) + 
+	cList.G(span(cList.sidx.at(1, 0), cList.sidx.at(1, 1)), span::all) * pdv->x -
+	cList.h(span(cList.sidx.at(1, 0), cList.sidx.at(1, 1)), span::all);
+    }
     resz = cList.snrm2(rz);
-    */
+    // Statistics for stopping criteria
+    pcost = pdv->x.at(n - 1, 0);
+    dcost = pcost + dot(ry, pdv->y) + sum(cList.sdot(rz, pdv->z)) - gap;
+    rgap = NA_REAL;
+    if(pcost < 0.0) rgap = gap / (-pcost);
+    if(dcost > 0.0) rgap = gap / dcost;
+    pres = sqrt(resy * resy + resz * resz);
+    dres = resx;
+    if(i == 0){
+      pres0 = std::max(1.0, pres);
+      dres0 = std::max(1.0, dres);
+    }
+    pres = pres / pres0;
+    dres = dres / dres0;
+    // Tracing status quo of IPM
+    if(trace){
+      Rcpp::Rcout << "Iteration: " << i << std::endl;
+      Rcpp::Rcout << "pobj: " << pcost << std::endl;
+      Rcpp::Rcout << "dobj: " << dcost << std::endl;
+      Rcpp::Rcout << "pinf: " << pres << std::endl;
+      Rcpp::Rcout << "dinf: " << dres << std::endl;
+      Rcpp::Rcout << "dgap: " << gap << std::endl;
+      Rcpp::Rcout << std::endl;
+    }
+    // Checking convergence
+    if(!std::isnan(rgap)){
+      checkRgap = (rgap <= rtol);
+    } else {
+      checkRgap = false;
+    }
+    if((pres <= ftol) && (dres <= ftol) && ((gap <= atol) || checkRgap)){
+      ts = cList.smss(pdv->s).max();
+      tz = cList.smss(pdv->z).max();
+      state["pobj"] = pcost;
+      state["dobj"] = dcost;
+      state["dgap"] = gap;
+      state["certp"] = pres;
+      state["certd"] = dres;
+      state["pslack"] = -ts;
+      state["dslack"] = -tz;
+      if(!std::isnan(rgap)){
+	state["rgap"] = rgap;
+      }
+      cps->set_state(state);
+      cps->set_status("optimal");
+      cps->set_niter(i);
+      cps->set_pdv(*pdv);
+      cps->pdv.x.reshape(ne, 1); // removing variable 't'
+      cps->pdv.x = exp(cps->pdv.x);
+      if((mnl > 1) && (cList.K == 1)){ // removing slack variables pertinent to 't'
+	cps->pdv.s.set_size(cList.dims[0] - 1, 1);
+	cps->pdv.z.set_size(cList.dims[0] - 1, 1);
+	cps->pdv.s = pdv->s.submat(1, 0, cList.dims[0] - 1, 0);
+	cps->pdv.z = pdv->z.submat(1, 0, cList.dims[0] - 1, 0);
+	umat sidxEpi = cList.sidx;
+	sidxEpi.at(0, 1) -= 1;
+	cps->set_sidx(sidxEpi);
+      }
+      if((mnl == 1) && (cList.K > 1)){ // removing slack variables pertinent to 't'
+	cps->pdv.s.set_size(cList.G.n_rows - 1, 1);
+	cps->pdv.z.set_size(cList.G.n_rows - 1, 1);
+	cps->pdv.s = pdv->s.submat(1, 0, cList.G.n_rows - 1, 0);
+	cps->pdv.z = pdv->z.submat(1, 0, cList.G.n_rows - 1, 0);
+	umat sidxEpi = cList.sidx;
+	sidxEpi.shed_row(0);
+	sidxEpi -= 1;
+	sidxEpi.at(0, 0) = 0;
+	cps->set_sidx(sidxEpi);
+      }
+      cps->pdv.s = exp(cps->pdv.s);
+      cps->pdv.z = exp(cps->pdv.z);
+      if(A.n_rows > 0){
+	cps->pdv.y = exp(cps->pdv.y);
+      }
+      if(trace){
+	Rcpp::Rcout << "Optimal solution found." << std::endl;
+      }
+      return cps;
+    }
+    // Compute initial scalings
+    if(i == 0){
+      WList = cList.ntsc(pdv->s, pdv->z);
+      Lambda = cList.getLambda(WList);
+    }
+    LambdaPrd = cList.sprd(Lambda, Lambda);
+    LHS.submat(0, 0, ne - 1, ne - 1) = H;
+    sigma = 0.0;
+    // Finding solution of increment in two-round loop 
+    // (same for affine and combined solution)
 
   } // end i-loop
 
