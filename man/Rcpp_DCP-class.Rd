@@ -24,21 +24,12 @@ All reference classes extend and inherit methods from \code{"\linkS4class{envRef
       List with elements of functions for evaluating non-linear
       constraints, their associated gradients and their associated
       Hessians.}
-
     \item{\code{A}:}{Object of class \code{activeBindingFunction}:
       Left-hand side of equality cosntraints.}
     \item{\code{b}:}{Object of class \code{activeBindingFunction}:
       Right-hand side of equality cosntraints.}
   }
 }
-
-\section{Class-Based Methods}{
-  \describe{
-    \item{\code{initialize(...)}:}{ ~~ }
-    \item{\code{finalize()}:}{ ~~ }
-  }
-}
-
 
 \examples{
 showClass("Rcpp_DCP")

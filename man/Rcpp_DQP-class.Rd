@@ -29,15 +29,6 @@ All reference classes extend and inherit methods from \code{"\linkS4class{envRef
   }
 }
 
-\section{Class-Based Methods}{
-  \describe{
-    \item{\code{initialize(...)}:}{ ~~ }
-    \item{\code{finalize()}:}{ ~~ }
-    \item{\code{cps()}:}{ ~~ }
-  }
-}
-
-
 \examples{
 showClass("Rcpp_DQP")
 }
