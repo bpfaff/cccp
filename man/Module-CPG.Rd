@@ -9,6 +9,7 @@
 \alias{DQP}
 \alias{CPS}
 \alias{rpp}
+\alias{gpp}
 
 \title{
 	Rcpp module: CPG
@@ -32,6 +33,7 @@
   }
   functions: \describe{
     \item{rpp}{Function for solving risk parity portfolios.}
+    \item{gpp}{Function for solving a geometric program.}
   }
 }
     

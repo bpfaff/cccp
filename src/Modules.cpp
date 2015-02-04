@@ -105,6 +105,7 @@ RCPP_MODULE(CPG){
     ;
 
   Rcpp::function("rpp", &rpp);
+  Rcpp::function("gpp", &gpp);
 }
 
 

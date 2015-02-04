@@ -64,6 +64,7 @@ class CONEC {
   friend class DNL;
   friend class DQP;
   friend CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl);
+  friend CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, mat b, CTRL& ctrl);
 
   double snrm2(mat s);
   vec sdot(mat s, mat z);
@@ -294,6 +295,7 @@ class PDV {
   friend class DQP;
   friend class CONEC;
   friend CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl);
+  friend CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, mat b, CTRL& ctrl);
 
  private:
   mat x;
@@ -350,3 +352,5 @@ class CPS {
 
 // Function for solving risk parity portfolios
 CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl);
+// Function for solving geometric programs
+CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, mat b, CTRL& ctrl);
