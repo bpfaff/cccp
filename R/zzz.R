@@ -2,9 +2,6 @@ loadModule("CPG", TRUE)
 
 evalqOnLoad({
 ##
-## Class union of convex program definitions
-setClassUnion("CPD", members = c("Rcpp_DLP", "Rcpp_DQP", "Rcpp_DNL", "Rcpp_DCP"))
-##
 ## show-methods for reference objects
 setMethod("show", "Rcpp_CTRL", function(object){
     cat("Control parameters used in optimization:\n\n")

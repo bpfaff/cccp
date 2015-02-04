@@ -174,7 +174,7 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
     LambdaPrd = cList.sprd(Lambda, Lambda);
     LHS.submat(0, 0, ne - 1, ne - 1) = H;
     sigma = 0.0;
-    // Finding solution of increment in two-round loop 
+    // Finding solution of increments in two-round loop 
     // (same for affine and combined solution)
 
   } // end i-loop
