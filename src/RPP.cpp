@@ -159,7 +159,7 @@ CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl){
 	dpdv->s = cList.sinv(dpdv->s, Lambda);
 	Ws3 = cList.ssnt(dpdv->s, WList, false, true);
 	dpdv->z = dpdv->z - Ws3;
-	// Solving reduced reduced system
+	// Solving reduced system
 	cEpi = cList;
 	WEpi = WList; 
 	a = dpdv->z.at(0, 0); // Slack with respect to f0
