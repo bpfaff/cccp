@@ -654,7 +654,7 @@ mat rpp_h0(mat x, mat P, mat mrc){
 std::vector<mat> fgp(mat x, mat F, mat g){
   std::vector<mat> ans;
   double ysum, ymax;
-  mat y, fval(1, 1), gval(F.n_cols, 1), hval(F.n_cols, F.n_cols);
+  mat y, fval(1, 1), gval(F.n_cols, 1), hval(F.n_cols, F.n_cols), Fisc;
 
   y = F * x + g;
   ymax = y.max();
@@ -665,7 +665,10 @@ std::vector<mat> fgp(mat x, mat F, mat g){
   y /= ysum;
   gval = F.t() * y;
 
-  hval = F.t() * (diagmat(y) - y * y.t()) * F;
+  Fisc = sqrt(diagmat(y)) * (F - accu(gval));
+  hval = Fisc.t() * Fisc;
+
+  //  hval = F.t() * (diagmat(y) - y * y.t()) * F;
 
   ans.push_back(fval);
   ans.push_back(gval);
