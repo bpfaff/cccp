@@ -7,9 +7,7 @@ using namespace arma;
 CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, mat b, CTRL& ctrl){
   // Initializing objects
   int n = cList.n, ne = n - 1, m = sum(cList.dims), 
-    mnl = cList.dims(0), sizeLHS = A.n_rows + A.n_cols - 1;
-  // Constraints
-  CONEC cEpi;
+    mnl = cList.dims(0), sizeLHS = A.n_rows + A.n_cols;
   // Primal dual variables
   PDV* pdv = cList.initpdv(A.n_rows);
   PDV* dpdv = cList.initpdv(A.n_rows);
@@ -21,19 +19,20 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
   Rcpp::NumericVector state = cps->get_state();
   bool checkRgap = false, backTrack;
   double gap = m, resx, resy, resz, pcost = 1.0, dcost = 1.0, rgap = NA_REAL, 
-    pres = 1.0, dres = 1.0, pres0 = 1.0, dres0 = 1.0, sigma, mu, ts, tz, tm, step, a, x1;
+    pres = 1.0, dres = 1.0, pres0 = 1.0, dres0 = 1.0, sigma, mu, ts, tz, tm, step, ymax, ysum;
   vec ss(3);
-  mat H(ne, ne), rx, ry, rz(cList.G.n_rows, 1), Lambda, LambdaPrd, Ws3, x, 
-    ux(ne, 1), uz, RHS(ne, 1);
+  mat H(ne, ne), rx, ry, rz(cList.G.n_rows, 1), Lambda, LambdaPrd, Ws3, x, y(mnl, 1), Fval(mnl, 1);
   mat OneE = cList.sone();
   // Initialising LHS matrices
   mat LHS = zeros(sizeLHS, sizeLHS);
   if(A.n_rows > 0){ // equality constraints
-    LHS.submat(ne, 0, sizeLHS - 1, ne - 1) = A(span::all, span(0, ne - 1));
-    LHS.submat(0, ne, ne - 1, sizeLHS - 1) = A(span::all, span(0, ne - 1)).t();
+    LHS.submat(n, 0, sizeLHS - 1, n - 1) = A;
+    LHS.submat(0, n, n - 1, sizeLHS - 1) = A.t();
   }
+  mat RHS(sizeLHS, 1);
+  mat rhs1(m, m), ans(sizeLHS, 1); 
   std::vector<mat> FGP;
-  std::vector<std::map<std::string,mat> > WList, WEpi;
+  std::vector<std::map<std::string,mat> > WList;
   // Setting control parameters
   Rcpp::List params(ctrl.get_params());
   bool trace = Rcpp::as<bool>(params["trace"]);
@@ -58,20 +57,11 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
       H += pdv->z.at(j, 0) * FGP[2];
     }
     cList.h(0, 0) = cList.h(0, 0) - pdv->x.at(n - 1, 0);
-    /*
-    Rcpp::Rcout << "Fvals:" << std::endl;
-    cList.h.print();
-    Rcpp::Rcout << "Gradient:" << std::endl;
-    cList.G.print();
-    Rcpp::Rcout << "Hessian:" << std::endl;
-    H.print();
-    */
     // Computing gap
     gap = sum(cList.sdot(pdv->s, pdv->z));
     // Computing residuals
     // Dual Residuals
     rx = cList.G.t() * pdv->z + A.t() * pdv->y;
-    rx.at(rx.n_rows - 1, 0) += 1.0;
     resx = norm(rx);
     // Primal Residuals
     ry = b - A * pdv->x;
@@ -173,10 +163,106 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
     }
     LambdaPrd = cList.sprd(Lambda, Lambda);
     LHS.submat(0, 0, ne - 1, ne - 1) = H;
+    LHS.submat(0, 0, n - 1, n - 1) += cList.gwwg(WList);
     sigma = 0.0;
     // Finding solution of increments in two-round loop 
     // (same for affine and combined solution)
+    for(int ii = 0; ii < 2; ii++){
+      mu = gap / m;
+      dpdv->s = -1.0 * LambdaPrd + OneE * sigma * mu;
+      dpdv->x = -1.0 * rx;
+      dpdv->y = -1.0 * ry;
+      dpdv->z = -1.0 * rz;
+      // Solving KKT-system
+      try{
+	dpdv->s = cList.sinv(dpdv->s, Lambda);
+	Ws3 = cList.ssnt(dpdv->s, WList, false, true);
+	dpdv->z = dpdv->z - Ws3;
+	rhs1 = cList.gwwz(WList, dpdv->z);
+	RHS.submat(0, 0, n - 1, 0) = dpdv->x + rhs1;
+	if(dpdv->y.n_rows > 0){
+	  RHS.submat(n, 0, RHS.n_rows - 1, 0) = dpdv->y;
+	}
+	ans = solve(LHS, RHS);
+	dpdv->x = ans.submat(0, 0, n - 1, 0);
+	if(dpdv->y.n_rows > 0){
+	  dpdv->y = ans.submat(n, 0, RHS.n_rows - 1, 0);
+	}
+	dpdv->z = cList.G * dpdv->x - dpdv->z;
+	dpdv->z = cList.ssnt(dpdv->z, WList, true, true);
+	dpdv->s = dpdv->s - dpdv->z;
+      } catch(std::runtime_error &ex) {
+	ts = cList.smss(pdv->s).max();
+	tz = cList.smss(pdv->z).max();
+	state["pobj"] = pcost;
+	state["dobj"] = dcost;
+	state["dgap"] = gap;
+	state["certp"] = pres;
+	state["certd"] = dres;
+	state["pslack"] = -ts;
+	state["dslack"] = -tz;
+	if(!std::isnan(rgap)){
+	  state["rgap"] = rgap;
+	}
+	cps->set_state(state);
+	cps->set_status("unknown");
+	cps->set_niter(i);
+	cps->set_pdv(*pdv);
+	if(trace){
+	  Rcpp::Rcout << "Terminated (singular KKT matrix)." << std::endl;
+	}
+	return cps;
+      } catch(...) {
+	::Rf_error("C++ exception (unknown reason)"); 
+      }
+      // Maximum step to boundary
+      dpdv->s = cList.sslb(dpdv->s, Lambda, false);
+      dpdv->z = cList.sslb(dpdv->z, Lambda, false); 
+      ts = cList.smss(dpdv->s).max();
+      tz = cList.smss(dpdv->z).max();
+      ss << 0.0 << ts << tz << endr;
+      tm = ss.max();
+      if(tm == 0.0){
+	step = 1.0;
+      } else {
+	step = std::min(1.0, sadj / tm);
+      }
+      // Backtracking until x is in the domain of f
+      backTrack = true;
+      while(backTrack){
+	x = pdv->x + step * dpdv->x;
+	for(int j = 0; j < mnl; j++){
+	  y = FList[j] * x(span(0, ne - 1), span::all) + gList[j];
+	  ymax = y.max();
+	  y = exp(y - ymax);
+	  ysum = norm(y, 1);
+	  Fval(j, 0) = ymax + log(ysum);
+	}
+	Fval(0, 0) -= x.at(n - 1, 0); 
+	if(is_finite(Fval)){
+	  backTrack = false;
+	} else {
+	  step *= beta;
+	}
+      } // end while-loop domain of f
+      if(ii == 0){
+	sigma = pow((1.0 - step), 3.0);
+      }
+    } // end ii-loop
 
+    // Updating x, y; s and z (in current scaling)
+    pdv->x = pdv->x + step * dpdv->x;
+    pdv->y = pdv->y + step * dpdv->y;
+
+    dpdv->s = cList.SorZupdate(dpdv->s, Lambda, step);
+    dpdv->z = cList.SorZupdate(dpdv->z, Lambda, step);
+
+    // Updating NT-scaling and Lagrange Multipliers
+    WList = cList.ntsu(dpdv->s, dpdv->z, WList);
+    Lambda = cList.getLambda(WList);
+    pdv->s = cList.ssnt(Lambda, WList, false, true);
+    pdv->z = cList.ssnt(Lambda, WList, true, false);
+    gap = sum(cList.sdot(Lambda, Lambda));
   } // end i-loop
 
   // Preparing result for non-convergence in maxiters iterations
