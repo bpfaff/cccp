@@ -172,14 +172,9 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
     cEpi = cList;
     WEpi = WList; 
     cEpi.n -= 1;
-    //cEpi.G.set_size(cList.G.n_rows, ne);
-    //cEpi.G = cList.G(span::all, span(0, ne - 1)); // removing last column
-    //cEpi.G = cEpi.G(span(1, cEpi.G.n_rows - 1), span::all); // removing first row pertinent to f0
-    //cEpi.h = cEpi.h(span(1, cEpi.G.n_rows - 1), span::all); // removing first row pertinent to f0
     cEpi.G.shed_col(n - 1);
     cEpi.G.shed_row(0);
     cEpi.h.shed_row(0);
-    Rcpp::Rcout << "Fine until here" << std::endl;
     // Distinguishing three cases:
     // mnl == 1 and K > 1 : only f0 and NNO constraints
     // mnl > 1 and K == 1 : f0 and posinomial constraints; no NNO constraints
