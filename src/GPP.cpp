@@ -210,7 +210,6 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
     // Finding solution of increments in two-round loop 
     // (same for affine and combined solution)
     for(int ii = 0; ii < 2; ii++){
-      Rcpp::Rcout << "In ii-loop: " << ii << std::endl;
       mu = gap / m;
       dpdv->s = -1.0 * LambdaPrd + OneE * sigma * mu;
       dpdv->x = -1.0 * rx;
