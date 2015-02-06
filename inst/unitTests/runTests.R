@@ -1,4 +1,4 @@
-pkg <- "cccp3"
+pkg <- "cccp"
 
 if(require("RUnit", quietly = TRUE))
 {

@@ -1,4 +1,4 @@
-#include "cccp3.h"
+#include "cccp.h"
 /*
  *
  * Methods for Convex Programs with nonlinear constraints

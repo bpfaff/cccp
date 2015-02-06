@@ -1,7 +1,7 @@
 /*
  * Function for solving risk parity portfolios (long-only)
 */
-#include "cccp3.h"
+#include "cccp.h"
 using namespace arma;
 
 CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl){

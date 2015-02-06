@@ -1,7 +1,7 @@
 /*
  * Function for solving a geometric program
 */
-#include "cccp3.h"
+#include "cccp.h"
 using namespace arma;
 
 CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, mat b, CTRL& ctrl){

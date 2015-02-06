@@ -1,4 +1,4 @@
-#include "cccp3.h"
+#include "cccp.h"
 
 #ifndef ARMA_H
 #define ARMA_H
