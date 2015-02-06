@@ -665,10 +665,8 @@ std::vector<mat> fgp(mat x, mat F, mat g){
   y /= ysum;
   gval = F.t() * y;
 
-  Fisc = sqrt(diagmat(y)) * (F - accu(gval));
+  Fisc = sqrt(diagmat(y)) * (F - ones(F.n_rows, 1) * gval.t());
   hval = Fisc.t() * Fisc;
-
-  //  hval = F.t() * (diagmat(y) - y * y.t()) * F;
 
   ans.push_back(fval);
   ans.push_back(gval);

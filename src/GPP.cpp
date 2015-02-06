@@ -7,7 +7,9 @@ using namespace arma;
 CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, mat b, CTRL& ctrl){
   // Initializing objects
   int n = cList.n, ne = n - 1, m = sum(cList.dims), 
-    mnl = cList.dims(0), sizeLHS = A.n_rows + A.n_cols;
+    mnl = cList.dims(0), sizeLHS = A.n_rows + A.n_cols - 1;
+  // Constraints
+  CONEC cEpi;
   // Primal dual variables
   PDV* pdv = cList.initpdv(A.n_rows);
   PDV* dpdv = cList.initpdv(A.n_rows);
@@ -19,20 +21,20 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
   Rcpp::NumericVector state = cps->get_state();
   bool checkRgap = false, backTrack;
   double gap = m, resx, resy, resz, pcost = 1.0, dcost = 1.0, rgap = NA_REAL, 
-    pres = 1.0, dres = 1.0, pres0 = 1.0, dres0 = 1.0, sigma, mu, ts, tz, tm, step, ymax, ysum;
+    pres = 1.0, dres = 1.0, pres0 = 1.0, dres0 = 1.0, sigma, mu, ts, tz, tm, step, a, x1,
+    ymax, ysum;
   vec ss(3);
-  mat H(ne, ne), rx, ry, rz(cList.G.n_rows, 1), Lambda, LambdaPrd, Ws3, x, y(mnl, 1), Fval(mnl, 1);
+  mat H(ne, ne), rx, ry, rz(cList.G.n_rows, 1), Lambda, LambdaPrd, Ws3, x, ans(sizeLHS, 1),
+    ux(ne, 1), uz, RHS(sizeLHS, 1), y, Fval(mnl, 1);
   mat OneE = cList.sone();
   // Initialising LHS matrices
   mat LHS = zeros(sizeLHS, sizeLHS);
   if(A.n_rows > 0){ // equality constraints
-    LHS.submat(n, 0, sizeLHS - 1, n - 1) = A;
-    LHS.submat(0, n, n - 1, sizeLHS - 1) = A.t();
+    LHS.submat(ne, 0, sizeLHS - 1, ne - 1) = A(span::all, span(0, ne - 1));
+    LHS.submat(0, ne, ne - 1, sizeLHS - 1) = A(span::all, span(0, ne - 1)).t();
   }
-  mat RHS(sizeLHS, 1);
-  mat rhs1(m, m), ans(sizeLHS, 1); 
   std::vector<mat> FGP;
-  std::vector<std::map<std::string,mat> > WList;
+  std::vector<std::map<std::string,mat> > WList, WEpi;
   // Setting control parameters
   Rcpp::List params(ctrl.get_params());
   bool trace = Rcpp::as<bool>(params["trace"]);
@@ -62,6 +64,7 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
     // Computing residuals
     // Dual Residuals
     rx = cList.G.t() * pdv->z + A.t() * pdv->y;
+    rx.at(rx.n_rows - 1, 0) += 1.0; // last element of 'q' is 1.0 * t
     resx = norm(rx);
     // Primal Residuals
     ry = b - A * pdv->x;
@@ -162,12 +165,56 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
       Lambda = cList.getLambda(WList);
     }
     LambdaPrd = cList.sprd(Lambda, Lambda);
-    LHS.submat(0, 0, ne - 1, ne - 1) = H;
-    LHS.submat(0, 0, n - 1, n - 1) += cList.gwwg(WList);
     sigma = 0.0;
+    //
+    // Creating objects for epigraph form
+    //
+    cEpi = cList;
+    WEpi = WList; 
+    cEpi.n -= 1;
+    //cEpi.G.set_size(cList.G.n_rows, ne);
+    //cEpi.G = cList.G(span::all, span(0, ne - 1)); // removing last column
+    //cEpi.G = cEpi.G(span(1, cEpi.G.n_rows - 1), span::all); // removing first row pertinent to f0
+    //cEpi.h = cEpi.h(span(1, cEpi.G.n_rows - 1), span::all); // removing first row pertinent to f0
+    cEpi.G.shed_col(n - 1);
+    cEpi.G.shed_row(0);
+    cEpi.h.shed_row(0);
+    Rcpp::Rcout << "Fine until here" << std::endl;
+    // Distinguishing three cases:
+    // mnl == 1 and K > 1 : only f0 and NNO constraints
+    // mnl > 1 and K == 1 : f0 and posinomial constraints; no NNO constraints
+    // mnl > 1 and K > 1 : f0, posinomial constraints and cone constraints
+    // Problem to be solved is reduced to x0
+
+    // mnl == 1 and K > 1
+    if((mnl == 1) && (cList.K > 1)){
+      WEpi.erase(WEpi.begin());
+      cEpi.K -= 1;
+      cEpi.sidx.shed_row(0);
+      cEpi.sidx -= 1;
+      cEpi.sidx.at(0, 0) = 0;
+      cEpi.cone.erase(cEpi.cone.begin());
+      cEpi.dims.shed_row(0);
+    }
+    // mnl > 1 and K == 1
+    if((mnl > 1) && (cList.K == 1)){
+      WEpi[0]["dnl"] = WEpi[0]["dnl"](span(1, mnl - 1), span::all);
+      WEpi[0]["dnli"] = WEpi[0]["dnli"](span(1, mnl - 1), span::all);
+      cEpi.dims(0) -= 1;
+      cEpi.sidx(0, 1) -= 1;
+    }
+    // mnl > 1 and K > 1
+    if((mnl > 1) && (cList.K > 1)){
+      WEpi[0]["dnl"] = WEpi[0]["dnl"](span(1, mnl - 1), span::all);
+      WEpi[0]["dnli"] = WEpi[0]["dnli"](span(1, mnl - 1), span::all);
+      cEpi.dims(0) -= 1;
+      cEpi.sidx = cEpi.sidx - 1;
+      cEpi.sidx(0, 0) = 0;
+    }
     // Finding solution of increments in two-round loop 
     // (same for affine and combined solution)
     for(int ii = 0; ii < 2; ii++){
+      Rcpp::Rcout << "In ii-loop: " << ii << std::endl;
       mu = gap / m;
       dpdv->s = -1.0 * LambdaPrd + OneE * sigma * mu;
       dpdv->x = -1.0 * rx;
@@ -178,18 +225,30 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
 	dpdv->s = cList.sinv(dpdv->s, Lambda);
 	Ws3 = cList.ssnt(dpdv->s, WList, false, true);
 	dpdv->z = dpdv->z - Ws3;
-	rhs1 = cList.gwwz(WList, dpdv->z);
-	RHS.submat(0, 0, n - 1, 0) = dpdv->x + rhs1;
-	if(dpdv->y.n_rows > 0){
-	  RHS.submat(n, 0, RHS.n_rows - 1, 0) = dpdv->y;
+	// Solving reduced system
+	a = dpdv->z.at(0, 0); // Slack with respect to f0
+	x1 = dpdv->x.at(n - 1, 0); // Epigraph-variable 't'
+	ux = dpdv->x(span(0, ne - 1), span::all);
+	ux = ux + dpdv->x.at(n - 1, 0) * cList.G.submat(0, 0, 0, ne - 1).t();
+	uz = dpdv->z(span(1, dpdv->z.n_rows - 1), span::all);
+	RHS.submat(0, 0, ne - 1, 0) = ux + cEpi.gwwz(WEpi, uz);
+	LHS.submat(0, 0, ne - 1, ne - 1) = H + cEpi.gwwg(WEpi);
+	if(pdv->y.n_rows > 0){
+	  RHS.submat(ne, 0, RHS.n_rows - 1, 0) = dpdv->y;
 	}
+	// Solving KKT-system
 	ans = solve(LHS, RHS);
-	dpdv->x = ans.submat(0, 0, n - 1, 0);
+	dpdv->x.submat(0, 0, ne - 1, 0) = ans.submat(0, 0, ne - 1, 0);
 	if(dpdv->y.n_rows > 0){
-	  dpdv->y = ans.submat(n, 0, RHS.n_rows - 1, 0);
+	  dpdv->y = ans.submat(ne, 0, RHS.n_rows - 1, 0);
 	}
-	dpdv->z = cList.G * dpdv->x - dpdv->z;
-	dpdv->z = cList.ssnt(dpdv->z, WList, true, true);
+	// Preparing dpdv
+	uz = cEpi.G * dpdv->x.submat(0, 0, ne - 1, 0) - uz;
+	dpdv->z(span(1, dpdv->z.n_rows - 1), span::all) = cEpi.ssnt(uz, WEpi, true, true);
+	dpdv->z.at(0, 0) = -dpdv->x.at(dpdv->x.n_rows - 1, 0) * WList[0]["dnl"].at(0, 0);
+	x1 = dot(cList.G.submat(0, 0, 0, ne - 1), dpdv->x.submat(0, 0, ne - 1, 0)) + 
+	  pow(WList[0]["dnl"].at(0, 0), 2) * dpdv->x.at(n - 1, 0) - a;
+	dpdv->x.at(n - 1, 0) = x1;
 	dpdv->s = dpdv->s - dpdv->z;
       } catch(std::runtime_error &ex) {
 	ts = cList.smss(pdv->s).max();
@@ -236,9 +295,9 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
 	  ymax = y.max();
 	  y = exp(y - ymax);
 	  ysum = norm(y, 1);
-	  Fval(j, 0) = ymax + log(ysum);
+	  Fval.at(j, 0) = ymax + log(ysum);
 	}
-	Fval(0, 0) -= x.at(n - 1, 0); 
+	Fval.at(0, 0) -= x.at(n - 1, 0); 
 	if(is_finite(Fval)){
 	  backTrack = false;
 	} else {

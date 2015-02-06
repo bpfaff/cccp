@@ -1,5 +1,6 @@
 ACNT	Analytic center with equality constraints
 FPLN	Floor Planning: linear objective with non-linear constraints
+GP	Geometric Program
 LPIC	Solving Linear Program with linear inequality constraints
 LPCC	Solving Linear Program with NNO, SOC and PSD constraints
 L1	Solving L1-norm approximation by means of LP 

@@ -204,7 +204,7 @@ PDV* DCP::sxyz(PDV* pdv, mat LHS, std::vector<std::map<std::string,mat> > WList)
     pdv->z(span(1, pdv->z.n_rows - 1), span::all) = cEpi.ssnt(uz, WEpi, true, true);
   }
   pdv->z.at(0, 0) = -pdv->x.at(pdv->x.n_rows - 1, 0) * WList[0]["dnl"].at(0, 0);
-  x1 = dot(cEpi.G(0, span::all), pdv->x.submat(0, 0, ne - 1, 0)) + 
+  x1 = dot(cList.G.submat(0, 0, 0, ne - 1), pdv->x.submat(0, 0, ne - 1, 0)) + 
     pow(WList[0]["dnl"].at(0, 0), 2) * pdv->x.at(n - 1, 0) - a;
   pdv->x.at(n - 1, 0) = x1;
   return pdv;

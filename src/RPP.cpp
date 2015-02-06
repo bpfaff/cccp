@@ -186,7 +186,7 @@ CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl){
 	uz = cEpi.G * dpdv->x.submat(0, 0, ne - 1, 0) - uz;
 	dpdv->z(span(1, dpdv->z.n_rows - 1), span::all) = cEpi.ssnt(uz, WEpi, true, true);
 	dpdv->z.at(0, 0) = -dpdv->x.at(dpdv->x.n_rows - 1, 0) * WList[0]["dnl"].at(0, 0);
-	x1 = dot(cEpi.G(0, span::all), dpdv->x.submat(0, 0, ne - 1, 0)) + 
+	x1 = dot(cList.G.submat(0, 0, 0, ne - 1), dpdv->x.submat(0, 0, ne - 1, 0)) + 
 	  pow(WList[0]["dnl"].at(0, 0), 2) * dpdv->x.at(n - 1, 0) - a;
 	dpdv->x.at(n - 1, 0) = x1;
 	dpdv->s = dpdv->s - dpdv->z;
