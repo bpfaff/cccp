@@ -206,6 +206,7 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
       cEpi.sidx = cEpi.sidx - 1;
       cEpi.sidx(0, 0) = 0;
     }
+    LHS.submat(0, 0, ne - 1, ne - 1) = H + cEpi.gwwg(WEpi);	
     // Finding solution of increments in two-round loop 
     // (same for affine and combined solution)
     for(int ii = 0; ii < 2; ii++){
@@ -227,7 +228,6 @@ CPS* gpp(std::vector<mat> FList, std::vector<mat> gList, CONEC& cList, mat A, ma
 	ux = ux + dpdv->x.at(n - 1, 0) * cList.G.submat(0, 0, 0, ne - 1).t();
 	uz = dpdv->z(span(1, dpdv->z.n_rows - 1), span::all);
 	RHS.submat(0, 0, ne - 1, 0) = ux + cEpi.gwwz(WEpi, uz);
-	LHS.submat(0, 0, ne - 1, ne - 1) = H + cEpi.gwwg(WEpi);
 	if(pdv->y.n_rows > 0){
 	  RHS.submat(ne, 0, RHS.n_rows - 1, 0) = dpdv->y;
 	}

@@ -147,6 +147,24 @@ CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl){
     }
     LambdaPrd = cList.sprd(Lambda, Lambda);
     sigma = 0.0;
+
+    //
+    // Creating objects for epigraph form
+    //
+    cEpi = cList;
+    WEpi = WList; 
+    cEpi.n -= 1;
+    cEpi.K -= 1;
+    cEpi.G.shed_col(n - 1);
+    cEpi.G.shed_row(0);
+    cEpi.h.shed_row(0);
+    cEpi.sidx.shed_row(0);
+    cEpi.sidx -= 1;
+    cEpi.sidx.at(0, 0) = 0;
+    cEpi.cone.erase(cEpi.cone.begin());
+    cEpi.dims.shed_row(0);
+    WEpi.erase(WEpi.begin());
+    LHS = H + cEpi.gwwg(WEpi);	
     // Finding solution of increments in two-round loop 
     // (same for affine and combined solution)
     for(int ii = 0; ii < 2; ii++){
@@ -160,26 +178,11 @@ CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl){
 	Ws3 = cList.ssnt(dpdv->s, WList, false, true);
 	dpdv->z = dpdv->z - Ws3;
 	// Solving reduced system
-	cEpi = cList;
-	WEpi = WList; 
 	a = dpdv->z.at(0, 0); // Slack with respect to f0
-	x1 = dpdv->x.at(dpdv->x.n_rows, 0); // Epigraph-variable 't'
-	uz = dpdv->z;
-	cEpi.n -= 1;
-	cEpi.G.set_size(cList.G.n_rows, ne);
-	cEpi.G = cList.G(span::all, span(0, ne - 1)); // removing last column
+	x1 = dpdv->x.at(n - 1, 0); // Epigraph-variable 't'
 	ux = dpdv->x(span(0, ne - 1), span::all);
-	ux = ux + dpdv->x.at(n - 1, 0) * cEpi.G.row(0).t();
-	WEpi.erase(WEpi.begin());
-	cEpi.K -= 1;
-	cEpi.G = cEpi.G(span(1, cEpi.G.n_rows - 1), span::all); // removing first row pertinent to f0
-	cEpi.sidx = cEpi.sidx(span(1, cEpi.sidx.n_rows - 1), span::all);
-	cEpi.sidx -= 1;
-	cEpi.sidx.at(0, 0) = 0;
-	cEpi.cone.erase(cEpi.cone.begin());
-	cEpi.dims.shed_row(0);
-	LHS = H + cEpi.gwwg(WEpi);
-	uz = uz(span(1, uz.n_rows - 1), span::all); 
+	ux = ux + dpdv->x.at(n - 1, 0) * cList.G.submat(0, 0, 0, ne - 1).t();
+	uz = dpdv->z(span(1, dpdv->z.n_rows - 1), span::all);
 	RHS = ux + cEpi.gwwz(WEpi, uz);
 	dpdv->x.submat(0, 0, ne - 1, 0) = solve(LHS, RHS);
 	// Preparing dpdv
