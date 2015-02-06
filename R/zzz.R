@@ -126,7 +126,7 @@ setMethod("show", signature = "Rcpp_CPS", function(object){
     }
     cat(paste("Status of solution:", object$status, "\n"))
     cat(paste("Count of iterations:", object$niter, "\n\n"))
-    cat("Solutions are contained in 'pdv'.\n")
+    cat("Solutions are contained in 'PDV'.\n")
     cat("Use 'getx()', 'gety()', 'gets()' and 'getz()', respectively.\n")
 })
 ## cps-methods
