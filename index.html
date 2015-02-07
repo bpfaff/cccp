@@ -1,70 +1,52 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
-    <meta charset='utf-8'>
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="viewport" content="width=640">
-
-    <link rel="stylesheet" href="stylesheets/core.css" media="screen">
-    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-
-    <script type="text/javascript" src="javascripts/modernizr.js"></script>
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
-    <script type="text/javascript">
-      $(document).ready(function () {
-        $('#main_content').headsmart()
-      })
-    </script>
     <title>cccp by bpfaff</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
   </head>
-
   <body>
-    <a id="forkme_banner" href="https://github.com/bpfaff/cccp3">View on GitHub</a>
-    <div class="shell">
-
+    <div class="wrapper">
       <header>
-        <span class="ribbon-outer">
-          <span class="ribbon-inner">
-            <h1>cccp</h1>
-            <h2>Development/Branches of cccp Package (also hosted on R-Forge)</h2>
-          </span>
-          <span class="left-tail"></span>
-          <span class="right-tail"></span>
-        </span>
+        <h1>cccp</h1>
+        <p>Development/Branches of cccp Package (also hosted on R-Forge)</p>
+        <p class="view"><a href="https://github.com/bpfaff/cccp">View the Project on GitHub <small>bpfaff/cccp</small></a></p>
+        <ul>
+          <li><a href="https://github.com/bpfaff/cccp/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/bpfaff/cccp/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/bpfaff/cccp">View On <strong>GitHub</strong></a></li>
+        </ul>
       </header>
-
-      <section id="downloads">
-        <span class="inner">
-          <a href="https://github.com/bpfaff/cccp3/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/bpfaff/cccp3/tarball/master" class="tgz"><em>download</em> .TGZ</a>
-        </span>
-      </section>
-
-
-      <span class="banner-fix"></span>
-
-
-      <section id="main_content">
+      <section>
         <p>This package contains routines for solving convex optimization problems with cone constraints by means of interior-point methods. The implemented routines are adopted from the cvxopt-software. The package imports the CRAN-package RCPP and links to Rcpp and RcppArmadillo. The package does contain a Rcpp-module.</p>
 
 <p>The main function cccp() can be utilized for solving cone constrained LPs and QPs. In addition, the function can also be employed for solving LPs with non-linear constraints or nonlinear objective functions with nonlinear and/or cone constraints. Convenience functions for solving (general) risk parity portfolio optimizations, minimizing L1-norms and solving geometric programs are made available as functions rp(), l1() and gp(), respectively.</p>
       </section>
-
-      <footer>
-        <span class="ribbon-outer">
-          <span class="ribbon-inner">
-            <p>this project by <a href="https://github.com/bpfaff">bpfaff</a> can be found on <a href="https://github.com/bpfaff/cccp3">GitHub</a></p>
-          </span>
-          <span class="left-tail"></span>
-          <span class="right-tail"></span>
-        </span>
-        <p>Generated with <a href="http://pages.github.com">GitHub Pages</a> using Merlot</p>
-        <span class="octocat"></span>
-      </footer>
-
     </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/bpfaff">bpfaff</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-59494807-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
 
-    
   </body>
 </html>
