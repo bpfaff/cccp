@@ -1,6 +1,6 @@
 Package: cccp
-Version: 0.0-1
-Date: 2015-01-08
+Version: 0.2-3
+Date: 2015-02-09
 Title: Cone Constrained Convex Problems
 Authors@R: c(person("Bernhard", "Pfaff", role = c("aut", "cre"), email = "bernhard@pfaffikus.de"), person("Lieven", "Vandenberghe", role = "cph", comment = "copyright holder of cvxopt"), person("Martin", "Andersen", role = "cph", comment = "copyright holder of cvxopt"), person("Joachim", "Dahl", role = "cph", comment = "copyright holder of cvxopt"))
 Maintainer: Bernhard Pfaff <bernhard@pfaffikus.de>
