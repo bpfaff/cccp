@@ -2,12 +2,12 @@ Package: cccp
 Version: 0.0-1
 Date: 2015-01-08
 Title: Cone Constrained Convex Problems
-Authors@R: person("Bernhard", "Pfaff", role = c("aut", "cre"), email = "bernhard@pfaffikus.de")
+Authors@R: c(person("Bernhard", "Pfaff", role = c("aut", "cre"), email = "bernhard@pfaffikus.de"), person("Lieven", "Vandenberghe", role = "cph", comment = "copyright holder of cvxopt"), person("Martin", "Andersen", role = "cph", comment = "copyright holder of cvxopt"), person("Joachim", "Dahl", role = "cph", comment = "copyright holder of cvxopt"))
 Maintainer: Bernhard Pfaff <bernhard@pfaffikus.de>
 Depends: R (>= 3.0.1), methods
 Suggests: RUnit, numDeriv
 LazyLoad: yes
-Description: This package contains routines for solving convex optimization problems with cone constraints by means of interior-point methods. The implemented routines are adopted from the cvxopt-software. 
+Description: This package contains routines for solving convex optimization problems with cone constraints by means of interior-point methods. The implemented algorithms have been partially ported from the Python-module of cvxopt, which has been released under GPL 3 or newer (see http://cvxopt.org for more information). 
 Imports: Rcpp (>= 0.11.2)
 LinkingTo: Rcpp, RcppArmadillo
 License: GPL (>= 3)
