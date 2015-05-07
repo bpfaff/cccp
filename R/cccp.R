@@ -27,6 +27,9 @@ cccp <- function(P = NULL, q = NULL, A = NULL, b = NULL, cList = list(),
     } else if(is.null(P)){
         cpd <- dlp(q, A, b, cList)
     } else {
+        if(is.null(q)){
+            q <- rep(0, ncol(P))
+        }
         cpd <- dqp(P, q, A, b, cList)
     }
 
