@@ -12,8 +12,8 @@
 }
 
 \usage{
-ctrl(maxiters = 100L, abstol = 1e-07, reltol = 1e-06,
-     feastol = 1e-07, stepadj = 0.95, beta = 0.5, trace = TRUE)
+ctrl(maxiters = 100L, abstol = 1e-06, reltol = 1e-06,
+     feastol = 1e-06, stepadj = 0.95, beta = 0.5, trace = TRUE)
 }
 
 \arguments{
