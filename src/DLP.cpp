@@ -500,7 +500,8 @@ CPS* DLP::cps(CTRL& ctrl){
     pdv->z = cList.ssnt(Lambda, WList, true, false);
     pdv->kappa = lg / dgi;
     pdv->tau = lg * dgi;
-    gap = pow(sqrt(dot(Lambda, Lambda)) / pdv->tau, 2.0);
+    // gap = pow(sqrt(dot(Lambda, Lambda)) / pdv->tau, 2.0);
+    gap = dot(Lambda, Lambda);
   } // end i-loop
 
   pdv->x = pdv->x / pdv->tau;
