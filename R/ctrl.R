@@ -1,6 +1,6 @@
 ##
 ## Function for creating 'CTRL' objects 
-ctrl <- function(maxiters = 100L, abstol = 1e-6, reltol = 1e-6, feastol = 1e-7,
+ctrl <- function(maxiters = 100L, abstol = 1e-6, reltol = 1e-6, feastol = 1e-6,
                  stepadj = 0.95, beta = 0.5, trace = TRUE){
 
     if(!is.integer(maxiters)){
