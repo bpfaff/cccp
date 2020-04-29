@@ -114,7 +114,7 @@ PDV* DLP::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat>
   if(pdv->y.n_rows > 0){
     RHS.submat(n, 0, RHS.n_rows - 1, 0) = pdv->y;
   }
-  ans = solve(LHS, RHS);
+  ans = solve(LHS, RHS, solve_opts::refine);
   pdv->x = ans.submat(0, 0, n - 1, 0);
   if(pdv->y.n_rows > 0){
     pdv->y = ans.submat(n, 0, RHS.n_rows - 1, 0);
@@ -245,19 +245,22 @@ CPS* DLP::cps(CTRL& ctrl){
   //
   for(int i = 0; i < maxiters; i++){
     // Evaluate residuals, gap and stopping criteria
-    // Dual residuals
+    // Dual residuals: hrx = -A'*y - G'z
     hrx = -(A.t() * pdv->y) - cList.G.t() * pdv->z;
     hresx = sqrt(dot(hrx, hrx));
+    // rx = hrx - c*tau = -A'*y - G'z - c*tau
     rx = hrx - q * pdv->tau;
     resx = sqrt(dot(rx, rx)) / pdv->tau;
     // Primal residuals
     hry = A * pdv->x;
     hresy = sqrt(dot(hry, hry));
+    // ry = hry - b*tau = A*x - b*tau
     ry = hry - b * pdv->tau;
     resy = sqrt(dot(ry, ry)) / pdv->tau;
-    // Centrality residuals
+    // Centrality residuals: hrz = s + G*x
     hrz = pdv->s + cList.G * pdv->x;
     hresz = cList.snrm2(hrz);
+    // rz = hrz - h*tau = s + G*x - h*tau
     rz = hrz - cList.h * pdv->tau;
     resz = cList.snrm2(rz) / pdv->tau;
     // Self-dual residuals
@@ -372,6 +375,9 @@ CPS* DLP::cps(CTRL& ctrl){
      return cps;
     }
     // Computing initial scalings
+    // W * z = W^{-T} * s = lambda
+    // dg * tau = 1 / dg * kappa = lambdag
+    // lambda_g is stored in the last position of lmbda
     if(i == 0){
       WList = cList.ntsc(pdv->s, pdv->z);
       Lambda = cList.getLambda(WList);
@@ -382,6 +388,7 @@ CPS* DLP::cps(CTRL& ctrl){
     LambdaPrd = cList.sprd(Lambda, Lambda);
     lgprd = lg * lg;
     // Solution step 1 (same for affine and combined solution)
+    // solving a three equation system
     try{
       dpdv1->x = -q;
       dpdv1->y = b;
@@ -414,7 +421,7 @@ CPS* DLP::cps(CTRL& ctrl){
       return cps;
     } catch(...){
       ::Rf_error("C++ exception (unknown reason)"); 
-   }
+    }
     dpdv1->x = dpdv1->x * dgi;
     dpdv1->y = dpdv1->y * dgi;
     dpdv1->z = dpdv1->z * dgi;
@@ -422,6 +429,7 @@ CPS* DLP::cps(CTRL& ctrl){
     mu = dot(Lambda, Lambda) / (m + 1);
     sigma = 0.0;
     // Solving for affine and combined direction in two-round for-loop
+    // System of six equations
     for(int ii = 0; ii < 2; ii++){
       dpdv2->s = LambdaPrd;
       dpdv2->kappa = lgprd;
@@ -441,7 +449,6 @@ CPS* DLP::cps(CTRL& ctrl){
       dpdv2->z = -1.0 * dpdv2->z;
       dpdv2->y = -1.0 * dpdv2->y; 
       KktSol = *(sxyz(dpdv2, LHS, RHS, WList));
-
       // Combining solutions dpdv1 and dpdv2
       dpdv2->kappa = -1.0 * dpdv2->kappa / lg;
       dpdv2->tau = dpdv2->tau + dpdv2->kappa / dgi;
@@ -501,8 +508,7 @@ CPS* DLP::cps(CTRL& ctrl){
     pdv->kappa = lg / dgi;
     pdv->tau = lg * dgi;
     // gap = pow(sqrt(dot(Lambda, Lambda)) / pdv->tau, 2.0);
-    gap = pow(norm(Lambda.submat(1, 0, Lambda.n_rows - 1, 0)) / pdv->tau, 2.0);
-
+    gap = pow(norm(Lambda) / pdv->tau, 2.0);  
   } // end i-loop
 
   pdv->x = pdv->x / pdv->tau;
