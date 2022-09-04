@@ -474,7 +474,7 @@ CPS* DLP::cps(CTRL& ctrl){
       tz = cList.smss(dpdv2->z).max();
       tt = -dpdv2->tau / lg;
       tk = -dpdv2->kappa / lg;
-      ss << 0.0 << ts << tz << tt << tk << endr;
+      ss = { 0.0, ts, tz, tt, tk };
       tm = ss.max();
       if(tm == 0.0){
 	step = 1.0;
