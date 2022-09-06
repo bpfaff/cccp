@@ -222,7 +222,7 @@ CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl){
       dpdv->z = cList.sslb(dpdv->z, Lambda, false); 
       ts = cList.smss(dpdv->s).max();
       tz = cList.smss(dpdv->z).max();
-      ss << 0.0 << ts << tz << endr;
+      ss = { 0.0, ts, tz };
       tm = ss.max();
       if(tm == 0.0){
 	step = 1.0;
