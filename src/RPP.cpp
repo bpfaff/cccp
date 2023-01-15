@@ -6,7 +6,7 @@ using namespace arma;
 
 CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl){
   // Initializing objects
-  int ne = P.n_cols;
+  unsigned int ne = P.n_cols;
   int n = ne + 1;
   // Constraints
   CONEC cList, cEpi;
@@ -20,9 +20,9 @@ CPS* rpp(mat x0, mat P, mat mrc, CTRL& ctrl){
   cList.G.insert_rows(0, 1);
   cList.G(0, ne) = -1.0;
   cList.h.zeros(n, 1);
-  cList.dims << 1 << ne << endr;
-  cList.sidx << 0 << 0 << endr
-	     << 1 << ne << endr;
+  cList.dims = { 1, ne };
+  cList.sidx = { { 0, 0 }, 
+	         { 1, ne } };
   cList.K = 2;
   cList.n = n;
   // Primal dual variables
