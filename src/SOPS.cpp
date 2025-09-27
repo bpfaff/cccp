@@ -181,10 +181,11 @@ double smss_p(mat s){
   double ans = 0.0;
   int n = s.n_rows;
 
-  for(int i = 1; i < n; i++){
-    ans += s(i, 0) * s(i, 0);
-  }
-  ans = sqrt(ans);
+  //for(int i = 1; i < n; i++){
+  //  ans += s(i, 0) * s(i, 0);
+  //}
+  //ans = sqrt(ans);
+  ans = norm(s.submat(1, 0, n - 1, 0));
   ans = ans - s(0, 0);
 
   return ans;

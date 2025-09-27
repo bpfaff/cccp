@@ -1,10 +1,10 @@
 /* 
  *
- * Header file for package cccp3
+ * Header file for package cccp
  *
 */
-#ifndef CCCP3_H
-#define CCCP3_H
+#ifndef CCCP_H
+#define CCCP_H
 
 #ifndef ARMA_H
 #define ARMA_H

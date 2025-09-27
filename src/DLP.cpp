@@ -115,6 +115,7 @@ PDV* DLP::sxyz(PDV* pdv, mat LHS, mat RHS, std::vector<std::map<std::string,mat>
     RHS.submat(n, 0, RHS.n_rows - 1, 0) = pdv->y;
   }
   ans = solve(LHS, RHS, solve_opts::refine);
+  //ans = solve(LHS, RHS);
   pdv->x = ans.submat(0, 0, n - 1, 0);
   if(pdv->y.n_rows > 0){
     pdv->y = ans.submat(n, 0, RHS.n_rows - 1, 0);
@@ -134,6 +135,7 @@ CPS* DLP::cps(CTRL& ctrl){
 
   PDV* dpdv1 = cList.initpdv(A.n_rows);
   PDV* dpdv2 = cList.initpdv(A.n_rows);
+  PDV* ws3 = cList.initpdv(A.n_rows);
   CPS* cps = new CPS();
   cps->set_pdv(*pdv);
   cps->set_sidx(cList.sidx);
@@ -507,8 +509,7 @@ CPS* DLP::cps(CTRL& ctrl){
     pdv->z = cList.ssnt(Lambda, WList, true, false);
     pdv->kappa = lg / dgi;
     pdv->tau = lg * dgi;
-    // gap = pow(sqrt(dot(Lambda, Lambda)) / pdv->tau, 2.0);
-    gap = pow(norm(Lambda) / pdv->tau, 2.0);  
+    gap = pow(sqrt(dot(Lambda, Lambda)) / pdv->tau, 2.0);
   } // end i-loop
 
   pdv->x = pdv->x / pdv->tau;
